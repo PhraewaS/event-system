@@ -59,3 +59,37 @@ test("T-14 / AC-02,03 production cookies require HTTPS and retain CSRF protectio
   expect(login.headers["set-cookie"][0]).toMatch(/; Secure/);
   expect(login.headers["cache-control"]).toBe("no-store");
 });
+
+test("T-15 / AC-03,04,10 current database role is authoritative and bodies/pages are bounded", async () => {
+  const app = createApp(pool, secret);
+  const agent = request.agent(app);
+  const csrf = (await agent.get("/api/auth/csrf")).body.data.csrfToken;
+  const login = await agent
+    .post("/api/auth/login")
+    .set("X-CSRF-Token", csrf)
+    .send({ email: "organizer2@example.test", password })
+    .expect(200);
+  await agent.get("/api/organizer/events").expect(200);
+  await pool.query("UPDATE users SET role='PARTICIPANT' WHERE id=$1", [
+    demoIds.organizer2,
+  ]);
+  try {
+    await agent.get("/api/organizer/events").expect(403);
+  } finally {
+    await pool.query("UPDATE users SET role='ORGANIZER' WHERE id=$1", [
+      demoIds.organizer2,
+    ]);
+  }
+  const badPage = await request(app).get("/api/events?offset=-1").expect(400);
+  expect(badPage.body.error.code).toBe("VALIDATION_ERROR");
+  const page = await request(app).get("/api/events?offset=200").expect(200);
+  expect(page.body.data).toEqual([]);
+  expect(page.body.page.nextOffset).toBeNull();
+  await agent
+    .post("/api/events")
+    .set("X-CSRF-Token", login.body.data.csrfToken)
+    .send({ description: "x".repeat(17000) })
+    .expect(413);
+  const noCsrf = await agent.post("/api/auth/logout").send({}).expect(403);
+  expect(noCsrf.body.error.code).toBe("CSRF_INVALID");
+});
