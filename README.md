@@ -1,6 +1,6 @@
-# Gather — Sprint 1: ui
+# Gather — Sprint 1: verification
 
-Review unit 6/8: [Issue #12](https://github.com/PhraewaS/event-system/issues/12) → [PR #19](https://github.com/PhraewaS/event-system/pull/19). The domain APIs and participant/organizer screens are available. Browser acceptance specifications are added separately in PR #20.
+Review unit 7/8: [Issue #13](https://github.com/PhraewaS/event-system/issues/13) → [PR #20](https://github.com/PhraewaS/event-system/pull/20). The domain APIs, participant/organizer screens, and six desktop/mobile browser scenarios are available. Repository templates and Compose are added separately in PR #21.
 
 This is a scoped, cumulative review snapshot. The [engineering baseline](docs/sprint-1.md) describes the complete target increment; later features and historical full-increment evidence do not represent functionality or tests on this branch. The complete runnable snapshot is on `feature/sprint1-github-delivery-5`.
 
@@ -8,7 +8,7 @@ This is a scoped, cumulative review snapshot. The [engineering baseline](docs/sp
 
 Use Node 24 and PostgreSQL 15+. React/TypeScript/Vite → Express API → persistent PostgreSQL follows the lab stack. Versioned SQL and `pg` make database constraints and transactions explicit.
 
-1. Check out `feature/sprint1-role-ui-12` after cloning the repository.
+1. Check out `feature/sprint1-verification-evidence-13` after cloning the repository.
 2. Create separate disposable development/test databases once in `psql`:
 
    ```sql
@@ -56,10 +56,12 @@ Local sample credentials are synthetic. Never commit `.env` or real credentials.
 ```sh
 npm run build
 npm test -- --reporter=verbose
+npx playwright install chromium
+npm run test:e2e
 node scripts/evidence.mjs
 ```
 
-The current cumulative suite has **23 tests**.  Browser acceptance tests are introduced in PR #20; do not run or claim browser verification for this snapshot.
+The current cumulative suite has **23 tests**.  The six browser scenarios exercise the built UI on desktop/mobile.
 
 Tests intentionally clear only `TEST_DATABASE_URL`, whose database name must end in `_test`. Use a separate disposable database and run database/browser suites sequentially. Build before running browser tests. Generated local logs/manifests are under ignored `artifacts/`; hosted CI artifacts identify the submitted head. Required CI builds the application, runs the tests available on this branch, builds the Docker image and uploads evidence. Docker/Compose execution on the implementation machine and GCP deployment are separate gates; Compose is introduced in PR #21 and GCP is Lab 5 work.
 

@@ -1,0 +1,33 @@
+
+> gather-event-system@0.1.0 test
+> vitest run --reporter=verbose
+
+
+ RUN  v5.0.5 C:/Users/User/OneDrive/Documents/SE/Group Project/event-system
+
+ ✓ tests/sprint1.test.ts > F-01 Identity and session security > T-01 / AC-01 valid and invalid login, generic rejection, password hashing 140ms
+ ✓ tests/sprint1.test.ts > F-01 Identity and session security > T-02 / AC-02 session rotation, expiry, logout revocation, recreation persistence 160ms
+ ✓ tests/sprint1.test.ts > F-01 Identity and session security > T-03 / AC-03 authentication and CSRF enforced, safe errors 72ms
+ ✓ tests/sprint1.test.ts > F-02 Publication > T-04 / AC-04 roles and server-assigned ownership 89ms
+ ✓ tests/sprint1.test.ts > F-02 Publication > T-05 / AC-05 publication boundaries leave storage unchanged 82ms
+ ✓ tests/sprint1.test.ts > F-03 Registration and persistence > T-06 / AC-06 full API journey survives independent application/pool recreation 150ms
+ ✓ tests/sprint1.test.ts > F-03 Registration and persistence > T-07 / AC-07 duplicate, full, deadline, missing and forged registration 141ms
+ ✓ tests/sprint1.test.ts > F-03 Registration and persistence > T-08 / AC-08 two independent API instances compete for final place 251ms
+ ✓ tests/sprint1.test.ts > F-03 Registration and persistence > T-09 / AC-09 private registration owner restrictions 111ms
+ ✓ tests/sprint1.test.ts > F-04 Organizer ownership and data integrity > T-10 / AC-10 role and event ownership enforced independently 117ms
+ ✓ tests/sprint1.test.ts > F-04 Organizer ownership and data integrity > T-11 / AC-11 database constraints and migration/seed reproducibility 449ms
+ ✓ tests/security.test.ts > T-13 / AC-01,03 failed-login throttling preserves successful use 526ms
+ ✓ tests/security.test.ts > T-14 / AC-02,03 production cookies require HTTPS and retain CSRF protections 35ms
+ ✓ tests/security.test.ts > T-15 / AC-03,04,10 current database role is authoritative and bodies/pages are bounded 54ms
+ ✓ tests/rules.test.ts > T-07 unit / AC-07 registration rule boundaries > accepts immediately before the deadline 1ms
+ ✓ tests/rules.test.ts > T-07 unit / AC-07 registration rule boundaries > rejects exactly at and after the deadline 0ms
+ ✓ tests/rules.test.ts > T-07 unit / AC-07 registration rule boundaries > duplicate takes precedence when full or closed 0ms
+ ✓ tests/rules.test.ts > T-07 unit / AC-07 registration rule boundaries > capacity boundary rejects only when all places are taken 0ms
+
+ Test Files  3 passed (3)
+      Tests  18 passed (18)
+   Start at  20:32:45
+   Duration  5.78s (tests 81%, import 15%, transform 4%)
+
+    Isolate  3 workers spawned · ~756ms startup each (spawn + environment, per file)
+             at least ~1.51s faster with isolate: false — reuses workers across files instead of one per file
