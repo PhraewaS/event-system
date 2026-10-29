@@ -115,7 +115,7 @@ Final verification, 29 October 2026: `npm run build` succeeded; `npm test -- --r
 
 The original increment supplied this combined engineering baseline and README as human-authored design/setup documents. GitHub bootstrap adds operational issue/PR templates and preserved execution evidence; it does not introduce duplicate design documents.
 
-## GitHub bootstrap and remaining release gates
+## Original GitHub bootstrap snapshot and release gates
 
 Repository: [PhraewaS/event-system](https://github.com/PhraewaS/event-system); [Sprint 1 milestone](https://github.com/PhraewaS/event-system/milestone/1) due 8 November 2026 (end of day Asia/Bangkok); [project board](https://github.com/users/PhraewaS/projects/3); [CI runs](https://github.com/PhraewaS/event-system/actions). The public repository was selected explicitly by the stakeholder.
 
@@ -138,3 +138,55 @@ The stakeholder requested Write access for guluJa. A repository invitation and p
 Operational templates live in .github/ISSUE_TEMPLATE and .github/pull_request_template.md. They collect requirement/feature links, stable AC/STS IDs, scope/permissions and red/green evidence. They become the default repository templates after the reviewed release reaches main.
 
 Bootstrap followed the official [repository CLI](https://cli.github.com/manual/gh_repo_create), [branch-protection API](https://docs.github.com/en/rest/branches/branch-protection), [Projects API](https://docs.github.com/en/graphql/reference/projects), [issue-form schema](https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/syntax-for-githubs-form-schema), and [PR-template guidance](https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/creating-a-pull-request-template-for-your-repository).
+
+## Current review order
+
+The stakeholder requested the separation used in [toktickit](https://github.com/PhraewaS/toktickit). Its [Issue #49](https://github.com/PhraewaS/toktickit/issues/49) / [PR #56](https://github.com/PhraewaS/toktickit/pull/56) demonstrate a bounded feature branch and dependency on an accepted contract; [verification PR #60](https://github.com/PhraewaS/toktickit/pull/60) and [release PR #63](https://github.com/PhraewaS/toktickit/pull/63) keep verification and release work separate. The table below replaces the old all-in-one review path; the bootstrap snapshot above is historical.
+
+| Order | Issue / scope                                                          | Feature branch                             | PR                                                      | Initial reconstruction tests |
+| ----- | ---------------------------------------------------------------------- | ------------------------------------------ | ------------------------------------------------------- | ---------------------------- |
+| 1     | [#11](https://github.com/PhraewaS/event-system/issues/11) foundation   | `feature/sprint1-project-foundation-11`    | [#14](https://github.com/PhraewaS/event-system/pull/14) | Tests 2 passed (2)           |
+| 2     | [#1](https://github.com/PhraewaS/event-system/issues/1) authentication | `feature/sprint1-authentication-1`         | [#15](https://github.com/PhraewaS/event-system/pull/15) | Tests 7 passed (7)           |
+| 3     | [#2](https://github.com/PhraewaS/event-system/issues/2) publication    | `feature/sprint1-event-publication-2`      | [#16](https://github.com/PhraewaS/event-system/pull/16) | Tests 9 passed (9)           |
+| 4     | [#3](https://github.com/PhraewaS/event-system/issues/3) registration   | `feature/sprint1-registration-3`           | [#17](https://github.com/PhraewaS/event-system/pull/17) | Tests 17 passed (17)         |
+| 5     | [#4](https://github.com/PhraewaS/event-system/issues/4) organizer      | `feature/sprint1-organizer-management-4`   | [#18](https://github.com/PhraewaS/event-system/pull/18) | Tests 21 passed (21)         |
+| 6     | [#12](https://github.com/PhraewaS/event-system/issues/12) ui           | `feature/sprint1-role-ui-12`               | [#19](https://github.com/PhraewaS/event-system/pull/19) | Tests 21 passed (21)         |
+| 7     | [#13](https://github.com/PhraewaS/event-system/issues/13) verification | `feature/sprint1-verification-evidence-13` | [#20](https://github.com/PhraewaS/event-system/pull/20) | Tests 21 passed (21)         |
+| 8     | [#5](https://github.com/PhraewaS/event-system/issues/5) delivery       | `feature/sprint1-github-delivery-5`        | [#21](https://github.com/PhraewaS/event-system/pull/21) | Tests 21 passed (21)         |
+
+All eight local builds and their real PostgreSQL/unit suites passed. The verification snapshot also ran the six original desktop/mobile browser scenarios successfully. Tests introduced with later APIs/UI are not claimed for earlier partial snapshots. The initial reconstruction retained the original full API/security/rule/browser test sources and added FOUND-01/02 (real DB health/idempotent persistence, NFR-01/02) and AUTH-BOUND-01 (authentication/CSRF boundaries, AC-01/03): 21 tests plus six browser scenarios. The subsequent Issue #22 correction adds CLIENT-CSRF-01/02, so the current UI and downstream cumulative suites contain 23 tests plus the same six browser scenarios. The table records the initial per-unit runs, not later correction results. The original red/green evidence remains labelled with its original 305444a implementation source; this decomposition is not new historical TDD.
+
+Staging was renamed to `sprint1-staging` without moving its commit or weakening review/check requirements. Only the first unit targets staging immediately. Subsequent PRs are dependent Drafts whose temporary base is the previous feature branch, so each diff contains its own bounded change. This is preparation for the serial workflow, not a claim that the dependency has been accepted. Once the parent PR is independently reviewed and merged into staging: update the child from staging, change its base to sprint1-staging, rerun checks at the resulting head and obtain independent approval. Do not merge dependent Drafts into feature branches or bypass protections to accelerate the sequence. After all units are accepted, Issue #6 covers actual staging integration/acceptance, a separate release PR into main and the accepted tag.
+
+The original `feat/sprint-1` and PR #10 preserve the earlier combined implementation and hosted runs. PR #10 is superseded by the scoped series and is not an accepted/merged release. No original branch or review history was rewritten. Each PR in the table is now manually linked to its dedicated Issue through GitHub Development; PR #19 also links defect #22. Each Issue records its branch, scope, dependency and eventual staging target. Foundation moves to PR Review when its hosted check passes and an independent teammate is requested under Reviewers. Dependent units remain Draft/Started with blocked:dependency until their parent is accepted. Release acceptance remains Specified; Lab 5/later features remain Backlog. Done requires actual independent review, reviewed staging merge and acceptance for the item's scope, with evidence; inspect linked Issue state after merge rather than treating linkage or CI as completion.
+
+#### Repository workflow and project views
+
+New work starts with an Issue and feature contract before creating a feature/fix branch from the current `sprint1-staging` head. The prepared dependency stack above is an explicitly reconstructed exception for existing implementation, not evidence of already accepted dependencies. A normal feature/fix PR targets staging. A release PR targets main only after actual staging integration/system/acceptance checks and independent review. Preserve real red/green execution evidence for meaningful rule/defect changes; do not invent earlier process history.
+
+Manually link an Issue using Development; closing keywords alone do not establish the link when a PR targets a non-default branch. The Issue is the work/acceptance contract and the PR is the proposed change. Request the independent teammate in **Reviewers**; **Assignees** identify work ownership and do not replace a review request. The review must contain a specific check, question, finding or reason for approval. Required checks, an up-to-date base, approval from someone other than the last pusher, stale-review dismissal and resolved conversations remain protected-branch gates.
+
+All work retains every project item, including separately added PR cards. Development Kanban filters to `is:issue` and shows linked pull requests on Issue cards. Sprint 1 Kanban filters to `is:issue label:sprint:1`; Lab 5/later Issues remain visible in the broader backlog. Separate PR cards must use a status consistent with their linked Issue; they are not duplicate feature contracts.
+
+| Status | Observable condition |
+| --- | --- |
+| Backlog | Later work or no committed/ready contract |
+| Specified | Behavior, permissions, AC and tests specified; ready to start |
+| Started | Implementation, dependency acceptance or integration work remains |
+| PR Review | Reviewable scope, passing current checks and an independent review request |
+| Fixing | Review findings or failed checks are being corrected and re-tested |
+| Done | Specific independent review, reviewed staging merge and item acceptance recorded |
+
+[Issue #6](https://github.com/PhraewaS/event-system/issues/6) is the live integration/release checklist. After each accepted parent, update the child from staging, retarget it to staging, rerun checks and request a fresh independent review before merge. After acceptance, verify the linked Issue state and record the reviewed merge/evidence before closing it or moving it to Done. PR #19 and its synchronized foundation ancestor contain the corrections for Issue #22; the defect additionally requires integrated regression/browser evidence. GCP deployment remains Lab 5 work in Issue #7.
+
+Official workflow references: [manual Issue/PR linking](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue), [changing a PR base](https://docs.github.com/en/pull-requests/how-tos/create-pull-requests/changing-the-base-branch-of-a-pull-request), [project filters](https://docs.github.com/en/issues/planning-and-tracking-with-projects/customizing-views-in-your-project/filtering-projects), and [built-in project workflows](https://docs.github.com/en/issues/planning-and-tracking-with-projects/automating-your-project/using-the-built-in-automations).
+
+Current complete source for local demonstrations: `feature/sprint1-github-delivery-5`. API/UI business behavior is preserved; only the API file's formatting differs, with an equivalent parsed syntax tree. Build/real-DB/browser results remain execution evidence, not assumed from this statement.
+
+### CSRF regression found during hosted review validation
+
+[Issue #22](https://github.com/PhraewaS/event-system/issues/22) records a real intermittent sign-in failure in [delivery run 40902389931](https://github.com/PhraewaS/event-system/actions/runs/40902389931). Its trace showed pairs of GET /auth/csrf and GET /auth/me, followed by a 403 login and a visible security-token error. The CI job supplied NODE_ENV=test to the Vite build, enabling development behavior; React StrictMode repeats startup effects in development. Overlapping anonymous-session bootstrap responses could leave the client holding the token for an obsolete session.
+
+CLIENT-CSRF-01 deterministically reproduced the failure using out-of-order session/token responses and a protected mutation; it failed with CSRF_INVALID before the fix. CLIENT-CSRF-02 checks recovery after initialization fails. UI commit 78d0dae shares one in-flight bootstrap Promise and clears it after success/failure; both regression cases and all existing tests then passed (23 total). Red/green outputs are preserved in evidence/sprint-1/csrf-red.txt and csrf-green.txt. Foundation commit a5aae66 sets NODE_ENV=production for the CI build step while retaining test mode for the test steps. Parent updates were synchronized through the Draft stack without merging a PR into protected staging or main. This is an explicit corrective change beyond the original preserved snapshot; no API business rule or original browser assertion was removed.
+
+Official guidance: [React StrictMode startup effects](https://react.dev/reference/react/StrictMode), [Vite environment/mode semantics](https://vite.dev/guide/env-and-mode), and [OWASP session-bound CSRF tokens](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html). Teammate approval and final staging/main acceptance remain pending.
