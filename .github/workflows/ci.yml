@@ -8,7 +8,7 @@ permissions:
   contents: read
 jobs:
   build-and-test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     services:
       postgres:
@@ -19,7 +19,7 @@ jobs:
           POSTGRES_DB: event_system_test
         ports: ["5432:5432"]
         options: >-
-          --health-cmd 'pg_isready -U event_app -d event_system_test'
+          --health-cmd "pg_isready -U event_app -d event_system_test"
           --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       DATABASE_URL: postgresql://event_app:ci-synthetic-password@localhost:5432/event_system_test
@@ -27,7 +27,8 @@ jobs:
       SESSION_SECRET: ci-synthetic-session-secret-at-least-32-characters
       NODE_ENV: test
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - id: checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24
@@ -39,7 +40,7 @@ jobs:
       - run: npm run test:e2e
       - run: docker build -t gather:ci .
       - name: Record source and submitted commit
-        if: always()
+        if: ${{ always() && steps.checkout.outcome == 'success' }}
         run: node scripts/evidence.mjs
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
