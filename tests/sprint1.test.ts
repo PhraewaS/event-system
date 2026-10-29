@@ -216,3 +216,150 @@ describe("F-02 Publication", () => {
     });
   });
 });
+
+describe("F-03 Registration and persistence", () => {
+  test("T-06 / AC-06 full API journey survives independent application/pool recreation", async () => {
+    const owner = await actor("organizer@example.test");
+    const participant = await actor();
+    const event = await publish(owner);
+    const all = await request(app).get("/api/events").expect(200);
+    expect(all.body.data.some((e: { id: string }) => e.id === event.id)).toBe(
+      true,
+    );
+    const detail = await request(app)
+      .get(`/api/events/${event.id}`)
+      .expect(200);
+    expect(detail.body.data.remainingPlaces).toBe(2);
+    const res = await register(participant, event.id).expect(201);
+    const own = await participant.agent
+      .get(`/api/registrations/${res.body.data.id}`)
+      .expect(200);
+    expect(own.body.data.event.id).toBe(event.id);
+    const mine = await participant.agent
+      .get("/api/registrations/mine")
+      .expect(200);
+    expect(
+      mine.body.data.some((r: { id: string }) => r.id === res.body.data.id),
+    ).toBe(true);
+    const recreatedPool = new Pool({ connectionString: url });
+    try {
+      const recreated = createApp(recreatedPool, secret);
+      const persisted = await request(recreated)
+        .get("/api/registrations/mine")
+        .set("Cookie", participant.cookie)
+        .expect(200);
+      expect(
+        persisted.body.data.some(
+          (r: { id: string }) => r.id === res.body.data.id,
+        ),
+      ).toBe(true);
+      expect(
+        (await request(recreated).get(`/api/events/${event.id}`)).body.data
+          .remainingPlaces,
+      ).toBe(1);
+    } finally {
+      await recreatedPool.end();
+    }
+  });
+
+  test("T-07 / AC-07 duplicate, full, deadline, missing and forged registration", async () => {
+    const owner = await actor("organizer@example.test");
+    const a = await actor();
+    const b = await actor("participant2@example.test");
+    const event = await publish(owner, { capacity: 1 });
+    await register(a, event.id).expect(201);
+    expect((await register(a, event.id).expect(409)).body.error.code).toBe(
+      "DUPLICATE_REGISTRATION",
+    );
+    expect((await register(b, event.id).expect(409)).body.error.code).toBe(
+      "EVENT_FULL",
+    );
+    expect(
+      (
+        await pool.query(
+          "SELECT count(*)::int AS n FROM registrations WHERE event_id=$1",
+          [event.id],
+        )
+      ).rows[0].n,
+    ).toBe(1);
+    const closed = await publish(owner);
+    await pool.query(
+      "UPDATE events SET registration_deadline=clock_timestamp() WHERE id=$1",
+      [closed.id],
+    );
+    expect((await register(a, closed.id).expect(409)).body.error.code).toBe(
+      "REGISTRATION_CLOSED",
+    );
+    expect(
+      (await request(app).get(`/api/events/${closed.id}`)).body.data
+        .registrationOpen,
+    ).toBe(false);
+    await register(a, randomUUID()).expect(404);
+    await register(a, closed.id, {
+      participantId: demoIds.participant2,
+    }).expect(400);
+    await register(a, "not-a-uuid").expect(400);
+  });
+
+  test("T-08 / AC-08 two independent API instances compete for final place", async () => {
+    const owner = await actor("organizer@example.test");
+    const a = await actor();
+    const b = await actor("participant2@example.test", secondApp);
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const event = await publish(owner, { capacity: 1 });
+      const results = await Promise.all([
+        register(a, event.id),
+        register(b, event.id),
+      ]);
+      expect(results.map((r) => r.status).sort()).toEqual([201, 409]);
+      expect(results.find((r) => r.status === 409)?.body.error.code).toBe(
+        "EVENT_FULL",
+      );
+      expect(
+        (
+          await pool.query(
+            "SELECT count(*)::int AS n FROM registrations WHERE event_id=$1",
+            [event.id],
+          )
+        ).rows[0].n,
+      ).toBe(1);
+    }
+    const same = await actor("participant@example.test", secondApp);
+    const event = await publish(owner, { capacity: 2 });
+    const results = await Promise.all([
+      register(a, event.id),
+      register(same, event.id),
+    ]);
+    expect(results.map((r) => r.status).sort()).toEqual([201, 409]);
+    expect(results.find((r) => r.status === 409)?.body.error.code).toBe(
+      "DUPLICATE_REGISTRATION",
+    );
+    expect(
+      (await request(app).get(`/api/events/${event.id}`)).body.data
+        .remainingPlaces,
+    ).toBe(1);
+  });
+
+  test("T-09 / AC-09 private registration owner restrictions", async () => {
+    const owner = await actor("organizer@example.test");
+    const a = await actor();
+    const b = await actor("participant2@example.test");
+    const event = await publish(owner);
+    const registration = (await register(a, event.id).expect(201)).body.data;
+    await a.agent.get(`/api/registrations/${registration.id}`).expect(200);
+    const forbidden = await b.agent
+      .get(`/api/registrations/${registration.id}`)
+      .expect(404);
+    const missing = await b.agent
+      .get(`/api/registrations/${randomUUID()}`)
+      .expect(404);
+    expect(forbidden.body).toEqual(missing.body);
+    expect(
+      (await b.agent.get("/api/registrations/mine")).body.data.every(
+        (r: { participantId: string }) =>
+          r.participantId === demoIds.participant2,
+      ),
+    ).toBe(true);
+    await owner.agent.get(`/api/registrations/${registration.id}`).expect(403);
+  });
+});
