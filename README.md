@@ -2,6 +2,8 @@
 
 React + TypeScript + Vite → Express JSON API → persistent PostgreSQL. Uses the lab stack; `pg` and versioned SQL keep transaction/constraint behavior explicit. Node 24 and PostgreSQL 15+ required. One consolidated [engineering baseline](docs/sprint-1.md) contains SRS, system/feature SDS, feature inventory, traceability, AC, STS, permissions and references.
 
+The implementation is on `feat/sprint-1`, awaiting independent review into `sprint/1`; `main` remains the release branch. Until acceptance, clone/check out `feat/sprint-1` to run the application.
+
 ## Local setup
 
 1. Install Node 24 and PostgreSQL. Create **separate** development/test databases using an account allowed to create roles/databases (run once in `psql`):
@@ -92,6 +94,10 @@ docker compose exec -e DEMO_PASSWORD=Gather-demo-2026! app node dist/server/seed
 
 Production mode rejects demo seeding. `docker compose down` preserves data; deleting its volume deletes the database. The production image supports the one-off release migration command `node dist/server/migrate.js` before starting the server.
 
-The GitHub workflow builds, tests against PostgreSQL, runs browser tests and builds the container. Local branches `main`, `sprint/1` and `feat/sprint-1` exist. No GitHub project repository exists yet, so Issues/board, actual CI runs, required-check configuration, PRs, teammate review and release tagging are **pending**. Add a repository, connect this folder, create issues linked to the engineering baseline, use `sprint/1` staging and feature/fix branches, and require the `build-and-test` check plus independent review on staging/main. Re-run evidence against the submitted commit. A workflow file alone does not enforce these settings.
+The [public repository](https://github.com/PhraewaS/event-system) is connected as `origin`. The [project board](https://github.com/users/PhraewaS/projects/3), [Sprint 1 milestone](https://github.com/PhraewaS/event-system/milestone/1), and [issues](https://github.com/PhraewaS/event-system/issues) track the work. Feature review issues #1–#4 cover F-01–F-04; #5 tracks bootstrap; #6 tracks independent integration/release acceptance; #7 tracks Lab 5; #8–#9 retain later-sprint features. Tracking was added after the original local implementation; no earlier issue/PR history is claimed.
+
+Both `main` and `sprint/1` enforce a passing GitHub Actions `build-and-test` check, an up-to-date branch, one independent approval, stale-review dismissal and resolved conversations, including for administrators. Force pushes/deletion are blocked. Merge commits preserve implementation history; staging branches are retained. The [implementation PR list](https://github.com/PhraewaS/event-system/pulls) targets `sprint/1`; only an approved release PR may move the increment to `main`. Hosted CI validates build, PostgreSQL API tests, desktop/mobile browser tests and the Docker build, with evidence in [Actions](https://github.com/PhraewaS/event-system/actions). CI is configured with read-only default token permissions and cannot approve PRs.
+
+`guluJa` was invited with repository Write and project Writer access. The repository invitation must be accepted before collaborator review can be completed. Issue/PR templates are included with this feature branch and become the default forms after the reviewed release reaches `main`. [Preserved local red/green/browser evidence](evidence/sprint-1/) identifies implementation commit `305444a`; hosted CI records its own submitted commit. Teammate approval, reviewed integration, release tagging and GCP deployment remain human/release gates, tracked in #6/#7.
 
 GCP deployment and completed CI/CD are due in Lab 5. The planned deployment is Cloud Run + Cloud SQL PostgreSQL + Secret Manager, with release migrations and an approved main-to-release pipeline. No cloud resources were created or deployed. See the engineering baseline for official documentation sources and the remaining release gates.
