@@ -13,8 +13,15 @@ import path from "node:path";
 import { existsSync } from "node:fs";
 import type { Pool } from "pg";
 import { ZodError } from "zod";
-import { loginInput, publishInput, uuid, pageInput } from "./validation.js";
+import {
+  emptyInput,
+  loginInput,
+  pageInput,
+  publishInput,
+  uuid,
+} from "./validation.js";
 import { AppError } from "./errors.js";
+import { registerParticipant } from "./registrations.js";
 
 declare module "express-session" {
   interface SessionData {
@@ -35,7 +42,10 @@ const eventSelect = `SELECT e.id, e.organizer_id AS "organizerId", u.name AS "or
   (clock_timestamp()<e.registration_deadline AND c.n<e.capacity) AS "registrationOpen"
   FROM events e JOIN users u ON u.id=e.organizer_id
   CROSS JOIN LATERAL (SELECT count(*)::int AS n FROM registrations WHERE event_id=e.id) c`;
-
+const registrationSelect = `SELECT r.id, r.participant_id AS "participantId", r.created_at AS "createdAt",
+  json_build_object('id', e.id, 'title', e.title, 'location', e.location, 'startsAt', e.starts_at,
+    'registrationDeadline', e.registration_deadline) AS event
+  FROM registrations r JOIN events e ON e.id=r.event_id`;
 const page = (res: Response, rows: unknown[], offset: number) =>
   res.json({
     data: rows,
@@ -255,6 +265,46 @@ export function createApp(pool: Pool, secret: string, production = false) {
       );
       const created = await pool.query(`${eventSelect} WHERE e.id=$1`, [id]);
       res.status(201).json({ data: created.rows[0] });
+    },
+  );
+  app.post(
+    "/api/events/:id/registrations",
+    requireUser,
+    role("PARTICIPANT"),
+    csrf,
+    async (req, res) => {
+      const id = uuid.parse(req.params.id);
+      emptyInput.parse(req.body);
+      res
+        .status(201)
+        .json({ data: await registerParticipant(pool, id, user(res).id) });
+    },
+  );
+  app.get(
+    "/api/registrations/mine",
+    requireUser,
+    role("PARTICIPANT"),
+    async (req, res) => {
+      const { offset } = pageInput.parse(req.query);
+      const result = await pool.query(
+        `${registrationSelect} WHERE r.participant_id=$1 ORDER BY r.created_at DESC,r.id LIMIT 200 OFFSET $2`,
+        [user(res).id, offset],
+      );
+      page(res, result.rows, offset);
+    },
+  );
+  app.get(
+    "/api/registrations/:id",
+    requireUser,
+    role("PARTICIPANT"),
+    async (req, res) => {
+      const found = await pool.query(
+        `${registrationSelect} WHERE r.id=$1 AND r.participant_id=$2`,
+        [uuid.parse(req.params.id), user(res).id],
+      );
+      if (!found.rowCount)
+        throw new AppError(404, "NOT_FOUND", "Registration not found.");
+      res.json({ data: found.rows[0] });
     },
   );
 
