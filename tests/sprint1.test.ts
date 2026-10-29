@@ -142,6 +142,43 @@ describe("F-01 Identity and session security", () => {
     );
     await expired.agent.get("/api/auth/me").expect(401);
   });
+
+  test("T-03 / AC-03 authentication and CSRF enforced, safe errors", async () => {
+    for (const path of [
+      "/api/auth/me",
+      "/api/registrations/mine",
+      "/api/organizer/events",
+      `/api/events/${randomUUID()}/registrations`,
+    ]) {
+      await request(app).get(path).expect(401);
+    }
+    await request(app).post("/api/events").send(eventBody()).expect(401);
+    await request(app)
+      .post(`/api/events/${randomUUID()}/registrations`)
+      .send({})
+      .expect(401);
+    await request(app)
+      .post("/api/auth/login")
+      .send({ email: "participant@example.test", password })
+      .expect(403);
+    const owner = await actor("organizer@example.test");
+    await owner.agent.post("/api/events").send(eventBody()).expect(403);
+    await owner.agent
+      .post("/api/events")
+      .set("X-CSRF-Token", "wrong")
+      .send(eventBody())
+      .expect(403);
+    await owner.agent.post("/api/auth/logout").send({}).expect(403);
+    await request(app).get("/api/events/not-a-uuid").expect(400);
+    await request(app).get(`/api/events/${randomUUID()}`).expect(404);
+    await request(app).get("/api/no-such-route").expect(404);
+    await owner.agent
+      .post("/api/events")
+      .set("X-CSRF-Token", owner.token)
+      .set("Content-Type", "application/json")
+      .send("{broken")
+      .expect(400);
+  });
 });
 
 describe("F-02 Publication", () => {
@@ -361,5 +398,65 @@ describe("F-03 Registration and persistence", () => {
       ),
     ).toBe(true);
     await owner.agent.get(`/api/registrations/${registration.id}`).expect(403);
+  });
+});
+
+describe("F-04 Organizer ownership and data integrity", () => {
+  test("T-10 / AC-10 role and event ownership enforced independently", async () => {
+    const owner = await actor("organizer@example.test");
+    const other = await actor("organizer2@example.test");
+    const participant = await actor();
+    const event = await publish(owner);
+    await register(participant, event.id).expect(201);
+    const roster = await owner.agent
+      .get(`/api/events/${event.id}/registrations`)
+      .expect(200);
+    expect(roster.body.data).toHaveLength(1);
+    expect(roster.body.data[0].participant.email).toBe(
+      "participant@example.test",
+    );
+    await other.agent.get(`/api/events/${event.id}/registrations`).expect(404);
+    await participant.agent
+      .get(`/api/events/${event.id}/registrations`)
+      .expect(403);
+    await participant.agent.get("/api/organizer/events").expect(403);
+    expect(
+      (await other.agent.get("/api/organizer/events").expect(200)).body.data,
+    ).toHaveLength(0);
+    await register(owner, event.id).expect(403);
+    await owner.agent.get("/api/registrations/mine").expect(403);
+  });
+
+  test("T-11 / AC-11 database constraints and migration/seed reproducibility", async () => {
+    const owner = await actor("organizer@example.test");
+    const event = await publish(owner);
+    for (const [sql, values] of [
+      ["UPDATE events SET capacity=0 WHERE id=$1", [event.id]],
+      [
+        "UPDATE events SET registration_deadline=starts_at+interval '1 day' WHERE id=$1",
+        [event.id],
+      ],
+      ["UPDATE users SET role='ADMIN' WHERE id=$1", [demoIds.participant]],
+      [
+        "UPDATE events SET organizer_id=$1 WHERE id=$2",
+        [randomUUID(), event.id],
+      ],
+    ] as const)
+      await expect(pool.query(sql, [...values])).rejects.toBeDefined();
+    const a = await actor();
+    await register(a, event.id).expect(201);
+    await expect(
+      pool.query(
+        "INSERT INTO registrations(id,event_id,participant_id) VALUES($1,$2,$3)",
+        [randomUUID(), event.id, demoIds.participant],
+      ),
+    ).rejects.toMatchObject({ code: "23505" });
+    const before = (await pool.query("SELECT count(*)::int AS n FROM events"))
+      .rows[0].n;
+    await migrate(pool);
+    await seed(pool, password);
+    expect(
+      (await pool.query("SELECT count(*)::int AS n FROM events")).rows[0].n,
+    ).toBe(before);
   });
 });

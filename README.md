@@ -1,6 +1,6 @@
-# Gather — Sprint 1: registration
+# Gather — Sprint 1: organizer
 
-Review unit 4/8: [Issue #3](https://github.com/PhraewaS/event-system/issues/3) → [PR #17](https://github.com/PhraewaS/event-system/pull/17). Previous APIs plus capacity-safe registration, duplicate rejection and private participant registrations. The UI still shows database health; role screens come in PR #19.
+Review unit 5/8: [Issue #4](https://github.com/PhraewaS/event-system/issues/4) → [PR #18](https://github.com/PhraewaS/event-system/pull/18). Previous APIs plus organizer-owned event lists and owner-only registration rosters. The UI still shows database health; role screens come in PR #19.
 
 This is a scoped, cumulative review snapshot. The [engineering baseline](docs/sprint-1.md) describes the complete target increment; later features and historical full-increment evidence do not represent functionality or tests on this branch. The complete runnable snapshot is on `feature/sprint1-github-delivery-5`.
 
@@ -8,7 +8,7 @@ This is a scoped, cumulative review snapshot. The [engineering baseline](docs/sp
 
 Use Node 24 and PostgreSQL 15+. React/TypeScript/Vite → Express API → persistent PostgreSQL follows the lab stack. Versioned SQL and `pg` make database constraints and transactions explicit.
 
-1. Check out `feature/sprint1-registration-3` after cloning the repository.
+1. Check out `feature/sprint1-organizer-management-4` after cloning the repository.
 2. Create separate disposable development/test databases once in `psql`:
 
    ```sql
@@ -59,7 +59,7 @@ npm test -- --reporter=verbose
 node scripts/evidence.mjs
 ```
 
-The current cumulative suite has **17 tests**.  Browser acceptance tests are introduced in PR #20; do not run or claim browser verification for this snapshot.
+The current cumulative suite has **21 tests**.  Browser acceptance tests are introduced in PR #20; do not run or claim browser verification for this snapshot.
 
 Tests intentionally clear only `TEST_DATABASE_URL`, whose database name must end in `_test`. Use a separate disposable database and run database/browser suites sequentially. Build before running browser tests. Generated local logs/manifests are under ignored `artifacts/`; hosted CI artifacts identify the submitted head. Required CI builds the application, runs the tests available on this branch, builds the Docker image and uploads evidence. Docker/Compose execution on the implementation machine and GCP deployment are separate gates; Compose is introduced in PR #21 and GCP is Lab 5 work.
 
