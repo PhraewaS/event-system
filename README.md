@@ -1,4 +1,4 @@
-> Review unit 5/8: **[Sprint 1] Owned event management and registration rosters**, Issue #4. This branch contains the cumulative dependency snapshot through this unit. The complete increment was originally implemented at 369961b; these are newly reconstructed review units, not backdated initial development. Earlier units intentionally omit later APIs/UI/tests. Follow the dependency order and merge into sprint1-staging only after independent review.
+> Review unit 6/8: **[Sprint 1] Participant and organizer screens**, Issue #12. This branch contains the cumulative dependency snapshot through this unit. The complete increment was originally implemented at 369961b; these are newly reconstructed review units, not backdated initial development. Earlier units intentionally omit later APIs/UI/tests. Follow the dependency order and merge into sprint1-staging only after independent review.
 
 # Gather — Sprint 1 event system
 
