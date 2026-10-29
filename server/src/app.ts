@@ -13,7 +13,7 @@ import path from "node:path";
 import { existsSync } from "node:fs";
 import type { Pool } from "pg";
 import { ZodError } from "zod";
-import { loginInput } from "./validation.js";
+import { loginInput, publishInput, uuid, pageInput } from "./validation.js";
 import { AppError } from "./errors.js";
 
 declare module "express-session" {
@@ -29,6 +29,22 @@ type User = {
   role: "PARTICIPANT" | "ORGANIZER";
 };
 const user = (res: Response) => res.locals.user as User;
+const eventSelect = `SELECT e.id, e.organizer_id AS "organizerId", u.name AS "organizerName", e.title,
+  e.description, e.location, e.capacity, e.starts_at AS "startsAt", e.registration_deadline AS "registrationDeadline",
+  e.created_at AS "createdAt", c.n AS "registeredCount", e.capacity-c.n AS "remainingPlaces",
+  (clock_timestamp()<e.registration_deadline AND c.n<e.capacity) AS "registrationOpen"
+  FROM events e JOIN users u ON u.id=e.organizer_id
+  CROSS JOIN LATERAL (SELECT count(*)::int AS n FROM registrations WHERE event_id=e.id) c`;
+
+const page = (res: Response, rows: unknown[], offset: number) =>
+  res.json({
+    data: rows,
+    page: {
+      offset,
+      limit: 200,
+      nextOffset: rows.length === 200 ? offset + 200 : null,
+    },
+  });
 
 export function createApp(pool: Pool, secret: string, production = false) {
   if (secret.length < 32)
@@ -188,6 +204,59 @@ export function createApp(pool: Pool, secret: string, production = false) {
     });
     res.sendStatus(204);
   });
+  app.get("/api/events", async (req, res) => {
+    const { offset } = pageInput.parse(req.query);
+    const result = await pool.query(
+      `${eventSelect} ORDER BY e.created_at DESC,e.id LIMIT 200 OFFSET $1`,
+      [offset],
+    );
+    page(res, result.rows, offset);
+  });
+  app.get("/api/events/:id", async (req, res) => {
+    const found = await pool.query(`${eventSelect} WHERE e.id=$1`, [
+      uuid.parse(req.params.id),
+    ]);
+    if (!found.rowCount)
+      throw new AppError(404, "NOT_FOUND", "Event not found.");
+    res.json({ data: found.rows[0] });
+  });
+  app.post(
+    "/api/events",
+    requireUser,
+    role("ORGANIZER"),
+    csrf,
+    async (req, res) => {
+      const input = publishInput.parse(req.body);
+      const now = (await pool.query("SELECT clock_timestamp() AS now")).rows[0]
+        .now as Date;
+      if (
+        Date.parse(input.startsAt) <= now.getTime() ||
+        Date.parse(input.registrationDeadline) <= now.getTime()
+      )
+        throw new AppError(
+          400,
+          "VALIDATION_ERROR",
+          "Event start and registration deadline must be in the future.",
+        );
+      const id = randomUUID();
+      await pool.query(
+        `INSERT INTO events(id,organizer_id,title,description,location,capacity,starts_at,registration_deadline)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8)`,
+        [
+          id,
+          user(res).id,
+          input.title,
+          input.description,
+          input.location,
+          input.capacity,
+          input.startsAt,
+          input.registrationDeadline,
+        ],
+      );
+      const created = await pool.query(`${eventSelect} WHERE e.id=$1`, [id]);
+      res.status(201).json({ data: created.rows[0] });
+    },
+  );
 
   app.use("/api", (_req, _res) => {
     throw new AppError(404, "NOT_FOUND", "API route not found.");

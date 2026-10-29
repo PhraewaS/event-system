@@ -143,3 +143,76 @@ describe("F-01 Identity and session security", () => {
     await expired.agent.get("/api/auth/me").expect(401);
   });
 });
+
+describe("F-02 Publication", () => {
+  test("T-04 / AC-04 roles and server-assigned ownership", async () => {
+    const participant = await actor();
+    await participant.agent
+      .post("/api/events")
+      .set("X-CSRF-Token", participant.token)
+      .send(eventBody())
+      .expect(403);
+    const owner = await actor("organizer@example.test");
+    const event = await publish(owner, { capacity: 1 });
+    expect(event.organizerId).toBe(demoIds.organizer);
+    const saved = await pool.query("SELECT capacity FROM events WHERE id=$1", [
+      event.id,
+    ]);
+    expect(saved.rows[0].capacity).toBe(1);
+    for (const forged of [
+      { organizerId: demoIds.organizer2 },
+      { role: "ORGANIZER" },
+    ]) {
+      await owner.agent
+        .post("/api/events")
+        .set("X-CSRF-Token", owner.token)
+        .send(eventBody(forged))
+        .expect(400);
+    }
+    // Published capacity has no mutation route in this sprint.
+    await owner.agent
+      .patch(`/api/events/${event.id}`)
+      .set("X-CSRF-Token", owner.token)
+      .send({ capacity: 0 })
+      .expect(404);
+  });
+
+  test("T-05 / AC-05 publication boundaries leave storage unchanged", async () => {
+    const owner = await actor("organizer@example.test");
+    const before = (await pool.query("SELECT count(*)::int AS n FROM events"))
+      .rows[0].n;
+    for (const invalid of [
+      { capacity: 0 },
+      { capacity: -1 },
+      { capacity: 1.5 },
+      { capacity: 1000001 },
+      { capacity: "2" },
+      { title: "  " },
+      { title: "a".repeat(121) },
+      { description: "short" },
+      { description: "a".repeat(4001) },
+      { location: "" },
+      { location: "a".repeat(201) },
+      { startsAt: future(-1) },
+      { registrationDeadline: future(-1) },
+      { registrationDeadline: future(72) },
+      { startsAt: "2027-11-01T10:00:00" },
+    ]) {
+      const res = await owner.agent
+        .post("/api/events")
+        .set("X-CSRF-Token", owner.token)
+        .send(eventBody(invalid))
+        .expect(400);
+      expect(res.body.error.code).toBe("VALIDATION_ERROR");
+    }
+    expect(
+      (await pool.query("SELECT count(*)::int AS n FROM events")).rows[0].n,
+    ).toBe(before);
+    const time = future(48);
+    await publish(owner, {
+      startsAt: time,
+      registrationDeadline: time,
+      capacity: 1000000,
+    });
+  });
+});
