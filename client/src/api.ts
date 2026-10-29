@@ -42,6 +42,7 @@ export class ApiError extends Error {
   }
 }
 let csrfToken: string | null = null;
+let csrfInitialization: Promise<void> | null = null;
 export async function api<T>(
   path: string,
   options: RequestInit = {},
@@ -102,9 +103,16 @@ export async function collection<T>(path: string): Promise<T[]> {
   }
   return rows;
 }
-export async function bootstrap() {
-  const result = await api<{ csrfToken: string }>("/auth/csrf");
-  csrfToken = result.csrfToken;
+export function bootstrap(): Promise<void> {
+  // Repeated startup effects must share one session/token initialization.
+  csrfInitialization ??= api<{ csrfToken: string }>("/auth/csrf")
+    .then((result) => {
+      csrfToken = result.csrfToken;
+    })
+    .finally(() => {
+      csrfInitialization = null;
+    });
+  return csrfInitialization;
 }
 export async function login(email: string, password: string) {
   const result = await api<{ user: User; csrfToken: string }>("/auth/login", {
