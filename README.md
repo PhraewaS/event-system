@@ -2,7 +2,7 @@
 
 React + TypeScript + Vite → Express JSON API → persistent PostgreSQL. Uses the lab stack; `pg` and versioned SQL keep transaction/constraint behavior explicit. Node 24 and PostgreSQL 15+ required. One consolidated [engineering baseline](docs/sprint-1.md) contains SRS, system/feature SDS, feature inventory, traceability, AC, STS, permissions and references.
 
-The complete runnable review snapshot is on `feature/sprint1-github-delivery-5`. The increment is separated into eight issue/feature-branch/PR review units, following [toktickit](https://github.com/PhraewaS/toktickit). Start review with [foundation PR #14](https://github.com/PhraewaS/event-system/pull/14); dependent PRs remain Draft until their parent is accepted into `sprint1-staging`. `main` is the accepted-release branch. See the [review order](docs/sprint-1.md#current-issue-branch-pr-review-order).
+The complete runnable review snapshot is on `feature/sprint1-github-delivery-5`. The increment is separated into eight issue/feature-branch/PR review units, following [toktickit](https://github.com/PhraewaS/toktickit). Start review with [foundation PR #14](https://github.com/PhraewaS/event-system/pull/14); dependent PRs remain Draft until their parent is accepted into `sprint1-staging`. `main` is the accepted-release branch. See the [review order](docs/sprint-1.md#current-review-order).
 
 ## Local setup
 

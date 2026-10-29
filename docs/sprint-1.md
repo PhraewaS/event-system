@@ -137,7 +137,7 @@ Operational templates live in .github/ISSUE_TEMPLATE and .github/pull_request_te
 
 Bootstrap followed the official [repository CLI](https://cli.github.com/manual/gh_repo_create), [branch-protection API](https://docs.github.com/en/rest/branches/branch-protection), [Projects API](https://docs.github.com/en/graphql/reference/projects), [issue-form schema](https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/syntax-for-githubs-form-schema), and [PR-template guidance](https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/creating-a-pull-request-template-for-your-repository).
 
-## Current Issue–Branch–PR review order
+## Current review order
 
 The stakeholder requested the separation used in [toktickit](https://github.com/PhraewaS/toktickit). Its [Issue #49](https://github.com/PhraewaS/toktickit/issues/49) / [PR #56](https://github.com/PhraewaS/toktickit/pull/56) demonstrate a bounded feature branch and dependency on an accepted contract; [verification PR #60](https://github.com/PhraewaS/toktickit/pull/60) and [release PR #63](https://github.com/PhraewaS/toktickit/pull/63) keep verification and release work separate. The table below replaces the old all-in-one review path; the bootstrap snapshot above is historical.
 
