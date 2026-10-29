@@ -1,0 +1,36 @@
+
+> gather-event-system@0.1.0 test
+> vitest run --reporter=verbose tests/client-csrf.test.ts
+
+
+ RUN  v5.0.5 C:/Users/User/OneDrive/Documents/SE/Group Project/event-system
+
+ × tests/client-csrf.test.ts > CLIENT-CSRF-01 concurrent initialization preserves the current session token for a protected mutation 40ms
+   → promise rejected "Error: Token belongs to an obsolete sessi… { …(2) }" instead of resolving
+ ✓ tests/client-csrf.test.ts > CLIENT-CSRF-02 a failed initialization can be retried without retaining a rejected request 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/client-csrf.test.ts > CLIENT-CSRF-01 concurrent initialization preserves the current session token for a protected mutation
+AssertionError: promise rejected "Error: Token belongs to an obsolete sessi… { …(2) }" instead of resolving
+ ❯ tests/client-csrf.test.ts:19:57
+     17|   releaseFirst({data:{csrfToken:'session-token-1'}});
+     18|   await Promise.all([first,second]);
+     19|   await expect(api('/events',{method:'POST',body:'{}'})).resolves.toEq…
+       |                                                         ^
+     20| });
+     21| test('CLIENT-CSRF-02 a failed initialization can be retried without re…
+
+Caused by: Error: Token belongs to an obsolete session.
+ ❯ api client/src/api.ts:75:11
+ ❯ tests/client-csrf.test.ts:19:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { status: 403, code: 'CSRF_INVALID' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  22:40:24
+   Duration  868ms (tests 54%, transform 26%, import 17%, worker 4%)
