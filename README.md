@@ -1,4 +1,4 @@
-> Review unit 1/8: **[Sprint 1] Engineering baseline, project foundation and persistent database**, Issue #11. This branch contains the cumulative dependency snapshot through this unit. The complete increment was originally implemented at 369961b; these are newly reconstructed review units, not backdated initial development. Earlier units intentionally omit later APIs/UI/tests. Follow the dependency order and merge into sprint1-staging only after independent review.
+> Review unit 2/8: **[Sprint 1] Authentication, sessions and authorization foundation**, Issue #1. This branch contains the cumulative dependency snapshot through this unit. The complete increment was originally implemented at 369961b; these are newly reconstructed review units, not backdated initial development. Earlier units intentionally omit later APIs/UI/tests. Follow the dependency order and merge into sprint1-staging only after independent review.
 
 # Gather — Sprint 1 event system
 
