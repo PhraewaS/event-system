@@ -1,4 +1,4 @@
-> Review unit 7/8: **[Sprint 1] Browser verification and execution evidence**, Issue #13. This branch contains the cumulative dependency snapshot through this unit. The complete increment was originally implemented at 369961b; these are newly reconstructed review units, not backdated initial development. Earlier units intentionally omit later APIs/UI/tests. Follow the dependency order and merge into sprint1-staging only after independent review.
+> Review unit 8/8: **[Sprint 1] Repository delivery conventions and local containers**, Issue #5. This branch contains the cumulative dependency snapshot through this unit. The complete increment was originally implemented at 369961b; these are newly reconstructed review units, not backdated initial development. Earlier units intentionally omit later APIs/UI/tests. Follow the dependency order and merge into sprint1-staging only after independent review.
 
 # Gather — Sprint 1 event system
 
