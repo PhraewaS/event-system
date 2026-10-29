@@ -1,5 +1,7 @@
 # Sprint 1 engineering baseline and feature contracts
 
+> This document combines the target Sprint 1 contracts and historical complete-increment evidence. Consult this branch’s README for its implemented review scope, runnable commands and actual tests; later features/evidence are introduced by subsequent PRs. The active integration branch is `sprint1-staging`. Independent acceptance remains pending.
+
 Baseline: 29 October 2026. Target: 8 November 2026. This single document combines the required SRS, feature inventory/traceability, System SDS, feature SDS, AC and STS to avoid duplicate documents. The supplied course brief is the product authority. Linked official documentation below supplies technical guidance; it does not define business policy.
 
 ## SRS: actors, scope and decisions
@@ -91,9 +93,9 @@ Definition of Done for F-01–F-04: contracts precede code; meaningful failing t
 
 ## Delivery and planned deployment
 
-Sprint 1 must run locally; completed Docker/CI/CD and GCP deployment are due in Lab 5. Container definition and local Compose are provided for reproducibility. Planned GCP: built Node image in Artifact Registry → Cloud Run with Cloud SQL PostgreSQL and Secret Manager; migrations run once as a release job before traffic shifts. Persist all domain/session data in Cloud SQL, never container files. Lab 5 pipeline: build + real PostgreSQL API tests + selected Playwright tests; require passing checks and teammate review before staging/main merge; deploy accepted main releases via pipeline with explicit environment approval. GitHub branch protections are now configured for main and sprint/1 as recorded below. Cloud pipeline/resources remain Lab 5 work; a workflow file alone does not establish a deployment.
+Sprint 1 must run locally; completed Docker/CI/CD and GCP deployment are due in Lab 5. Container definition and local Compose are provided for reproducibility. Planned GCP: built Node image in Artifact Registry → Cloud Run with Cloud SQL PostgreSQL and Secret Manager; migrations run once as a release job before traffic shifts. Persist all domain/session data in Cloud SQL, never container files. Lab 5 pipeline: build + real PostgreSQL API tests + selected Playwright tests; require passing checks and teammate review before staging/main merge; deploy accepted main releases via pipeline with explicit environment approval. GitHub branch protections are now configured for main and sprint1-staging as recorded below. Cloud pipeline/resources remain Lab 5 work; a workflow file alone does not establish a deployment.
 
-Course workflow after repo creation: issues referencing FR/F/AC and this contract → feature/fix branches from `sprint/1` → reviewed PR into staging → integration tests → independently reviewed release PR to main → tag accepted commit. Record genuine local results tied to submitted commit; preserve red/green evidence. No invented issues, reviews, approvals or deployment claims.
+Course workflow after repo creation: issues referencing FR/F/AC and this contract → feature/fix branches from `sprint1-staging` → reviewed PR into staging → integration tests → independently reviewed release PR to main → tag accepted commit. Record genuine local results tied to submitted commit; preserve red/green evidence. No invented issues, reviews, approvals or deployment claims.
 
 ## Official technical references consulted
 
@@ -129,7 +131,7 @@ Repository: [PhraewaS/event-system](https://github.com/PhraewaS/event-system); [
 | F-05 cancellation/capacity changes, FR-06               | [#8](https://github.com/PhraewaS/event-system/issues/8) | Later sprint; contract required before coding    |
 | F-06 check-in/attendance, FR-07                         | [#9](https://github.com/PhraewaS/event-system/issues/9) | Later sprint; contract required before coding    |
 
-Remote branches retain the real local history: main and sprint/1 start at the contract baseline; feat/sprint-1 contains the implementation and bootstrap work. Both protected branches require GitHub Actions build-and-test (app ID 15368), up-to-date status, one independent approval, stale review dismissal and resolved review conversations; administrator enforcement, force-push and deletion restrictions are enabled. Authors cannot self-approve. Merge commits preserve the branch history; no administrative merge bypass is part of this setup.
+Remote branches retain the real local history: main and sprint1-staging start at the contract baseline; feat/sprint-1 contains the implementation and bootstrap work. Both protected branches require GitHub Actions build-and-test (app ID 15368), up-to-date status, one independent approval, stale review dismissal and resolved review conversations; administrator enforcement, force-push and deletion restrictions are enabled. Authors cannot self-approve. Merge commits preserve the branch history; no administrative merge bypass is part of this setup.
 
 The stakeholder requested Write access for guluJa. A repository invitation and project Writer access were issued; acceptance and an actual independent review remain separate events. Initial local TDD/build/browser evidence and a source manifest naming 305444a are preserved in [evidence/sprint-1](../evidence/sprint-1/). Hosted CI evidence identifies the later head commit. Existing source history was not rewritten to invent pre-implementation issues or tests.
 
