@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { afterAll, beforeAll, expect, test } from "vitest";
+import { afterAll, beforeAll, expect, test, vi } from "vitest";
 import { Pool } from "pg";
 import request from "supertest";
 import { createApp } from "../server/src/app.js";
@@ -38,6 +38,19 @@ test("T-13 / AC-01,03 failed-login throttling preserves successful use", async (
     .expect(429);
   expect(blocked.body.error.code).toBe("LOGIN_RATE_LIMIT");
   await agent.get("/api/auth/me").expect(401);
+  const afterWindow = Date.now() + 16 * 60 * 1000;
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(afterWindow);
+  try {
+    await agent
+      .post("/api/auth/login")
+      .set("X-CSRF-Token", token)
+      .send({ email: "participant@example.test", password })
+      .expect(200);
+    await agent.get("/api/auth/me").expect(200);
+  } finally {
+    vi.useRealTimers();
+  }
 });
 
 test("T-14 / AC-02,03 production cookies require HTTPS and retain CSRF protections", async () => {
@@ -57,6 +70,7 @@ test("T-14 / AC-02,03 production cookies require HTTPS and retain CSRF protectio
     .send({ email: "participant@example.test", password })
     .expect(200);
   expect(login.headers["set-cookie"][0]).toMatch(/; Secure/);
+  expect(login.headers["set-cookie"][0]).toMatch(/; HttpOnly/);
   expect(login.headers["set-cookie"][0]).toMatch(/; SameSite=Lax/);
   expect(login.headers["cache-control"]).toBe("no-store");
 });

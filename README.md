@@ -59,7 +59,7 @@ npm test -- --reporter=verbose
 node scripts/evidence.mjs
 ```
 
-The current cumulative suite has **10 tests**, including new boundary cases for both roles, spoofed/malformed login fields, current database identity and eight-hour session expiry. The [authentication acceptance contract and test mapping](docs/sprint-1.md#authentication-review-contract--issue-1--pr-15) states the partial review scope. Browser acceptance tests are introduced in PR #20; do not run or claim browser verification for this snapshot.
+The current cumulative suite has **12 tests**, covering both roles, credential length/validation boundaries, current database identity, session/CSRF rotation, logout cookie/store clearing, fixed eight-hour expiry across a newly created API instance, and failed-login throttling/recovery. The [authentication acceptance contract and test mapping](docs/sprint-1.md#authentication-review-contract--issue-1--pr-15) states the partial review scope and the remaining Sprint 1 release gates. Browser acceptance tests are introduced in PR #20; do not run or claim browser verification for this snapshot.
 
 Tests intentionally clear only `TEST_DATABASE_URL`, whose database name must end in `_test`. Use a separate disposable database and run database/browser suites sequentially. Build before running browser tests. Generated local logs/manifests are under ignored `artifacts/`; hosted CI artifacts identify the submitted head. Required CI builds the application, runs the tests available on this branch, builds the Docker image and uploads evidence. Docker/Compose execution on the implementation machine and GCP deployment are separate gates; Compose is introduced in PR #21 and GCP is Lab 5 work.
 

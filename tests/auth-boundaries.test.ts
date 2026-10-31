@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { beforeAll, afterAll, expect, test } from "vitest";
+import { beforeAll, afterAll, expect, test, vi } from "vitest";
 import { Pool } from "pg";
 import request from "supertest";
 import { createApp } from "../server/src/app.js";
@@ -9,7 +9,8 @@ const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith("_test"))
   throw new Error("Dedicated *_test database required.");
 const pool = new Pool({ connectionString: url });
-const app = createApp(pool, "auth-boundary-secret-at-least-32-characters");
+const secret = "auth-boundary-secret-at-least-32-characters";
+const app = createApp(pool, secret);
 const password = "Auth-boundary-synthetic-password!";
 beforeAll(async () => {
   await migrate(pool);
@@ -21,25 +22,39 @@ afterAll(async () => {
 });
 test("AUTH-BOUND-01 identity and login/logout enforce authentication and CSRF before domain routes exist", async () => {
   await request(app).get("/api/auth/me").expect(401);
-  await request(app)
+  await request(app).post("/api/auth/logout").send({}).expect(401);
+  const missingLoginToken = await request(app)
     .post("/api/auth/login")
     .send({ email: "participant@example.test", password })
     .expect(403);
+  expect(missingLoginToken.body.error.code).toBe("CSRF_INVALID");
   const agent = request.agent(app);
   const token = (await agent.get("/api/auth/csrf").expect(200)).body.data
     .csrfToken;
-  await agent
+  const wrongLoginToken = await agent
     .post("/api/auth/login")
     .set("X-CSRF-Token", "wrong")
     .send({ email: "participant@example.test", password })
     .expect(403);
+  expect(wrongLoginToken.body.error.code).toBe("CSRF_INVALID");
   const login = await agent
     .post("/api/auth/login")
     .set("X-CSRF-Token", token)
     .send({ email: "participant@example.test", password })
     .expect(200);
   expect(login.body.data.user.role).toBe("PARTICIPANT");
-  await agent.post("/api/auth/logout").send({}).expect(403);
+  const missingLogoutToken = await agent
+    .post("/api/auth/logout")
+    .send({})
+    .expect(403);
+  expect(missingLogoutToken.body.error.code).toBe("CSRF_INVALID");
+  const staleLogoutToken = await agent
+    .post("/api/auth/logout")
+    .set("X-CSRF-Token", token)
+    .send({})
+    .expect(403);
+  expect(staleLogoutToken.body.error.code).toBe("CSRF_INVALID");
+  await agent.get("/api/auth/me").expect(200);
   await agent
     .post("/api/auth/logout")
     .set("X-CSRF-Token", login.body.data.csrfToken)
@@ -132,4 +147,74 @@ test("AUTH-BOUND-04 / AC-02 a new login has an eight-hour persisted session life
   expect(
     Math.abs(sessions.rows[0].expire.getTime() - startedAt - eightHours),
   ).toBeLessThan(10000);
+});
+
+test("AUTH-BOUND-05 / AC-01 credential length boundaries separate validation from invalid credentials", async () => {
+  const agent = request.agent(app);
+  const token = (await agent.get("/api/auth/csrf").expect(200)).body.data
+    .csrfToken;
+  const maxEmail = `${"a".repeat(64)}@${"b".repeat(63)}.${"c".repeat(63)}.${"d".repeat(61)}`;
+  expect(maxEmail.length).toBe(254);
+  for (const input of [
+    { email: "participant@example.test", password: "x" },
+    { email: "participant@example.test", password: "x".repeat(256) },
+    { email: maxEmail, password: "invalid-credential" },
+  ]) {
+    const rejected = await agent
+      .post("/api/auth/login")
+      .set("X-CSRF-Token", token)
+      .send(input)
+      .expect(401);
+    expect(rejected.body.error.code).toBe("INVALID_CREDENTIALS");
+  }
+  const overlong = await agent
+    .post("/api/auth/login")
+    .set("X-CSRF-Token", token)
+    .send({ email: `${maxEmail}d`, password })
+    .expect(400);
+  expect(overlong.body.error.code).toBe("VALIDATION_ERROR");
+  await agent.get("/api/auth/me").expect(401);
+});
+
+test("AUTH-BOUND-06 / AC-02 a fresh API instance reads the session without extending its fixed expiry", async () => {
+  const agent = request.agent(app);
+  const token = (await agent.get("/api/auth/csrf").expect(200)).body.data
+    .csrfToken;
+  const login = await agent
+    .post("/api/auth/login")
+    .set("X-CSRF-Token", token)
+    .send({ email: "organizer2@example.test", password })
+    .expect(200);
+  const cookie = login.headers["set-cookie"][0].split(";")[0];
+  const readExpiry = async () =>
+    (
+      await pool.query(
+        "SELECT expire::timestamptz AS expire FROM session WHERE sess->>'csrfToken'=$1",
+        [login.body.data.csrfToken],
+      )
+    ).rows[0].expire.getTime();
+  const before = await readExpiry();
+  const freshPool = new Pool({ connectionString: url });
+  const freshApp = createApp(freshPool, secret);
+  const later = Date.now() + 60000;
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(later);
+  try {
+    const identity = await request(freshApp)
+      .get("/api/auth/me")
+      .set("Cookie", cookie)
+      .expect(200);
+    expect(identity.body.data.id).toBe(demoIds.organizer2);
+    expect(identity.headers["set-cookie"]).toBeUndefined();
+    const csrf = await request(freshApp)
+      .get("/api/auth/csrf")
+      .set("Cookie", cookie)
+      .expect(200);
+    expect(csrf.body.data.csrfToken).toBe(login.body.data.csrfToken);
+    expect(csrf.headers["set-cookie"]).toBeUndefined();
+    expect(await readExpiry()).toBe(before);
+  } finally {
+    vi.useRealTimers();
+    await freshPool.end();
+  }
 });
