@@ -1,0 +1,13 @@
+:root {
+  font-family: system-ui;
+  color: #243a34;
+  background: #fafaf7;
+}
+main {
+  max-width: 760px;
+  margin: 80px auto;
+  padding: 24px;
+}
+h1 {
+  color: #176b5b;
+}

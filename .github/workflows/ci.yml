@@ -1,0 +1,53 @@
+name: Sprint 1
+on:
+  pull_request:
+  push:
+    branches: [main, "sprint*-staging"]
+permissions:
+  contents: read
+jobs:
+  build-and-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17-bookworm
+        env:
+          POSTGRES_USER: event_app
+          POSTGRES_PASSWORD: ci-synthetic-password
+          POSTGRES_DB: event_system_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U event_app -d event_system_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://event_app:ci-synthetic-password@localhost:5432/event_system_test
+      TEST_DATABASE_URL: postgresql://event_app:ci-synthetic-password@localhost:5432/event_system_test
+      SESSION_SECRET: ci-synthetic-session-secret-at-least-32-characters
+      NODE_ENV: test
+    steps:
+      - id: checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+        env:
+          NODE_ENV: production
+      - run: npm test -- --reporter=verbose
+      - if: ${{ hashFiles('tests/e2e/*.spec.ts') != '' }}
+        run: npx playwright install --with-deps chromium
+      - if: ${{ hashFiles('tests/e2e/*.spec.ts') != '' }}
+        run: npm run test:e2e
+      - run: docker build -t gather:ci .
+      - name: Record source and submitted commit
+        if: ${{ always() && steps.checkout.outcome == 'success' }}
+        run: node scripts/evidence.mjs
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: sprint-1-evidence
+          path: artifacts/
+          retention-days: 30
