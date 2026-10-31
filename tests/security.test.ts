@@ -57,5 +57,6 @@ test("T-14 / AC-02,03 production cookies require HTTPS and retain CSRF protectio
     .send({ email: "participant@example.test", password })
     .expect(200);
   expect(login.headers["set-cookie"][0]).toMatch(/; Secure/);
+  expect(login.headers["set-cookie"][0]).toMatch(/; SameSite=Lax/);
   expect(login.headers["cache-control"]).toBe("no-store");
 });

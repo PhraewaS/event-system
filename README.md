@@ -59,15 +59,15 @@ npm test -- --reporter=verbose
 node scripts/evidence.mjs
 ```
 
-The current cumulative suite has **7 tests**.  Browser acceptance tests are introduced in PR #20; do not run or claim browser verification for this snapshot.
+The current cumulative suite has **10 tests**, including new boundary cases for both roles, spoofed/malformed login fields, current database identity and eight-hour session expiry. The [authentication acceptance contract and test mapping](docs/sprint-1.md#authentication-review-contract--issue-1--pr-15) states the partial review scope. Browser acceptance tests are introduced in PR #20; do not run or claim browser verification for this snapshot.
 
 Tests intentionally clear only `TEST_DATABASE_URL`, whose database name must end in `_test`. Use a separate disposable database and run database/browser suites sequentially. Build before running browser tests. Generated local logs/manifests are under ignored `artifacts/`; hosted CI artifacts identify the submitted head. Required CI builds the application, runs the tests available on this branch, builds the Docker image and uploads evidence. Docker/Compose execution on the implementation machine and GCP deployment are separate gates; Compose is introduced in PR #21 and GCP is Lab 5 work.
 
 ## Review and integration workflow
 
-This Draft PR currently compares against its predecessor feature branch. After the parent is independently approved and merged into `sprint1-staging`, update this branch from staging, retarget this PR to staging and rerun required checks before requesting review.
+Parent PR #14 received independent approval and was merged into `sprint1-staging` at `d4ba0fb15da5fd6be1cc327d64466d9adaf69d9d`. This branch is synchronized from that staging commit; PR #15 targets staging for its own independent review. Current validation and readiness are recorded in Issue #1 and PR Checks. Domain publication/registration/ownership PRs continue to wait for authentication acceptance.
 
-The [Kanban](https://github.com/users/PhraewaS/projects/3/views/2) tracks Issues. Ready work uses PR Review; review findings use Fixing. One independent teammate approval, passing required `build-and-test`, an up-to-date branch and resolved conversations are required to merge. `guluJa` has repository Write access. An actual review must state a specific check, finding or reason for approval. Authors cannot approve their own PRs.
+The [Kanban](https://github.com/users/PhraewaS/projects/3/views/2) tracks Issues. Ready work uses PR Review; review findings use Fixing. One independent teammate approval, passing required `build-and-test`, an up-to-date branch and resolved conversations are required to merge. Use the PR's Reviewers sidebar for the current teammate request; Assignees alone do not request review. An actual review must state a specific check, finding or reason for approval. Authors cannot approve their own PRs.
 
 After reviewed staging integration and acceptance for this item's scope, record the merge and close its Issue/move it to Done. Manual Development linking does not replace acceptance evidence. Follow the remaining dependent PRs in order; [Issue #6](https://github.com/PhraewaS/event-system/issues/6) tracks full sprint integration and a separately reviewed release PR from staging to `main`. No release is accepted yet.
 

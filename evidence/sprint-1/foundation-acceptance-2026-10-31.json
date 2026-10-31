@@ -1,0 +1,84 @@
+{
+  "sourceCommit": "a7a370cd55e61cac012b89f1bc0114c8ab85aa58",
+  "sourceMethod": "git archive of the exact reviewed PR14 head, without authentication/domain changes",
+  "reviewedMergeCommit": "d4ba0fb15da5fd6be1cc327d64466d9adaf69d9d",
+  "executedAt": "2026-10-31T11:17:24.358Z",
+  "hostedFoundationCheck": "https://github.com/PhraewaS/event-system/actions/runs/40909030366/job/123571616163",
+  "harnessSha256": "3dc673264ec4fb04a37b912b417e7acaaebaef55b6d5d54339e700dc90774121",
+  "checks": [
+    {
+      "id": "M-FOUND-01",
+      "status": "PASS",
+      "tables": [
+        "users",
+        "events",
+        "registrations",
+        "session",
+        "schema_migrations"
+      ],
+      "capacityZero": {
+        "sqlState": "23514",
+        "constraint": "events_capacity_check"
+      },
+      "missingOwner": {
+        "sqlState": "23503",
+        "constraint": "events_organizer_id_fkey"
+      },
+      "duplicateParticipantEvent": {
+        "sqlState": "23505",
+        "constraint": "registrations_participant_id_event_id_key"
+      },
+      "invalidRowsPersisted": false
+    },
+    {
+      "id": "M-FOUND-02",
+      "status": "PASS",
+      "demoUsers": 4,
+      "demoEvents": 3,
+      "allFourHashesVerified": true,
+      "seedValuesHashesDatesPreserved": true,
+      "stateSha256": "881f9b3003cabf3092bb2740392b6c58cd6e325c021a9ecc0943fb713040de2b",
+      "serverRestartedWithNewPool": true,
+      "committedRowsRetained": true
+    },
+    {
+      "id": "M-FOUND-03",
+      "status": "PASS",
+      "method": "Built reviewed UI and real PostgreSQL connection through an isolated TCP proxy; only test-proxy connections were terminated and rejected. Shared PostgreSQL service was not stopped.",
+      "healthy": {
+        "status": 200,
+        "body": {
+          "data": {
+            "status": "ok"
+          }
+        },
+        "ui": "API and persistent PostgreSQL are connected."
+      },
+      "unavailable": {
+        "status": 503,
+        "body": {
+          "error": {
+            "code": "DATABASE_UNAVAILABLE",
+            "message": "Database unavailable."
+          }
+        },
+        "ui": "The API or database is unavailable. Check setup and refresh."
+      },
+      "rawDatabaseErrorExposed": false
+    },
+    {
+      "id": "M-FOUND-04",
+      "status": "PASS",
+      "node": "v24.19.0",
+      "postgresql": "15.19",
+      "productionBuild": "npm run build --prefix .local/foundation-accepted-a7a370c-20261031 succeeded before this harness",
+      "configuration": "Existing ignored workspace test credentials supplied in memory; tracked example documents required settings.",
+      "secretInspection": {
+        "trackedPaths": 30,
+        "realEnvTracked": false,
+        "configuredPrivateValuesFound": false
+      },
+      "limits": "Local build reused the installed workspace dependencies. Clean npm ci and Docker image build are established by the reviewed hosted CI run; this does not claim local Docker/Compose or GCP execution."
+    }
+  ]
+}
