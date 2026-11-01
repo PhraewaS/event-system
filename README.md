@@ -1,6 +1,6 @@
-# Gather — Sprint 1: foundation
+# Gather — Sprint 1: authentication
 
-Review unit 1/8: [Issue #11](https://github.com/PhraewaS/event-system/issues/11) → [PR #14](https://github.com/PhraewaS/event-system/pull/14). Database schema, repeatable migrations and synthetic seed, database-backed health API, and a minimal health UI.
+Review unit 2/8: [Issue #1](https://github.com/PhraewaS/event-system/issues/1) → [PR #15](https://github.com/PhraewaS/event-system/pull/15). Foundation plus login/logout/current identity, PostgreSQL sessions, password hashing, CSRF and server authentication boundaries. The UI still shows database health; role screens come in PR #19.
 
 This is a scoped, cumulative review snapshot. The [engineering baseline](docs/sprint-1.md) describes the complete target increment; later features and historical full-increment evidence do not represent functionality or tests on this branch. The complete runnable snapshot is on `feature/sprint1-github-delivery-5`.
 
@@ -8,7 +8,7 @@ This is a scoped, cumulative review snapshot. The [engineering baseline](docs/sp
 
 Use Node 24 and PostgreSQL 15+. React/TypeScript/Vite → Express API → persistent PostgreSQL follows the lab stack. Versioned SQL and `pg` make database constraints and transactions explicit.
 
-1. Check out `feature/sprint1-project-foundation-11` after cloning the repository.
+1. Check out `feature/sprint1-authentication-1` after cloning the repository.
 2. Create separate disposable development/test databases once in `psql`:
 
    ```sql
@@ -59,15 +59,15 @@ npm test -- --reporter=verbose
 node scripts/evidence.mjs
 ```
 
-The current cumulative suite has **2 tests**. FOUND-01 exercises the health API against real PostgreSQL. FOUND-02 reruns migration/seed and checks persistence through a separate connection, record counts and hashed passwords. Browser acceptance tests are introduced in PR #20; do not run or claim browser verification for this snapshot.
+The current cumulative suite has **12 tests**, covering both roles, credential length/validation boundaries, current database identity, session/CSRF rotation, logout cookie/store clearing, fixed eight-hour expiry across a newly created API instance, and failed-login throttling/recovery. The [authentication acceptance contract and test mapping](docs/sprint-1.md#authentication-review-contract--issue-1--pr-15) states the partial review scope and the remaining Sprint 1 release gates. Browser acceptance tests are introduced in PR #20; do not run or claim browser verification for this snapshot.
 
 Tests intentionally clear only `TEST_DATABASE_URL`, whose database name must end in `_test`. Use a separate disposable database and run database/browser suites sequentially. Build before running browser tests. Generated local logs/manifests are under ignored `artifacts/`; hosted CI artifacts identify the submitted head. Required CI builds the application, runs the tests available on this branch, builds the Docker image and uploads evidence. Docker/Compose execution on the implementation machine and GCP deployment are separate gates; Compose is introduced in PR #21 and GCP is Lab 5 work.
 
 ## Review and integration workflow
 
-This first PR targets protected `sprint1-staging` directly and has no unaccepted feature dependency. Its Issue #11 is manually linked through GitHub Development.
+Parent PR #14 received independent approval and was merged into `sprint1-staging` at `d4ba0fb15da5fd6be1cc327d64466d9adaf69d9d`. This branch is synchronized from that staging commit; PR #15 targets staging for its own independent review. Current validation and readiness are recorded in Issue #1 and PR Checks. Domain publication/registration/ownership PRs continue to wait for authentication acceptance.
 
-The [Kanban](https://github.com/users/PhraewaS/projects/3/views/2) tracks Issues. Ready work uses PR Review; review findings use Fixing. One independent teammate approval, passing required `build-and-test`, an up-to-date branch and resolved conversations are required to merge. `guluJa` has repository Write access. An actual review must state a specific check, finding or reason for approval. Authors cannot approve their own PRs.
+The [Kanban](https://github.com/users/PhraewaS/projects/3/views/2) tracks Issues. Ready work uses PR Review; review findings use Fixing. One independent teammate approval, passing required `build-and-test`, an up-to-date branch and resolved conversations are required to merge. Use the PR's Reviewers sidebar for the current teammate request; Assignees alone do not request review. An actual review must state a specific check, finding or reason for approval. Authors cannot approve their own PRs.
 
 After reviewed staging integration and acceptance for this item's scope, record the merge and close its Issue/move it to Done. Manual Development linking does not replace acceptance evidence. Follow the remaining dependent PRs in order; [Issue #6](https://github.com/PhraewaS/event-system/issues/6) tracks full sprint integration and a separately reviewed release PR from staging to `main`. No release is accepted yet.
 
