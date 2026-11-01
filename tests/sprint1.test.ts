@@ -129,11 +129,24 @@ describe("F-01 Identity and session security", () => {
       .set("Cookie", cookie)
       .expect(200);
     await request(app).get("/api/auth/me").set("Cookie", oldCookie).expect(401);
-    await agent
+    const logout = await agent
       .post("/api/auth/logout")
       .set("X-CSRF-Token", login.body.data.csrfToken)
       .send({})
       .expect(204);
+    const clearedCookie = logout.headers["set-cookie"][0];
+    expect(clearedCookie).toMatch(/^gather\.sid=;/);
+    const expires = /Expires=([^;]+)/i.exec(clearedCookie)?.[1];
+    expect(expires).toBeDefined();
+    expect(Date.parse(expires!)).toBeLessThan(Date.now());
+    expect(
+      (
+        await pool.query(
+          "SELECT count(*)::int AS n FROM session WHERE sess->>'csrfToken'=$1",
+          [login.body.data.csrfToken],
+        )
+      ).rows[0].n,
+    ).toBe(0);
     await request(app).get("/api/auth/me").set("Cookie", cookie).expect(401);
     const expired = await actor("participant2@example.test");
     await pool.query(
