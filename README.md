@@ -59,7 +59,7 @@ npm test -- --reporter=verbose
 node scripts/evidence.mjs
 ```
 
-This snapshot retains the 12 accepted authentication/foundation tests plus T-04/T-05 for publication: **14 inherited tests** before the publication acceptance audit. Current validation and any added boundary cases are recorded in Issue #2 and PR #16. Browser acceptance tests are introduced in PR #20; do not run or claim browser verification for this snapshot.
+The current cumulative suite has **18 tests**: the 12 accepted authentication/foundation tests, T-04/T-05 publication tests, and four additional API/database/unit checks for publication permissions/CSRF, public discovery/pagination/persistence, text/time boundaries and schema rules. The [publication acceptance contract and test mapping](docs/sprint-1.md#publication-review-contract--issue-2--pr-16) specifies the observable outcomes. Current exact-head results are linked in Issue #2 and PR #16. Browser acceptance tests are introduced in PR #20; do not run or claim browser verification for this snapshot.
 
 Tests intentionally clear only `TEST_DATABASE_URL`, whose database name must end in `_test`. Use a separate disposable database and run database/browser suites sequentially. Build before running browser tests. Generated local logs/manifests are under ignored `artifacts/`; hosted CI artifacts identify the submitted head. Required CI builds the application, runs the tests available on this branch, builds the Docker image and uploads evidence. Docker/Compose execution on the implementation machine and GCP deployment are separate gates; Compose is introduced in PR #21 and GCP is Lab 5 work.
 
