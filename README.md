@@ -1,6 +1,6 @@
-# Gather — Sprint 1: publication
+# Gather — Sprint 1: registration
 
-Review unit 3/8: [Issue #2](https://github.com/PhraewaS/event-system/issues/2) → [PR #16](https://github.com/PhraewaS/event-system/pull/16). Previous APIs plus organizer-only publication and public event discovery with field/deadline validation. The UI still shows database health; role screens come in PR #19.
+Review unit 4/8: [Issue #3](https://github.com/PhraewaS/event-system/issues/3) → [PR #17](https://github.com/PhraewaS/event-system/pull/17). Previous APIs plus capacity-safe registration, duplicate rejection and private participant registrations. The UI still shows database health; role screens come in PR #19.
 
 This is a scoped, cumulative review snapshot. The [engineering baseline](docs/sprint-1.md) describes the complete target increment; later features and historical full-increment evidence do not represent functionality or tests on this branch. The complete runnable snapshot is on `feature/sprint1-github-delivery-5`.
 
@@ -8,7 +8,7 @@ This is a scoped, cumulative review snapshot. The [engineering baseline](docs/sp
 
 Use Node 24 and PostgreSQL 15+. React/TypeScript/Vite → Express API → persistent PostgreSQL follows the lab stack. Versioned SQL and `pg` make database constraints and transactions explicit.
 
-1. Check out `feature/sprint1-event-publication-2` after cloning the repository.
+1. Check out `feature/sprint1-registration-3` after cloning the repository.
 2. Create separate disposable development/test databases once in `psql`:
 
    ```sql
@@ -59,13 +59,13 @@ npm test -- --reporter=verbose
 node scripts/evidence.mjs
 ```
 
-The current cumulative suite has **18 tests**: the 12 accepted authentication/foundation tests, T-04/T-05 publication tests, and four additional API/database/unit checks for publication permissions/CSRF, public discovery/pagination/persistence, text/time boundaries and schema rules. The [publication acceptance contract and test mapping](docs/sprint-1.md#publication-review-contract--issue-2--pr-16) specifies the observable outcomes. Current exact-head results are linked in Issue #2 and PR #16. Browser acceptance tests are introduced in PR #20; do not run or claim browser verification for this snapshot.
+The current cumulative suite has **30 tests**: 18 inherited publication/authentication/foundation cases, four registration integration tests, four pure rule tests, and four additional registration API/database checks. They cover anonymous/role/CSRF/spoofed-input rejection, duplicate/closed precedence, transaction-pool recovery, observed PostgreSQL lock contention with closure before lock release, and complete private pagination/isolation. The second participant in T-09 has an actual own registration, avoiding an empty-list-only privacy check. See the [registration contract/test mapping](docs/sprint-1.md#registration-review-contract--issue-3--pr-17), Issue #3 and PR #17 for current exact-head evidence. Browser acceptance tests are introduced in PR #20; do not run or claim browser verification for this snapshot.
 
 Tests intentionally clear only `TEST_DATABASE_URL`, whose database name must end in `_test`. Use a separate disposable database and run database/browser suites sequentially. Build before running browser tests. Generated local logs/manifests are under ignored `artifacts/`; hosted CI artifacts identify the submitted head. Required CI builds the application, runs the tests available on this branch, builds the Docker image and uploads evidence. Docker/Compose execution on the implementation machine and GCP deployment are separate gates; Compose is introduced in PR #21 and GCP is Lab 5 work.
 
 ## Review and integration workflow
 
-Parent PR #15 received approval from poom2548 and was merged into `sprint1-staging` at `f7ed362cd5c7eba07d8d7eba56bbf6aa50c8fe29`. On 1 November the stakeholder clarified that poom2548 and meebotsompurin-stack belong to the other UAT group; guluJa is the development teammate. The prior foundation/authentication merges remain real history, but their course-required same-team review was not established. Issues #11/#1 track retrospective teammate checks; these cannot be presented as pre-merge reviews. This publication branch incorporates the merged source, and PR #16 requests guluJa for its own review. Record the outstanding checks before further item acceptance/release.
+Parent PR #16 received same-team approval from guluJa at `a81289c44786f2d1087aba7221964a09d9859675` and was merged into `sprint1-staging` at `466b6d1ef0da956c0eb60e6c9039ebffcc24663c`. This registration branch incorporates that merged source. PR #17 is the next bounded review unit into staging. The earlier foundation/authentication same-team assessments are recorded in closed Issues #11/#1; their missing pre-merge reviews remain historical process deviations and are not recreated by retrospective checks.
 
 The [Kanban](https://github.com/users/PhraewaS/projects/3/views/2) tracks Issues. Ready work uses PR Review; review findings use Fixing. One independent teammate approval, passing required `build-and-test`, an up-to-date branch and resolved conversations are required to merge. Use the PR's Reviewers sidebar for the current teammate request; Assignees alone do not request review. An actual review must state a specific check, finding or reason for approval. Authors cannot approve their own PRs.
 

@@ -1,7 +1,5 @@
 import { z } from "zod";
-
 export const uuid = z.uuid();
-
 export const loginInput = z
   .object({
     email: z
@@ -11,7 +9,6 @@ export const loginInput = z
     password: z.string().min(1).max(256),
   })
   .strict();
-
 export const publishInput = z
   .object({
     title: z.string().trim().min(3).max(120),
@@ -26,7 +23,7 @@ export const publishInput = z
     message: "Registration must close no later than the event starts.",
     path: ["registrationDeadline"],
   });
-
+export const emptyInput = z.object({}).strict();
 export const pageInput = z.object({
   offset: z.coerce.number().int().min(0).max(10000000).default(0),
 });
