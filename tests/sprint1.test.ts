@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { beforeAll, afterAll, describe, expect, test } from "vitest";
+import { beforeAll, afterAll, describe, expect, test, vi } from "vitest";
 import request from "supertest";
 import { randomUUID } from "node:crypto";
 import { Pool } from "pg";
@@ -463,6 +463,7 @@ describe("F-03 Registration and persistence", () => {
     const b = await actor("participant2@example.test");
     const event = await publish(owner);
     const registration = (await register(a, event.id).expect(201)).body.data;
+    const ownB = (await register(b, event.id).expect(201)).body.data;
     await a.agent.get(`/api/registrations/${registration.id}`).expect(200);
     const forbidden = await b.agent
       .get(`/api/registrations/${registration.id}`)
@@ -471,6 +472,9 @@ describe("F-03 Registration and persistence", () => {
       .get(`/api/registrations/${randomUUID()}`)
       .expect(404);
     expect(forbidden.body).toEqual(missing.body);
+    const personal = await b.agent.get("/api/registrations/mine").expect(200);
+    expect(personal.body.data.some((r: { id: string }) => r.id === ownB.id)).toBe(true);
+    expect(personal.body.data.some((r: { id: string }) => r.id === registration.id)).toBe(false);
     expect(
       (await b.agent.get("/api/registrations/mine")).body.data.every(
         (r: { participantId: string }) =>
@@ -478,5 +482,128 @@ describe("F-03 Registration and persistence", () => {
       ),
     ).toBe(true);
     await owner.agent.get(`/api/registrations/${registration.id}`).expect(403);
+  });
+
+  test("REG-BOUND-01 / AC-03,06,09 registration permissions, CSRF and spoofed identities reject without writes", async () => {
+    const owner = await actor("organizer@example.test");
+    const participant = await actor();
+    const event = await publish(owner);
+    const path = `/api/events/${event.id}/registrations`;
+    expect((await request(app).post(path).send({}).expect(401)).body.error.code).toBe("UNAUTHENTICATED");
+    for (const route of ["/api/registrations/mine", `/api/registrations/${randomUUID()}`]) {
+      expect((await request(app).get(route).expect(401)).body.error.code).toBe("UNAUTHENTICATED");
+      expect((await owner.agent.get(route).expect(403)).body.error.code).toBe("FORBIDDEN");
+    }
+    expect((await register(owner, event.id).expect(403)).body.error.code).toBe("FORBIDDEN");
+    expect((await participant.agent.post(path).send({}).expect(403)).body.error.code).toBe("CSRF_INVALID");
+    expect((await participant.agent.post(path).set("X-CSRF-Token", "wrong").send({}).expect(403)).body.error.code).toBe("CSRF_INVALID");
+    for (const body of [{ participantId: demoIds.participant2 }, { role: "ORGANIZER" }, { id: randomUUID() }, []])
+      expect((await register(participant, event.id, body).expect(400)).body.error.code).toBe("VALIDATION_ERROR");
+    expect((await register(participant, "not-a-uuid").expect(400)).body.error.code).toBe("VALIDATION_ERROR");
+    expect((await participant.agent.get("/api/registrations/not-a-uuid").expect(400)).body.error.code).toBe("VALIDATION_ERROR");
+    expect((await pool.query("SELECT count(*)::int AS n FROM registrations WHERE event_id=$1", [event.id])).rows[0].n).toBe(0);
+    const created = (await register(participant, event.id).expect(201)).body.data;
+    expect(created).toMatchObject({ eventId: event.id, participantId: demoIds.participant });
+  });
+
+  test("REG-BOUND-02 / AC-07 duplicate wins after closure/full and rejected transactions leave a single-connection pool reusable", async () => {
+    const onePool = new Pool({ connectionString: url, max: 1 });
+    const oneApp = createApp(onePool, secret);
+    try {
+      const owner = await actor("organizer@example.test");
+      const a = await actor("participant@example.test", oneApp);
+      const b = await actor("participant2@example.test", oneApp);
+      const full = await publish(owner, { capacity: 1 });
+      await register(a, full.id).expect(201);
+      await pool.query("UPDATE events SET registration_deadline=clock_timestamp()-interval '1 second' WHERE id=$1", [full.id]);
+      expect((await register(a, full.id).expect(409)).body.error.code).toBe("DUPLICATE_REGISTRATION");
+      expect((await register(b, full.id).expect(409)).body.error.code).toBe("REGISTRATION_CLOSED");
+      const closed = await publish(owner);
+      await pool.query("UPDATE events SET registration_deadline=clock_timestamp()-interval '1 second' WHERE id=$1", [closed.id]);
+      expect((await register(a, closed.id).expect(409)).body.error.code).toBe("REGISTRATION_CLOSED");
+      expect((await register(a, randomUUID()).expect(404)).body.error.code).toBe("NOT_FOUND");
+      const recovery = await publish(owner);
+      await register(b, recovery.id).expect(201);
+      const counts = async (id: string) => (await pool.query("SELECT count(*)::int AS n FROM registrations WHERE event_id=$1", [id])).rows[0].n;
+      expect(await counts(full.id)).toBe(1);
+      expect(await counts(closed.id)).toBe(0);
+      expect(await counts(recovery.id)).toBe(1);
+    } finally {
+      await onePool.end();
+    }
+  });
+
+  test("REG-CONC-01 / AC-07,08 a request blocked on the real event lock is rejected when the deadline closes before lock release", async () => {
+    const owner = await actor("organizer@example.test");
+    const participant = await actor();
+    const event = await publish(owner);
+    const onePool = new Pool({ connectionString: url, max: 1 });
+    const locker = await pool.connect();
+    let transactionOpen = false;
+    let pending: Promise<Awaited<ReturnType<typeof register>>> | undefined;
+    try {
+      const pid = (await onePool.query("SELECT pg_backend_pid() AS pid")).rows[0].pid;
+      const blockedApp = createApp(onePool, secret);
+      await locker.query("BEGIN");
+      transactionOpen = true;
+      await locker.query("SELECT id FROM events WHERE id=$1 FOR UPDATE", [event.id]);
+      pending = request(blockedApp).post(`/api/events/${event.id}/registrations`)
+        .set("Cookie", participant.cookie).set("X-CSRF-Token", participant.token).send({}).then(r => r);
+      // Wait for observed PostgreSQL lock contention, not an assumed timing delay.
+      await vi.waitFor(async () => {
+        const waiting = (await pool.query("SELECT wait_event_type,query FROM pg_stat_activity WHERE pid=$1", [pid])).rows[0];
+        expect(waiting.wait_event_type).toBe("Lock");
+        expect(waiting.query).toContain("FOR UPDATE");
+      }, { timeout: 5000, interval: 25 });
+      await locker.query("UPDATE events SET registration_deadline=clock_timestamp()-interval '1 second' WHERE id=$1", [event.id]);
+      await locker.query("COMMIT");
+      transactionOpen = false;
+      const response = await pending;
+      expect(response.status).toBe(409);
+      expect(response.body.error.code).toBe("REGISTRATION_CLOSED");
+      expect((await pool.query("SELECT count(*)::int AS n FROM registrations WHERE event_id=$1", [event.id])).rows[0].n).toBe(0);
+    } finally {
+      if (transactionOpen) await locker.query("ROLLBACK");
+      locker.release();
+      if (pending) await pending.catch(() => undefined);
+      await onePool.end();
+    }
+  });
+
+  test("REG-BOUND-03 / AC-09 personal pagination returns every own record once and excludes another participant", async () => {
+    const a = await actor();
+    const b = await actor("participant2@example.test");
+    const eventIds = Array.from({ length: 203 }, () => randomUUID());
+    const registrationIds = eventIds.map(() => randomUUID());
+    await pool.query(`INSERT INTO events(id,organizer_id,title,description,location,capacity,starts_at,registration_deadline)
+      SELECT id,$2,'Private pagination','Synthetic private pagination fixture','Campus',2,$3,$4
+      FROM unnest($1::uuid[]) AS ids(id)`, [eventIds, demoIds.organizer, future(48), future(24)]);
+    await pool.query(`INSERT INTO registrations(id,event_id,participant_id)
+      SELECT id,event_id,$3 FROM unnest($1::uuid[],$2::uuid[]) AS fixture(id,event_id)`, [registrationIds, eventIds, demoIds.participant]);
+    const foreign = (await register(b, eventIds[0]).expect(201)).body.data;
+    const expected = (await pool.query("SELECT id FROM registrations WHERE participant_id=$1", [demoIds.participant])).rows.map(r => r.id).sort();
+    const seen: string[] = [];
+    let offset: number | null = 0;
+    do {
+      const response = await a.agent.get(`/api/registrations/mine?offset=${offset}`).expect(200);
+      expect(response.headers["cache-control"]).toBe("no-store");
+      expect(response.body.data.length).toBeLessThanOrEqual(200);
+      expect(response.body.page).toMatchObject({ offset, limit: 200 });
+      if (response.body.data.length === 200) expect(response.body.page.nextOffset).toBe(offset! + 200);
+      else expect(response.body.page.nextOffset).toBeNull();
+      for (const row of response.body.data) {
+        expect(row.participantId).toBe(demoIds.participant);
+        expect(row.id).not.toBe(foreign.id);
+        seen.push(row.id);
+      }
+      offset = response.body.page.nextOffset;
+      expect(seen.length).toBeLessThanOrEqual(expected.length);
+    } while (offset !== null);
+    expect(seen.sort()).toEqual(expected);
+    expect(new Set(seen).size).toBe(expected.length);
+    const personalB = await b.agent.get("/api/registrations/mine").expect(200);
+    expect(personalB.body.data.some((r: { id: string }) => r.id === foreign.id)).toBe(true);
+    expect(personalB.body.data.every((r: { participantId: string }) => r.participantId === demoIds.participant2)).toBe(true);
+    expect((await a.agent.get("/api/registrations/mine?offset=-1").expect(400)).body.error.code).toBe("VALIDATION_ERROR");
   });
 });
