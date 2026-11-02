@@ -1,6 +1,6 @@
-# Gather — Sprint 1: authentication
+# Gather — Sprint 1: publication
 
-Review unit 2/8: [Issue #1](https://github.com/PhraewaS/event-system/issues/1) → [PR #15](https://github.com/PhraewaS/event-system/pull/15). Foundation plus login/logout/current identity, PostgreSQL sessions, password hashing, CSRF and server authentication boundaries. The UI still shows database health; role screens come in PR #19.
+Review unit 3/8: [Issue #2](https://github.com/PhraewaS/event-system/issues/2) → [PR #16](https://github.com/PhraewaS/event-system/pull/16). Previous APIs plus organizer-only publication and public event discovery with field/deadline validation. The UI still shows database health; role screens come in PR #19.
 
 This is a scoped, cumulative review snapshot. The [engineering baseline](docs/sprint-1.md) describes the complete target increment; later features and historical full-increment evidence do not represent functionality or tests on this branch. The complete runnable snapshot is on `feature/sprint1-github-delivery-5`.
 
@@ -8,7 +8,7 @@ This is a scoped, cumulative review snapshot. The [engineering baseline](docs/sp
 
 Use Node 24 and PostgreSQL 15+. React/TypeScript/Vite → Express API → persistent PostgreSQL follows the lab stack. Versioned SQL and `pg` make database constraints and transactions explicit.
 
-1. Check out `feature/sprint1-authentication-1` after cloning the repository.
+1. Check out `feature/sprint1-event-publication-2` after cloning the repository.
 2. Create separate disposable development/test databases once in `psql`:
 
    ```sql
@@ -59,15 +59,17 @@ npm test -- --reporter=verbose
 node scripts/evidence.mjs
 ```
 
-The current cumulative suite has **12 tests**, covering both roles, credential length/validation boundaries, current database identity, session/CSRF rotation, logout cookie/store clearing, fixed eight-hour expiry across a newly created API instance, and failed-login throttling/recovery. The [authentication acceptance contract and test mapping](docs/sprint-1.md#authentication-review-contract--issue-1--pr-15) states the partial review scope and the remaining Sprint 1 release gates. Browser acceptance tests are introduced in PR #20; do not run or claim browser verification for this snapshot.
+The current cumulative suite has **18 tests**: the 12 accepted authentication/foundation tests, T-04/T-05 publication tests, and four additional API/database/unit checks for publication permissions/CSRF, public discovery/pagination/persistence, text/time boundaries and schema rules. The [publication acceptance contract and test mapping](docs/sprint-1.md#publication-review-contract--issue-2--pr-16) specifies the observable outcomes. Current exact-head results are linked in Issue #2 and PR #16. Browser acceptance tests are introduced in PR #20; do not run or claim browser verification for this snapshot.
 
 Tests intentionally clear only `TEST_DATABASE_URL`, whose database name must end in `_test`. Use a separate disposable database and run database/browser suites sequentially. Build before running browser tests. Generated local logs/manifests are under ignored `artifacts/`; hosted CI artifacts identify the submitted head. Required CI builds the application, runs the tests available on this branch, builds the Docker image and uploads evidence. Docker/Compose execution on the implementation machine and GCP deployment are separate gates; Compose is introduced in PR #21 and GCP is Lab 5 work.
 
 ## Review and integration workflow
 
-Parent PR #14 received independent approval and was merged into `sprint1-staging` at `d4ba0fb15da5fd6be1cc327d64466d9adaf69d9d`. This branch is synchronized from that staging commit; PR #15 targets staging for its own independent review. Current validation and readiness are recorded in Issue #1 and PR Checks. Domain publication/registration/ownership PRs continue to wait for authentication acceptance.
+Parent PR #15 received approval from poom2548 and was merged into `sprint1-staging` at `f7ed362cd5c7eba07d8d7eba56bbf6aa50c8fe29`. On 1 November the stakeholder clarified that poom2548 and meebotsompurin-stack belong to the other UAT group; guluJa is the development teammate. The prior foundation/authentication merges remain real history, but their course-required same-team review was not established. Issues #11/#1 track retrospective teammate checks; these cannot be presented as pre-merge reviews. This publication branch incorporates the merged source, and PR #16 requests guluJa for its own review. Record the outstanding checks before further item acceptance/release.
 
 The [Kanban](https://github.com/users/PhraewaS/projects/3/views/2) tracks Issues. Ready work uses PR Review; review findings use Fixing. One independent teammate approval, passing required `build-and-test`, an up-to-date branch and resolved conversations are required to merge. Use the PR's Reviewers sidebar for the current teammate request; Assignees alone do not request review. An actual review must state a specific check, finding or reason for approval. Authors cannot approve their own PRs.
+
+PR review is performed by the other developer in the same team: PhraewaS and guluJa review each other's changes. Cross-team accounts do not substitute for that course gate, even if GitHub grants Write access. Cross-team UAT begins in Lab 6 on an actual released version: the other group executes the linked cases, records the release/commit and results, raises defect Issues, and retests the relevant released version after fixes. Existing cross-team code approvals are additional historical feedback, not completed UAT. No UAT result is claimed now.
 
 After reviewed staging integration and acceptance for this item's scope, record the merge and close its Issue/move it to Done. Manual Development linking does not replace acceptance evidence. Follow the remaining dependent PRs in order; [Issue #6](https://github.com/PhraewaS/event-system/issues/6) tracks full sprint integration and a separately reviewed release PR from staging to `main`. No release is accepted yet.
 

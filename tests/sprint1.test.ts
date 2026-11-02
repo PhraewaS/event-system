@@ -6,6 +6,7 @@ import { Pool } from "pg";
 import { createApp } from "../server/src/app.js";
 import { migrate } from "../server/scripts/migrate.js";
 import { seed, demoIds } from "../server/scripts/seed.js";
+import { publishInput } from "../server/src/validation.js";
 
 const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith("_test"))
@@ -154,5 +155,181 @@ describe("F-01 Identity and session security", () => {
       [demoIds.participant2],
     );
     await expired.agent.get("/api/auth/me").expect(401);
+  });
+});
+
+describe("F-02 Publication", () => {
+  test("PUB-BOUND-01 / AC-03,04 publication rejects anonymous, wrong-role and invalid-CSRF requests without writes", async () => {
+    const before = (await pool.query("SELECT count(*)::int AS n FROM events")).rows[0].n;
+    const anonymous = await request(app).post("/api/events").send(eventBody()).expect(401);
+    expect(anonymous.body.error.code).toBe("UNAUTHENTICATED");
+    const participant = await actor();
+    const forbidden = await participant.agent.post("/api/events")
+      .set("X-CSRF-Token", participant.token).send(eventBody()).expect(403);
+    expect(forbidden.body.error.code).toBe("FORBIDDEN");
+    const owner = await actor("organizer@example.test");
+    const missing = await owner.agent.post("/api/events").send(eventBody()).expect(403);
+    expect(missing.body.error.code).toBe("CSRF_INVALID");
+    const wrong = await owner.agent.post("/api/events")
+      .set("X-CSRF-Token", "wrong").send(eventBody()).expect(403);
+    expect(wrong.body.error.code).toBe("CSRF_INVALID");
+    expect((await pool.query("SELECT count(*)::int AS n FROM events")).rows[0].n).toBe(before);
+  });
+
+  test("T-04 / AC-04 roles and server-assigned ownership", async () => {
+    const participant = await actor();
+    await participant.agent
+      .post("/api/events")
+      .set("X-CSRF-Token", participant.token)
+      .send(eventBody())
+      .expect(403);
+    const owner = await actor("organizer@example.test");
+    const event = await publish(owner, { capacity: 1 });
+    expect(event.organizerId).toBe(demoIds.organizer);
+    const saved = await pool.query("SELECT capacity FROM events WHERE id=$1", [
+      event.id,
+    ]);
+    expect(saved.rows[0].capacity).toBe(1);
+    for (const forged of [
+      { organizerId: demoIds.organizer2 },
+      { role: "ORGANIZER" },
+    ]) {
+      await owner.agent
+        .post("/api/events")
+        .set("X-CSRF-Token", owner.token)
+        .send(eventBody(forged))
+        .expect(400);
+    }
+    // Published capacity has no mutation route in this sprint.
+    await owner.agent
+      .patch(`/api/events/${event.id}`)
+      .set("X-CSRF-Token", owner.token)
+      .send({ capacity: 0 })
+      .expect(404);
+  });
+
+  test("T-05 / AC-05 publication boundaries leave storage unchanged", async () => {
+    const owner = await actor("organizer@example.test");
+    const before = (await pool.query("SELECT count(*)::int AS n FROM events"))
+      .rows[0].n;
+    for (const invalid of [
+      { capacity: 0 },
+      { capacity: -1 },
+      { capacity: 1.5 },
+      { capacity: 1000001 },
+      { capacity: "2" },
+      { title: "  " },
+      { title: "a".repeat(121) },
+      { description: "short" },
+      { description: "a".repeat(4001) },
+      { location: "" },
+      { location: "a".repeat(201) },
+      { startsAt: future(-1) },
+      { registrationDeadline: future(-1) },
+      { registrationDeadline: future(72) },
+      { startsAt: "2027-11-01T10:00:00" },
+    ]) {
+      const res = await owner.agent
+        .post("/api/events")
+        .set("X-CSRF-Token", owner.token)
+        .send(eventBody(invalid))
+        .expect(400);
+      expect(res.body.error.code).toBe("VALIDATION_ERROR");
+    }
+    expect(
+      (await pool.query("SELECT count(*)::int AS n FROM events")).rows[0].n,
+    ).toBe(before);
+    const time = future(48);
+    await publish(owner, {
+      startsAt: time,
+      registrationDeadline: time,
+      capacity: 1000000,
+    });
+  });
+
+  test("PUB-BOUND-02 / AC-PUB-01 anonymous discovery persists across API instances and paginates without exposing private data", async () => {
+    const owner = await actor("organizer@example.test");
+    const created = await publish(owner, { capacity: 2 });
+    // Synthetic database fixture exercises public counts; no registration API is claimed here.
+    await pool.query("INSERT INTO registrations(id,participant_id,event_id) VALUES($1,$2,$3)",
+      [randomUUID(), demoIds.participant, created.id]);
+    const freshPool = new Pool({ connectionString: url });
+    const freshApp = createApp(freshPool, secret);
+    try {
+      const detail = await request(freshApp).get(`/api/events/${created.id}`).expect(200);
+      expect(detail.body.data).toMatchObject({
+        id: created.id, organizerId: demoIds.organizer, capacity: 2,
+        registeredCount: 1, remainingPlaces: 1, registrationOpen: true,
+      });
+      expect(detail.body.data.organizerName).toEqual(expect.any(String));
+      expect(Object.keys(detail.body.data).sort()).toEqual([
+        "id", "organizerId", "organizerName", "title", "description", "location", "capacity",
+        "startsAt", "registrationDeadline", "createdAt", "registeredCount", "remainingPlaces", "registrationOpen",
+      ].sort());
+      expect((await request(freshApp).get("/api/events/not-a-uuid").expect(400)).body.error.code)
+        .toBe("VALIDATION_ERROR");
+      expect((await request(freshApp).get(`/api/events/${randomUUID()}`).expect(404)).body.error.code)
+        .toBe("NOT_FOUND");
+      for (const offset of ["-1", "abc", "1.5", "10000001"])
+        expect((await request(freshApp).get(`/api/events?offset=${offset}`).expect(400)).body.error.code)
+          .toBe("VALIDATION_ERROR");
+      const ids = Array.from({ length: 203 }, () => randomUUID());
+      await pool.query(`INSERT INTO events(id,organizer_id,title,description,location,capacity,starts_at,registration_deadline)
+        SELECT id,$2,'Pagination workshop','Synthetic pagination fixture','Campus',2,$3,$4
+        FROM unnest($1::uuid[]) AS ids(id)`, [ids, demoIds.organizer, future(48), future(24)]);
+      const expected = (await pool.query("SELECT id FROM events")).rows.map(r => r.id).sort();
+      const seen: string[] = [];
+      let offset: number | null = 0;
+      do {
+        const response = await request(freshApp).get(`/api/events?offset=${offset}`).expect(200);
+        expect(response.body.data.length).toBeLessThanOrEqual(200);
+        expect(response.body.page).toMatchObject({ offset, limit: 200 });
+        if (response.body.data.length === 200) expect(response.body.page.nextOffset).toBe(offset! + 200);
+        else expect(response.body.page.nextOffset).toBeNull();
+        seen.push(...response.body.data.map((e: { id: string }) => e.id));
+        offset = response.body.page.nextOffset;
+        // Prevent a broken continuation token from looping forever.
+        expect(seen.length).toBeLessThanOrEqual(expected.length);
+      } while (offset !== null);
+      expect(seen.sort()).toEqual(expected);
+      expect(new Set(seen).size).toBe(expected.length);
+    } finally {
+      await freshPool.end();
+    }
+  });
+
+  test("PUB-BOUND-03 / AC-04,05 exact text bounds are trimmed and timezone-offset instants persist", async () => {
+    const owner = await actor("organizer2@example.test");
+    const at = new Date(Date.now() + 55 * 3600000).toISOString().replace("Z", "+07:00");
+    for (const [title, description, location, capacity] of [
+      ["abc", "d".repeat(10), "xy", 1],
+      ["t".repeat(120), "d".repeat(4000), "l".repeat(200), 1000000],
+    ] as const) {
+      const created = await publish(owner, {
+        title: `  ${title}  `, description: ` ${description} `, location: ` ${location} `,
+        capacity, startsAt: at, registrationDeadline: at,
+      });
+      expect(created).toMatchObject({ title, description, location, capacity, organizerId: demoIds.organizer2 });
+      expect(created.startsAt).toBe(new Date(at).toISOString());
+      expect(created.registrationDeadline).toBe(new Date(at).toISOString());
+      const saved = (await pool.query("SELECT title,description,location,organizer_id,starts_at,registration_deadline FROM events WHERE id=$1", [created.id])).rows[0];
+      expect(saved).toMatchObject({ title, description, location, organizer_id: demoIds.organizer2 });
+      expect(saved.starts_at.toISOString()).toBe(new Date(at).toISOString());
+      expect(saved.registration_deadline.toISOString()).toBe(new Date(at).toISOString());
+    }
+  });
+
+  test("PUB-UNIT-01 / AC-05 publication schema enforces types, bounds, normalization and deadline order", () => {
+    const at = future(48);
+    const valid = eventBody({ title: " abc ", description: " 0123456789 ", location: " xy ", startsAt: at, registrationDeadline: at, capacity: 1 });
+    expect(publishInput.parse(valid)).toMatchObject({ title: "abc", description: "0123456789", location: "xy", capacity: 1 });
+    expect(publishInput.safeParse(eventBody({ capacity: 1000000 })).success).toBe(true);
+    for (const change of [
+      { capacity: 0 }, { capacity: -1 }, { capacity: 1.5 }, { capacity: "1" }, { capacity: 1000001 },
+      { title: "ab" }, { description: "123456789" }, { location: "x" },
+      { title: "x".repeat(121) }, { description: "x".repeat(4001) }, { location: "x".repeat(201) },
+      { organizerId: demoIds.organizer2 }, { registrationDeadline: future(72) },
+      { startsAt: "2027-01-01T10:00:00" },
+    ]) expect(publishInput.safeParse(eventBody(change)).success).toBe(false);
   });
 });
