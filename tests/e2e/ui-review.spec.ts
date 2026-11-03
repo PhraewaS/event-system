@@ -109,6 +109,7 @@ test("UI-REVIEW-01 / AC-12-01,04,05,07,08 publish → register → persisted per
   await expect(
     page.getByRole("cell", { name: "participant@example.test", exact: true }),
   ).toBeVisible();
+  await expect(page.locator(".roster-summary strong")).toHaveText(["1", "0", "1"]);
   await page.screenshot({
     path: `artifacts/screenshots/roster-${info.project.name}.png`,
     fullPage: true,
@@ -155,6 +156,7 @@ test("UI-REVIEW-02 / AC-12-01,02,08 invalid login, role restrictions and ownersh
   ).toBeVisible();
   const forbidden = await page.request.post("/api/events", { data: {} });
   expect(forbidden.status()).toBe(403);
+  expect((await forbidden.json()).error.code).toBe("FORBIDDEN");
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(
     page.getByRole("link", { name: "Sign in", exact: false }),
