@@ -307,7 +307,40 @@ export function createApp(pool: Pool, secret: string, production = false) {
       res.json({ data: found.rows[0] });
     },
   );
-
+  app.get(
+    "/api/organizer/events",
+    requireUser,
+    role("ORGANIZER"),
+    async (req, res) => {
+      const { offset } = pageInput.parse(req.query);
+      const result = await pool.query(
+        `${eventSelect} WHERE e.organizer_id=$1 ORDER BY e.created_at DESC,e.id LIMIT 200 OFFSET $2`,
+        [user(res).id, offset],
+      );
+      page(res, result.rows, offset);
+    },
+  );
+  app.get(
+    "/api/events/:id/registrations",
+    requireUser,
+    role("ORGANIZER"),
+    async (req, res) => {
+      const id = uuid.parse(req.params.id);
+      const { offset } = pageInput.parse(req.query);
+      const owned = await pool.query(
+        "SELECT 1 FROM events WHERE id=$1 AND organizer_id=$2",
+        [id, user(res).id],
+      );
+      if (!owned.rowCount)
+        throw new AppError(404, "NOT_FOUND", "Event not found.");
+      const result = await pool.query(
+        `SELECT r.id,r.created_at AS "createdAt",json_build_object('id',u.id,'name',u.name,'email',u.email) AS participant
+      FROM registrations r JOIN users u ON u.id=r.participant_id WHERE r.event_id=$1 ORDER BY r.created_at,r.id LIMIT 200 OFFSET $2`,
+        [id, offset],
+      );
+      page(res, result.rows, offset);
+    },
+  );
   app.use("/api", (_req, _res) => {
     throw new AppError(404, "NOT_FOUND", "API route not found.");
   });
