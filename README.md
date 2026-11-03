@@ -1,8 +1,8 @@
 # Gather — Sprint 1: ui
 
-Review unit 6/8: [Issue #12](https://github.com/PhraewaS/event-system/issues/12) → [PR #19](https://github.com/PhraewaS/event-system/pull/19). The domain APIs and participant/organizer screens are available. Browser acceptance specifications are added separately in PR #20.
+Review unit 6/8: [Issue #12](https://github.com/PhraewaS/event-system/issues/12) → [PR #19](https://github.com/PhraewaS/event-system/pull/19). The domain APIs and participant/organizer screens are available. Selected browser acceptance journeys are included here so the UI has executable review evidence. Broader integrated verification/release evidence remains PR #20.
 
-This is a scoped, cumulative review snapshot. The [engineering baseline](docs/sprint-1.md) describes the complete target increment; later features and historical full-increment evidence do not represent functionality or tests on this branch. The complete runnable snapshot is on `feature/sprint1-github-delivery-5`.
+This is a scoped, cumulative review snapshot. The [engineering baseline](docs/sprint-1.md) describes the complete target increment; later features and historical full-increment evidence do not represent functionality or tests on this branch. PR #21 still contains pending delivery tooling; its older evidence does not replace current-source verification.
 
 ## Local setup for this branch
 
@@ -56,16 +56,18 @@ Local sample credentials are synthetic. Never commit `.env` or real credentials.
 ```sh
 npm run build
 npm test -- --reporter=verbose
+npx playwright install chromium
+npm run test:e2e
 node scripts/evidence.mjs
 ```
 
-The current cumulative suite has **40 tests**: the 38 accepted foundation/authentication/publication/registration/organizer checks plus CLIENT-CSRF-01/02. The [recorded organizer integration baseline](evidence/sprint-1/organizer-integration-baseline-2026-11-02.json) remains preserved. Selected UI browser acceptance checks are being prepared for this unit; the broader integration/release verification remains PR #20.
+The current cumulative suite has **40 unit/API/database tests**: the 38 accepted foundation/authentication/publication/registration/organizer checks plus CLIENT-CSRF-01/02. There are **8 selected browser cases**: UI-REVIEW-01–04 each at desktop 1440×1000 and mobile 390×844. They run the built UI against the real API/test database; only UI-REVIEW-04 explicitly injects list responses to inspect empty/error/loading states. Its session-expiry check updates an actual test session. See the [UI contract and test mapping](docs/sprint-1.md#ui-review-contract--issue-12--pr-19). The [organizer integration baseline](evidence/sprint-1/organizer-integration-baseline-2026-11-02.json) and original [CSRF failing](evidence/sprint-1/csrf-red.txt)/[passing](evidence/sprint-1/csrf-green.txt) evidence remain preserved.
 
 Tests intentionally clear only `TEST_DATABASE_URL`, whose database name must end in `_test`. Use a separate disposable database and run database/browser suites sequentially. Build before running browser tests. Generated local logs/manifests are under ignored `artifacts/`; hosted CI artifacts identify the submitted head. Required CI builds the application, runs the tests available on this branch, builds the Docker image and uploads evidence. Docker/Compose execution on the implementation machine and GCP deployment are separate gates; Compose is introduced in PR #21 and GCP is Lab 5 work.
 
 ## Review and integration workflow
 
-Parent PR #17 received same-team approval from guluJa at `1b913d114c247e0aecc54b3c7ad6b1e977e91d99` and was merged into `sprint1-staging` at `b225e83667b2c443c2a53edcf66c1e75d0ce9b7d`. This organizer-management branch incorporates that source. PR #18 is the next bounded API review unit into staging. The earlier foundation/authentication same-team assessments are recorded in closed Issues #11/#1; their missing pre-merge reviews remain historical process deviations and are not recreated by retrospective checks.
+Parent PR #18 received same-team approval from guluJa at `604d3f2b9b6963fca055fbeb2e8fe65e622ae10b` and was merged into `sprint1-staging` at `c414678f86c87a88e37b52b6971377a51febc37e`. This UI branch incorporates that source. PR #19 targets staging for bounded UI review; native Development links include Issue #12 and defect #22. Current-head checks and actual same-team review remain necessary before acceptance. The earlier foundation/authentication same-team assessments are recorded in closed Issues #11/#1; their missing pre-merge reviews remain historical process deviations.
 
 The [Kanban](https://github.com/users/PhraewaS/projects/3/views/2) tracks Issues. Ready work uses PR Review; review findings use Fixing. One independent teammate approval, passing required `build-and-test`, an up-to-date branch and resolved conversations are required to merge. Use the PR's Reviewers sidebar for the current teammate request; Assignees alone do not request review. An actual review must state a specific check, finding or reason for approval. Authors cannot approve their own PRs.
 
