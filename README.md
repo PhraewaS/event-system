@@ -1,14 +1,14 @@
-# Gather — Sprint 1: organizer
+# Gather — Sprint 1: ui
 
-Review unit 5/8: [Issue #4](https://github.com/PhraewaS/event-system/issues/4) → [PR #18](https://github.com/PhraewaS/event-system/pull/18). Previous APIs plus organizer-owned event lists and owner-only registration rosters. The UI still shows database health; role screens come in PR #19.
+Review unit 6/8: [Issue #12](https://github.com/PhraewaS/event-system/issues/12) → [PR #19](https://github.com/PhraewaS/event-system/pull/19). The domain APIs and participant/organizer screens are available. Selected browser acceptance journeys are included here so the UI has executable review evidence. Broader integrated verification/release evidence remains PR #20.
 
-This is a scoped, cumulative review snapshot. The [engineering baseline](docs/sprint-1.md) describes the complete target increment; later features and historical full-increment evidence do not represent functionality or tests on this branch. The complete runnable snapshot is on `feature/sprint1-github-delivery-5`.
+This is a scoped, cumulative review snapshot. The [engineering baseline](docs/sprint-1.md) describes the complete target increment; later features and historical full-increment evidence do not represent functionality or tests on this branch. PR #21 still contains pending delivery tooling; its older evidence does not replace current-source verification.
 
 ## Local setup for this branch
 
 Use Node 24 and PostgreSQL 15+. React/TypeScript/Vite → Express API → persistent PostgreSQL follows the lab stack. Versioned SQL and `pg` make database constraints and transactions explicit.
 
-1. Check out `feature/sprint1-organizer-management-4` after cloning the repository.
+1. Check out `feature/sprint1-role-ui-12` after cloning the repository.
 2. Create separate disposable development/test databases once in `psql`:
 
    ```sql
@@ -32,7 +32,7 @@ Use Node 24 and PostgreSQL 15+. React/TypeScript/Vite → Express API → persis
    npm run dev
    ```
 
-Open http://localhost:5173. The page must display **API and persistent PostgreSQL are connected.** Login/registration screens are intentionally introduced in PR #19.
+Open http://localhost:5173. Sign in as Organizer, publish a capacity-1 event, sign out and register as Participant. View My registrations, then sign in as the owning Organizer to inspect the roster.
 
 For the built application run `npm run build` then `npm start` and open http://localhost:3000. `GET /api/health` runs a real database query and returns `{ "data": { "status": "ok" } }`; database failure returns 503. Stop/restart the server: the seeded data remains in PostgreSQL.
 
@@ -56,16 +56,18 @@ Local sample credentials are synthetic. Never commit `.env` or real credentials.
 ```sh
 npm run build
 npm test -- --reporter=verbose
+npx playwright install chromium
+npm run test:e2e
 node scripts/evidence.mjs
 ```
 
-The current cumulative suite has **38 tests**: 30 inherited foundation/authentication/publication/registration cases, T-03/T-10/T-11/T-15 for backend permissions/integrity, and four additional ownership/roster/pagination/persistence checks. See the [organizer contract and test mapping](docs/sprint-1.md#organizer-review-contract--issue-4--pr-18), Issue #4 and PR #18 for current source/results. The [recorded integration baseline](evidence/sprint-1/organizer-integration-baseline-2026-11-02.json) preserves the obsolete empty-list assumption found before the stronger owner-isolation assertion. Browser acceptance tests are introduced in PR #20; do not run or claim browser verification for this snapshot.
+The current cumulative suite has **43 unit/API/database tests**: the 38 accepted foundation/authentication/publication/registration/organizer checks plus CLIENT-CSRF-01–05. There are **8 selected browser cases**: UI-REVIEW-01–04 each at desktop 1440×1000 and mobile 390×844. They run the built UI against the real API/test database; only UI-REVIEW-04 explicitly injects list responses to inspect empty/error/loading states. Its session-expiry check updates an actual test session and signs in again through the in-app link without reloading. See the [UI contract and test mapping](docs/sprint-1.md#ui-review-contract--issue-12--pr-19). The [organizer baseline](evidence/sprint-1/organizer-integration-baseline-2026-11-02.json), original [CSRF failing](evidence/sprint-1/csrf-red.txt)/[passing](evidence/sprint-1/csrf-green.txt) runs and [new expiry regression](evidence/sprint-1/ui-expiry-red-2026-11-04.json) remain preserved.
 
 Tests intentionally clear only `TEST_DATABASE_URL`, whose database name must end in `_test`. Use a separate disposable database and run database/browser suites sequentially. Build before running browser tests. Generated local logs/manifests are under ignored `artifacts/`; hosted CI artifacts identify the submitted head. Required CI builds the application, runs the tests available on this branch, builds the Docker image and uploads evidence. Docker/Compose execution on the implementation machine and GCP deployment are separate gates; Compose is introduced in PR #21 and GCP is Lab 5 work.
 
 ## Review and integration workflow
 
-Parent PR #17 received same-team approval from guluJa at `1b913d114c247e0aecc54b3c7ad6b1e977e91d99` and was merged into `sprint1-staging` at `b225e83667b2c443c2a53edcf66c1e75d0ce9b7d`. This organizer-management branch incorporates that source. PR #18 is the next bounded API review unit into staging. The earlier foundation/authentication same-team assessments are recorded in closed Issues #11/#1; their missing pre-merge reviews remain historical process deviations and are not recreated by retrospective checks.
+Parent PR #18 received same-team approval from guluJa at `604d3f2b9b6963fca055fbeb2e8fe65e622ae10b` and was merged into `sprint1-staging` at `c414678f86c87a88e37b52b6971377a51febc37e`. This UI branch incorporates that source. PR #19 targets staging for bounded UI review; native Development links include Issue #12 and defect #22. Current-head checks and actual same-team review remain necessary before acceptance. The earlier foundation/authentication same-team assessments are recorded in closed Issues #11/#1; their missing pre-merge reviews remain historical process deviations.
 
 The [Kanban](https://github.com/users/PhraewaS/projects/3/views/2) tracks Issues. Ready work uses PR Review; review findings use Fixing. One independent teammate approval, passing required `build-and-test`, an up-to-date branch and resolved conversations are required to merge. Use the PR's Reviewers sidebar for the current teammate request; Assignees alone do not request review. An actual review must state a specific check, finding or reason for approval. Authors cannot approve their own PRs.
 
