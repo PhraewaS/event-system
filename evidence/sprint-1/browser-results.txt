@@ -1,0 +1,23 @@
+
+> gather-event-system@0.1.0 test:e2e
+> playwright test
+
+[WebServer] (node:14732) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:24228) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 6 tests using 1 worker
+
+(node:38472) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 [desktop] › tests\e2e\sprint1.spec.ts:34:1 › T-12 / AC-12 publish → register → persisted personal view → owner roster (2.2s)
+  ok 2 [desktop] › tests\e2e\sprint1.spec.ts:117:1 › T-12 / AC-03,09,10,12 invalid login, role restrictions and ownership (896ms)
+  ok 3 [desktop] › tests\e2e\sprint1.spec.ts:158:1 › T-12 / AC-05,07,12 discovery, validation and closed event states (1.1s)
+(node:27568) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 4 [mobile] › tests\e2e\sprint1.spec.ts:34:1 › T-12 / AC-12 publish → register → persisted personal view → owner roster (2.4s)
+  ok 5 [mobile] › tests\e2e\sprint1.spec.ts:117:1 › T-12 / AC-03,09,10,12 invalid login, role restrictions and ownership (839ms)
+  ok 6 [mobile] › tests\e2e\sprint1.spec.ts:158:1 › T-12 / AC-05,07,12 discovery, validation and closed event states (1.2s)
+
+  6 passed (19.5s)
