@@ -1,0 +1,35 @@
+{
+  "recordedAt": "2026-11-03T17:58:23.306Z",
+  "issue": 23,
+  "pr": 19,
+  "commit": "8bb4e2c7a742acedc1e89875de8e15040b0c948b",
+  "sources": {
+    "client/src/api.ts": "58fe2d20aeba4c3acccb4f67061330d5108d4b62fde4a9ad449458b4eaa8ea97",
+    "tests/client-csrf.test.ts": "8f482c4f1017075704a3fb1bc5a55e3c02586fd715043aa2294a846c5b1800ca",
+    "tests/e2e/ui-review.spec.ts": "355e166905ca63da87f68b27c26617b56a8ca36f8e7c605fa9051ece81305e81",
+    "playwright.config.ts": "2b835748eeb9363ea0b877ead8e153bd16726c3c649d13e6d26eb51194abdcd9"
+  },
+  "normalization": "ANSI styling and absolute workspace path only; results are actual command output.",
+  "commands": [
+    {
+      "command": "npm test -- --reporter=verbose tests/client-csrf.test.ts",
+      "exitCode": 1,
+      "result": {
+        "failed": 2,
+        "passed": 3
+      },
+      "rawLogSha256": "8998ef2074605bff8305624ec8fc51800724d5a0f116be27e2ae48b3b9205b06",
+      "output": "\r\n> gather-event-system@0.1.0 test\r\n> vitest run --reporter=verbose tests/client-csrf.test.ts\r\n\r\n\r\n RUN  v5.0.5 C:/Users/User/OneDrive/Documents/SE/Group Project/event-system\r\n\r\n ✓ tests/client-csrf.test.ts > CLIENT-CSRF-01 concurrent initialization preserves the current session token for a protected mutation 35ms\r\n ✓ tests/client-csrf.test.ts > CLIENT-CSRF-02 a failed initialization can be retried without retaining a rejected request 2ms\r\n × tests/client-csrf.test.ts > CLIENT-CSRF-03 expired api read refreshes CSRF before first re-login 5ms\r\n   → promise rejected \"Error: Obsolete session token. { …(2) }\" instead of resolving\r\n × tests/client-csrf.test.ts > CLIENT-CSRF-04 expired collection read refreshes CSRF before first re-login 2ms\r\n   → promise rejected \"Error: Obsolete session token. { …(2) }\" instead of resolving\r\n ✓ tests/client-csrf.test.ts > CLIENT-CSRF-05 invalid credentials do not expire identity or automatically retry login 1ms\r\n\r\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯\r\n\r\n FAIL  tests/client-csrf.test.ts > CLIENT-CSRF-03 expired api read refreshes CSRF before first re-login\r\n FAIL  tests/client-csrf.test.ts > CLIENT-CSRF-04 expired collection read refreshes CSRF before first re-login\r\nAssertionError: promise rejected \"Error: Obsolete session token. { …(2) }\" instead of resolving\r\n ❯ tests/client-csrf.test.ts:100:81\r\n     98|     await expect(client[readKind](\"/registrations/mine\")).rejects.toMa…\r\n     99|     expect(dispatchEvent).toHaveBeenCalledOnce();\r\n    100|     await expect(client.login(\"participant@example.test\", \"synthetic-p…\r\n       |                                                                                 ^\r\n    101|     expect(bootstraps).toBe(2);\r\n    102|     expect(logins).toBe(1);\r\n\r\nCaused by: Error: Obsolete session token.\r\n ❯ api client/src/api.ts:76:11\r\n ❯ Module.login client/src/api.ts:118:18\r\n ❯ tests/client-csrf.test.ts:100:5\r\n\r\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\r\nSerialized Error: { status: 403, code: 'CSRF_INVALID' }\r\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯\r\n\r\n\r\n Test Files  1 failed (1)\r\n      Tests  2 failed | 3 passed (5)\r\n   Start at  00:57:08\r\n   Duration  967ms (tests 59%, import 20%, transform 12%, worker 8%)\r\n\r\n"
+    },
+    {
+      "command": "npm run test:e2e -- --grep UI-REVIEW-04 --project desktop",
+      "exitCode": 1,
+      "result": {
+        "failed": 1,
+        "passed": 0
+      },
+      "rawLogSha256": "bf47609d0e9d99016dd1be28625033e9cc567db1a98a99f3dd9d3e2c569455d5",
+      "output": "\r\n> gather-event-system@0.1.0 test:e2e\r\n> playwright test --grep UI-REVIEW-04 --project desktop\r\n\r\n[WebServer] (node:25516) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\r\n[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)\r\n[WebServer] (node:29920) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\r\n[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)\r\n\r\nRunning 1 test using 1 worker\r\n\r\n(node:8336) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\r\n(Use `node --trace-warnings ...` to show where the warning was created)\r\n  x  1 [desktop] › tests\\e2e\\ui-review.spec.ts:232:1 › UI-REVIEW-04 / AC-12-06,07 loading, empty, API failure and expired private identity (7.1s)\r\n\r\n\r\n  1) [desktop] › tests\\e2e\\ui-review.spec.ts:232:1 › UI-REVIEW-04 / AC-12-06,07 loading, empty, API failure and expired private identity \r\n\r\n    Error: expect(locator).toBeVisible() failed\r\n\r\n    Locator: getByRole('button', { name: 'Sign out' })\r\n    Expected: visible\r\n    Timeout: 5000ms\r\n    Error: element(s) not found\r\n\r\n    Call log:\r\n      - Expect \"toBeVisible\" getByRole('button', { name: 'Sign out' }) with timeout 5000ms\r\n      - waiting for getByRole('button', { name: 'Sign out' })\r\n\r\n\r\n      272 |   await page.getByLabel(\"Password\", { exact: true }).fill(password);\r\n      273 |   await page.getByRole(\"button\", { name: \"Sign in\", exact: true }).click();\r\n    > 274 |   await expect(page.getByRole(\"button\", { name: \"Sign out\" })).toBeVisible();\r\n          |                                                                ^\r\n      275 |   await expect(page.getByRole(\"alert\")).toHaveCount(0);\r\n      276 | });\r\n      277 |\r\n        at <workspace>\\tests\\e2e\\ui-review.spec.ts:274:64\r\n\r\n    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────\r\n    artifacts\\playwright-results\\ui-review-UI-REVIEW-04-AC--3c911-nd-expired-private-identity-desktop\\test-failed-1.png\r\n    ────────────────────────────────────────────────────────────────────────────────────────────────\r\n\r\n    Error Context: artifacts\\playwright-results\\ui-review-UI-REVIEW-04-AC--3c911-nd-expired-private-identity-desktop\\error-context.md\r\n\r\n    Error Context: artifacts\\playwright-results\\ui-review-UI-REVIEW-04-AC--3c911-nd-expired-private-identity-desktop\\error-context.md\r\n\r\n    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────\r\n    artifacts\\playwright-results\\ui-review-UI-REVIEW-04-AC--3c911-nd-expired-private-identity-desktop\\trace.zip\r\n    Usage:\r\n\r\n        npx playwright show-trace artifacts\\playwright-results\\ui-review-UI-REVIEW-04-AC--3c911-nd-expired-private-identity-desktop\\trace.zip\r\n\r\n    ────────────────────────────────────────────────────────────────────────────────────────────────\r\n\r\n  1 failed\r\n    [desktop] › tests\\e2e\\ui-review.spec.ts:232:1 › UI-REVIEW-04 / AC-12-06,07 loading, empty, API failure and expired private identity \r\n"
+    }
+  ]
+}
