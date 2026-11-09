@@ -1,0 +1,313 @@
+
+> gather-event-system@0.1.0 test
+> vitest run --reporter=verbose
+
+
+ RUN  v5.0.5 C:/Users/User/OneDrive/Documents/SE/Group Project/event-system
+
+ × tests/sprint1.test.ts > F-01 Identity and session security > T-01 / AC-01 valid and invalid login, generic rejection, password hashing 15ms
+   → expected 200 "OK", got 501 "Not Implemented"
+ × tests/sprint1.test.ts > F-01 Identity and session security > T-02 / AC-02 session rotation, expiry, logout revocation, recreation persistence 3ms
+   → expected 200 "OK", got 501 "Not Implemented"
+ × tests/sprint1.test.ts > F-01 Identity and session security > T-03 / AC-03 authentication and CSRF enforced, safe errors 2ms
+   → expected 401 "Unauthorized", got 501 "Not Implemented"
+ × tests/sprint1.test.ts > F-02 Publication > T-04 / AC-04 roles and server-assigned ownership 2ms
+   → expected 200 "OK", got 501 "Not Implemented"
+ × tests/sprint1.test.ts > F-02 Publication > T-05 / AC-05 publication boundaries leave storage unchanged 2ms
+   → expected 200 "OK", got 501 "Not Implemented"
+ × tests/sprint1.test.ts > F-03 Registration and persistence > T-06 / AC-06 full API journey survives independent application/pool recreation 2ms
+   → expected 200 "OK", got 501 "Not Implemented"
+ × tests/sprint1.test.ts > F-03 Registration and persistence > T-07 / AC-07 duplicate, full, deadline, missing and forged registration 2ms
+   → expected 200 "OK", got 501 "Not Implemented"
+ × tests/sprint1.test.ts > F-03 Registration and persistence > T-08 / AC-08 two independent API instances compete for final place 2ms
+   → expected 200 "OK", got 501 "Not Implemented"
+ × tests/sprint1.test.ts > F-03 Registration and persistence > T-09 / AC-09 private registration owner restrictions 3ms
+   → expected 200 "OK", got 501 "Not Implemented"
+ × tests/sprint1.test.ts > F-04 Organizer ownership and data integrity > T-10 / AC-10 role and event ownership enforced independently 3ms
+   → expected 200 "OK", got 501 "Not Implemented"
+ × tests/sprint1.test.ts > F-04 Organizer ownership and data integrity > T-11 / AC-11 database constraints and migration/seed reproducibility 2ms
+   → expected 200 "OK", got 501 "Not Implemented"
+ × tests/rules.test.ts > T-07 unit / AC-07 registration rule boundaries > accepts immediately before the deadline 3ms
+   → Registration rules not implemented
+ × tests/rules.test.ts > T-07 unit / AC-07 registration rule boundaries > rejects exactly at and after the deadline 0ms
+   → Registration rules not implemented
+ × tests/rules.test.ts > T-07 unit / AC-07 registration rule boundaries > duplicate takes precedence when full or closed 0ms
+   → Registration rules not implemented
+ × tests/rules.test.ts > T-07 unit / AC-07 registration rule boundaries > capacity boundary rejects only when all places are taken 0ms
+   → Registration rules not implemented
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 15 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/rules.test.ts > T-07 unit / AC-07 registration rule boundaries > accepts immediately before the deadline
+Error: Registration rules not implemented
+ ❯ registrationRejection server/src/registrations.ts:3:9
+      1| export type EventRuleInput = { capacity: number; registrationDeadline:…
+      2| export function registrationRejection(_event: EventRuleInput, _duplica…
+      3|   throw new Error('Registration rules not implemented');
+       |         ^
+      4| }
+      5|
+ ❯ tests/rules.test.ts:8:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/15]⎯
+
+ FAIL  tests/rules.test.ts > T-07 unit / AC-07 registration rule boundaries > rejects exactly at and after the deadline
+Error: Registration rules not implemented
+ ❯ registrationRejection server/src/registrations.ts:3:9
+      1| export type EventRuleInput = { capacity: number; registrationDeadline:…
+      2| export function registrationRejection(_event: EventRuleInput, _duplica…
+      3|   throw new Error('Registration rules not implemented');
+       |         ^
+      4| }
+      5|
+ ❯ tests/rules.test.ts:11:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/15]⎯
+
+ FAIL  tests/rules.test.ts > T-07 unit / AC-07 registration rule boundaries > duplicate takes precedence when full or closed
+Error: Registration rules not implemented
+ ❯ registrationRejection server/src/registrations.ts:3:9
+      1| export type EventRuleInput = { capacity: number; registrationDeadline:…
+      2| export function registrationRejection(_event: EventRuleInput, _duplica…
+      3|   throw new Error('Registration rules not implemented');
+       |         ^
+      4| }
+      5|
+ ❯ tests/rules.test.ts:15:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/15]⎯
+
+ FAIL  tests/rules.test.ts > T-07 unit / AC-07 registration rule boundaries > capacity boundary rejects only when all places are taken
+Error: Registration rules not implemented
+ ❯ registrationRejection server/src/registrations.ts:3:9
+      1| export type EventRuleInput = { capacity: number; registrationDeadline:…
+      2| export function registrationRejection(_event: EventRuleInput, _duplica…
+      3|   throw new Error('Registration rules not implemented');
+       |         ^
+      4| }
+      5|
+ ❯ tests/rules.test.ts:19:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/15]⎯
+
+ FAIL  tests/sprint1.test.ts > F-01 Identity and session security > T-01 / AC-01 valid and invalid login, generic rejection, password hashing
+Error: expected 200 "OK", got 501 "Not Implemented"
+ ❯ actor tests/sprint1.test.ts:22:55
+     20| async function actor(email = 'participant@example.test', target = app)…
+     21|   const agent = request.agent(target);
+     22|   const bootstrap = await agent.get('/api/auth/csrf').expect(200);
+       |                                                       ^
+     23|   const response = await agent.post('/api/auth/login').set('X-CSRF-Tok…
+     24|   return { agent, token: response.body.data.csrfToken, cookie: respons…
+ ❯ tests/sprint1.test.ts:47:23
+ ❯ Test._assertStatus node_modules/supertest/lib/test.js:404:14
+ ❯ node_modules/supertest/lib/test.js:460:13
+ ❯ Test._assertFunction node_modules/supertest/lib/test.js:437:13
+ ❯ Test.assert node_modules/supertest/lib/test.js:302:23
+ ❯ localAssert node_modules/supertest/lib/test.js:220:38
+ ❯ Server.<anonymous> node_modules/supertest/lib/test.js:227:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/15]⎯
+
+ FAIL  tests/sprint1.test.ts > F-01 Identity and session security > T-02 / AC-02 session rotation, expiry, logout revocation, recreation persistence
+Error: expected 200 "OK", got 501 "Not Implemented"
+ ❯ tests/sprint1.test.ts:64:57
+     62|   test('T-02 / AC-02 session rotation, expiry, logout revocation, recr…
+     63|     const agent = request.agent(app);
+     64|     const bootstrap = await agent.get('/api/auth/csrf').expect(200);
+       |                                                         ^
+     65|     const oldCookie = bootstrap.headers['set-cookie'][0].split(';')[0];
+     66|     const login = await agent.post('/api/auth/login').set('X-CSRF-Toke…
+ ❯ Test._assertStatus node_modules/supertest/lib/test.js:404:14
+ ❯ node_modules/supertest/lib/test.js:460:13
+ ❯ Test._assertFunction node_modules/supertest/lib/test.js:437:13
+ ❯ Test.assert node_modules/supertest/lib/test.js:302:23
+ ❯ localAssert node_modules/supertest/lib/test.js:220:38
+ ❯ Server.<anonymous> node_modules/supertest/lib/test.js:227:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/15]⎯
+
+ FAIL  tests/sprint1.test.ts > F-01 Identity and session security > T-03 / AC-03 authentication and CSRF enforced, safe errors
+Error: expected 401 "Unauthorized", got 501 "Not Implemented"
+ ❯ tests/sprint1.test.ts:83:36
+     81|   test('T-03 / AC-03 authentication and CSRF enforced, safe errors', a…
+     82|     for (const path of ['/api/auth/me', '/api/registrations/mine', '/a…
+     83|       await request(app).get(path).expect(401);
+       |                                    ^
+     84|     }
+     85|     await request(app).post('/api/events').send(eventBody()).expect(40…
+ ❯ Test._assertStatus node_modules/supertest/lib/test.js:404:14
+ ❯ node_modules/supertest/lib/test.js:460:13
+ ❯ Test._assertFunction node_modules/supertest/lib/test.js:437:13
+ ❯ Test.assert node_modules/supertest/lib/test.js:302:23
+ ❯ localAssert node_modules/supertest/lib/test.js:220:38
+ ❯ Server.<anonymous> node_modules/supertest/lib/test.js:227:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/15]⎯
+
+ FAIL  tests/sprint1.test.ts > F-02 Publication > T-04 / AC-04 roles and server-assigned ownership
+Error: expected 200 "OK", got 501 "Not Implemented"
+ ❯ actor tests/sprint1.test.ts:22:55
+     20| async function actor(email = 'participant@example.test', target = app)…
+     21|   const agent = request.agent(target);
+     22|   const bootstrap = await agent.get('/api/auth/csrf').expect(200);
+       |                                                       ^
+     23|   const response = await agent.post('/api/auth/login').set('X-CSRF-Tok…
+     24|   return { agent, token: response.body.data.csrfToken, cookie: respons…
+ ❯ tests/sprint1.test.ts:101:31
+ ❯ Test._assertStatus node_modules/supertest/lib/test.js:404:14
+ ❯ node_modules/supertest/lib/test.js:460:13
+ ❯ Test._assertFunction node_modules/supertest/lib/test.js:437:13
+ ❯ Test.assert node_modules/supertest/lib/test.js:302:23
+ ❯ localAssert node_modules/supertest/lib/test.js:220:38
+ ❯ Server.<anonymous> node_modules/supertest/lib/test.js:227:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/15]⎯
+
+ FAIL  tests/sprint1.test.ts > F-02 Publication > T-05 / AC-05 publication boundaries leave storage unchanged
+Error: expected 200 "OK", got 501 "Not Implemented"
+ ❯ actor tests/sprint1.test.ts:22:55
+     20| async function actor(email = 'participant@example.test', target = app)…
+     21|   const agent = request.agent(target);
+     22|   const bootstrap = await agent.get('/api/auth/csrf').expect(200);
+       |                                                       ^
+     23|   const response = await agent.post('/api/auth/login').set('X-CSRF-Tok…
+     24|   return { agent, token: response.body.data.csrfToken, cookie: respons…
+ ❯ tests/sprint1.test.ts:116:25
+ ❯ Test._assertStatus node_modules/supertest/lib/test.js:404:14
+ ❯ node_modules/supertest/lib/test.js:460:13
+ ❯ Test._assertFunction node_modules/supertest/lib/test.js:437:13
+ ❯ Test.assert node_modules/supertest/lib/test.js:302:23
+ ❯ localAssert node_modules/supertest/lib/test.js:220:38
+ ❯ Server.<anonymous> node_modules/supertest/lib/test.js:227:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/15]⎯
+
+ FAIL  tests/sprint1.test.ts > F-03 Registration and persistence > T-06 / AC-06 full API journey survives independent application/pool recreation
+Error: expected 200 "OK", got 501 "Not Implemented"
+ ❯ actor tests/sprint1.test.ts:22:55
+     20| async function actor(email = 'participant@example.test', target = app)…
+     21|   const agent = request.agent(target);
+     22|   const bootstrap = await agent.get('/api/auth/csrf').expect(200);
+       |                                                       ^
+     23|   const response = await agent.post('/api/auth/login').set('X-CSRF-Tok…
+     24|   return { agent, token: response.body.data.csrfToken, cookie: respons…
+ ❯ tests/sprint1.test.ts:136:25
+ ❯ Test._assertStatus node_modules/supertest/lib/test.js:404:14
+ ❯ node_modules/supertest/lib/test.js:460:13
+ ❯ Test._assertFunction node_modules/supertest/lib/test.js:437:13
+ ❯ Test.assert node_modules/supertest/lib/test.js:302:23
+ ❯ localAssert node_modules/supertest/lib/test.js:220:38
+ ❯ Server.<anonymous> node_modules/supertest/lib/test.js:227:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/15]⎯
+
+ FAIL  tests/sprint1.test.ts > F-03 Registration and persistence > T-07 / AC-07 duplicate, full, deadline, missing and forged registration
+Error: expected 200 "OK", got 501 "Not Implemented"
+ ❯ actor tests/sprint1.test.ts:22:55
+     20| async function actor(email = 'participant@example.test', target = app)…
+     21|   const agent = request.agent(target);
+     22|   const bootstrap = await agent.get('/api/auth/csrf').expect(200);
+       |                                                       ^
+     23|   const response = await agent.post('/api/auth/login').set('X-CSRF-Tok…
+     24|   return { agent, token: response.body.data.csrfToken, cookie: respons…
+ ❯ tests/sprint1.test.ts:158:25
+ ❯ Test._assertStatus node_modules/supertest/lib/test.js:404:14
+ ❯ node_modules/supertest/lib/test.js:460:13
+ ❯ Test._assertFunction node_modules/supertest/lib/test.js:437:13
+ ❯ Test.assert node_modules/supertest/lib/test.js:302:23
+ ❯ localAssert node_modules/supertest/lib/test.js:220:38
+ ❯ Server.<anonymous> node_modules/supertest/lib/test.js:227:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/15]⎯
+
+ FAIL  tests/sprint1.test.ts > F-03 Registration and persistence > T-08 / AC-08 two independent API instances compete for final place
+Error: expected 200 "OK", got 501 "Not Implemented"
+ ❯ actor tests/sprint1.test.ts:22:55
+     20| async function actor(email = 'participant@example.test', target = app)…
+     21|   const agent = request.agent(target);
+     22|   const bootstrap = await agent.get('/api/auth/csrf').expect(200);
+       |                                                       ^
+     23|   const response = await agent.post('/api/auth/login').set('X-CSRF-Tok…
+     24|   return { agent, token: response.body.data.csrfToken, cookie: respons…
+ ❯ tests/sprint1.test.ts:175:25
+ ❯ Test._assertStatus node_modules/supertest/lib/test.js:404:14
+ ❯ node_modules/supertest/lib/test.js:460:13
+ ❯ Test._assertFunction node_modules/supertest/lib/test.js:437:13
+ ❯ Test.assert node_modules/supertest/lib/test.js:302:23
+ ❯ localAssert node_modules/supertest/lib/test.js:220:38
+ ❯ Server.<anonymous> node_modules/supertest/lib/test.js:227:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/15]⎯
+
+ FAIL  tests/sprint1.test.ts > F-03 Registration and persistence > T-09 / AC-09 private registration owner restrictions
+Error: expected 200 "OK", got 501 "Not Implemented"
+ ❯ actor tests/sprint1.test.ts:22:55
+     20| async function actor(email = 'participant@example.test', target = app)…
+     21|   const agent = request.agent(target);
+     22|   const bootstrap = await agent.get('/api/auth/csrf').expect(200);
+       |                                                       ^
+     23|   const response = await agent.post('/api/auth/login').set('X-CSRF-Tok…
+     24|   return { agent, token: response.body.data.csrfToken, cookie: respons…
+ ❯ tests/sprint1.test.ts:193:25
+ ❯ Test._assertStatus node_modules/supertest/lib/test.js:404:14
+ ❯ node_modules/supertest/lib/test.js:460:13
+ ❯ Test._assertFunction node_modules/supertest/lib/test.js:437:13
+ ❯ Test.assert node_modules/supertest/lib/test.js:302:23
+ ❯ localAssert node_modules/supertest/lib/test.js:220:38
+ ❯ Server.<anonymous> node_modules/supertest/lib/test.js:227:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/15]⎯
+
+ FAIL  tests/sprint1.test.ts > F-04 Organizer ownership and data integrity > T-10 / AC-10 role and event ownership enforced independently
+Error: expected 200 "OK", got 501 "Not Implemented"
+ ❯ actor tests/sprint1.test.ts:22:55
+     20| async function actor(email = 'participant@example.test', target = app)…
+     21|   const agent = request.agent(target);
+     22|   const bootstrap = await agent.get('/api/auth/csrf').expect(200);
+       |                                                       ^
+     23|   const response = await agent.post('/api/auth/login').set('X-CSRF-Tok…
+     24|   return { agent, token: response.body.data.csrfToken, cookie: respons…
+ ❯ tests/sprint1.test.ts:208:25
+ ❯ Test._assertStatus node_modules/supertest/lib/test.js:404:14
+ ❯ node_modules/supertest/lib/test.js:460:13
+ ❯ Test._assertFunction node_modules/supertest/lib/test.js:437:13
+ ❯ Test.assert node_modules/supertest/lib/test.js:302:23
+ ❯ localAssert node_modules/supertest/lib/test.js:220:38
+ ❯ Server.<anonymous> node_modules/supertest/lib/test.js:227:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/15]⎯
+
+ FAIL  tests/sprint1.test.ts > F-04 Organizer ownership and data integrity > T-11 / AC-11 database constraints and migration/seed reproducibility
+Error: expected 200 "OK", got 501 "Not Implemented"
+ ❯ actor tests/sprint1.test.ts:22:55
+     20| async function actor(email = 'participant@example.test', target = app)…
+     21|   const agent = request.agent(target);
+     22|   const bootstrap = await agent.get('/api/auth/csrf').expect(200);
+       |                                                       ^
+     23|   const response = await agent.post('/api/auth/login').set('X-CSRF-Tok…
+     24|   return { agent, token: response.body.data.csrfToken, cookie: respons…
+ ❯ tests/sprint1.test.ts:225:25
+ ❯ Test._assertStatus node_modules/supertest/lib/test.js:404:14
+ ❯ node_modules/supertest/lib/test.js:460:13
+ ❯ Test._assertFunction node_modules/supertest/lib/test.js:437:13
+ ❯ Test.assert node_modules/supertest/lib/test.js:302:23
+ ❯ localAssert node_modules/supertest/lib/test.js:220:38
+ ❯ Server.<anonymous> node_modules/supertest/lib/test.js:227:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/15]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  15 failed (15)
+   Start at  20:12:16
+   Duration  2.30s (import 44%, tests 40%, transform 11%, worker 5%)
+
+    Isolate  2 workers spawned · ~758ms startup each (spawn + environment, per file)
+             at least ~758ms faster with isolate: false — reuses workers across files instead of one per file
+
+npm notice
+npm notice New major version of npm available! 11.17.0 -> 12.2.1
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.1
+npm notice To update run: npm install -g npm@12.2.1
+npm notice
