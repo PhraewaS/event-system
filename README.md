@@ -1,12 +1,15 @@
-# Gather — Sprint 1 event system
+# Gather — Event registration (Sprint 1)
 
-React + TypeScript + Vite → Express JSON API → persistent PostgreSQL. Uses the lab stack; `pg` and versioned SQL keep transaction/constraint behavior explicit. Node 24 and PostgreSQL 15+ required. One consolidated [engineering baseline](docs/sprint-1.md) contains SRS, system/feature SDS, feature inventory, traceability, AC, STS, permissions and references.
+Gather is a React → Express → PostgreSQL event registration app. Organizers publish capacity-limited events and inspect owned rosters; Participants reserve places and view private registrations. Current verification: 43 unit/API/DB/client tests and 12 desktop/mobile browser cases.
 
-The complete runnable review snapshot is on `feature/sprint1-github-delivery-5`. The increment is separated into eight issue/feature-branch/PR review units, following [toktickit](https://github.com/PhraewaS/toktickit). Start review with [foundation PR #14](https://github.com/PhraewaS/event-system/pull/14); dependent PRs remain Draft until their parent is accepted into `sprint1-staging`. `main` is the accepted-release branch. See the [review order](docs/sprint-1.md#current-review-order).
+This is a scoped, cumulative review snapshot. The [engineering baseline](docs/sprint-1.md) describes the complete target increment; later features and historical full-increment evidence do not represent functionality or tests on this branch. PR #21 still contains pending delivery tooling; its older evidence does not replace current-source verification.
 
-## Local setup
+## Local setup for this branch
 
-1. Install Node 24 and PostgreSQL. Create **separate** development/test databases using an account allowed to create roles/databases (run once in `psql`):
+Use Node 24 and PostgreSQL 15+. React/TypeScript/Vite → Express API → persistent PostgreSQL follows the lab stack. Versioned SQL and `pg` make database constraints and transactions explicit.
+
+1. Clone the repository. Until the reviewed release reaches main, check out sprint1-staging for the integrated application; main is the accepted-release branch.
+2. Create separate disposable development/test databases once in `psql`:
 
    ```sql
    CREATE ROLE event_app LOGIN PASSWORD 'local-demo-password';
@@ -14,15 +17,13 @@ The complete runnable review snapshot is on `feature/sprint1-github-delivery-5`.
    CREATE DATABASE event_system_test OWNER event_app;
    ```
 
-   The sample password is synthetic local-only data. Use your own credentials for hosted environments. On Windows, `psql.exe` may be under `C:\Program Files\PostgreSQL\17\bin`.
-
-2. Copy `.env.example` to `.env`, adjust connection URLs, and replace `SESSION_SECRET` with random output from:
+3. Copy `.env.example` to `.env`, adjust the connection URLs and replace `SESSION_SECRET` using random output from:
 
    ```sh
    node -e "console.log(require('node:crypto').randomBytes(48).toString('hex'))"
    ```
 
-3. From this folder:
+4. Run:
 
    ```sh
    npm ci
@@ -31,26 +32,26 @@ The complete runnable review snapshot is on `feature/sprint1-github-delivery-5`.
    npm run dev
    ```
 
-   Open http://localhost:5173. Vite proxies the API to port 3000. Alternatively, `npm run build` then `npm start` serves the entire application at http://localhost:3000. Migrate before starting. Schema changes use a new numbered SQL file; never edit an applied migration. Migration names/checksums are persisted and verified; concurrent migration runners use an advisory lock.
+Open http://localhost:5173. Sign in as Organizer, publish a capacity-1 event, sign out and register as Participant. View My registrations, then sign in as the owning Organizer to inspect the roster.
 
-## Demo workflow
+For the built application run `npm run build` then `npm start` and open http://localhost:3000. `GET /api/health` runs a real database query and returns `{ "data": { "status": "ok" } }`; database failure returns 503. Stop/restart the server: the seeded data remains in PostgreSQL.
 
-The four accounts use the `DEMO_PASSWORD` configured when first seeded (example: `Gather-demo-2026!`). These are synthetic accounts, not real secrets.
+## Seed and configuration
 
-| Email                     | Role                                            |
-| ------------------------- | ----------------------------------------------- |
-| organizer@example.test    | Organizer (Alex Morgan)                         |
-| organizer2@example.test   | Organizer (Jamie Rivera; separate ownership)    |
-| participant@example.test  | Participant (Sam Taylor)                        |
-| participant2@example.test | Participant (Riley Chen; separate private data) |
+Four synthetic accounts are seeded: `organizer@example.test`, `organizer2@example.test`, `participant@example.test`, and `participant2@example.test`. Their initial password is `DEMO_PASSWORD` from the local environment. Passwords use Argon2id. Seed reruns preserve existing accounts, hashes, dates and registrations; three sample events are inserted once. Seeding is disabled in production.
 
-Sign in as Organizer → Publish an event (capacity 1 makes rejection easy to demonstrate) → sign out → sign in as Participant → discover event → reserve a place → My registrations → sign out → sign in as original Organizer → My events → View registrations. A second Participant sees Fully booked. Participants cannot publish; the other Organizer cannot read the first Organizer's roster.
+| Variable | Purpose |
+| --- | --- |
+| DATABASE_URL | Persistent application PostgreSQL connection |
+| TEST_DATABASE_URL | Separate disposable database ending in `_test` |
+| SESSION_SECRET | Random value of at least 32 characters; reserve for session signing |
+| DEMO_PASSWORD | At least 12 characters; required for local demo seeding |
+| PORT | Application port; defaults to 3000 |
+| NODE_ENV | Development locally; production for deployed builds |
 
-Seed reruns preserve accounts, passwords, dates and existing registrations. Initial event dates are relative to the first seed; existing events do not move on rerun. Reset demo data only by intentionally creating a fresh disposable database, not by dropping the lab database. No automatic production seeding.
+Local sample credentials are synthetic. Never commit `.env` or real credentials. Migration names/checksums are stored in PostgreSQL; add new numbered migrations rather than changing applied files. Relationships and constraints are defined in [001_initial.sql](server/migrations/001_initial.sql).
 
-Sprint 1 decisions: duplicate registration returns 409, deadline closes registration at that instant, capacity is fixed after publication. Cancellation, editing capacity, check-in and attendance reports are planned for later sprints.
-
-## Automated verification
+## Verification for this snapshot
 
 ```sh
 npm run build
@@ -60,50 +61,45 @@ npm run test:e2e
 node scripts/evidence.mjs
 ```
 
-`npm test` and browser tests use **TEST_DATABASE_URL only** and deliberately clear their own data. The database name must end in `_test`. Do not point it at a shared database. Run suites sequentially; the API suite and browser suite own the same disposable test database. Browser tests start a separate server on port 3100 and test the built UI, so build first. Browser reports, traces, screenshots and source hashes are under ignored `artifacts/`. The initial intentional failing test run is retained locally as `artifacts/tdd-red.log`; the subsequent green run as `artifacts/tdd-green.log`. Preserve these with the submitted commit; source manifests record a real commit when one exists, otherwise `null`.
+The current cumulative suite has **43 unit/API/database tests**: the 38 accepted foundation/authentication/publication/registration/organizer checks plus CLIENT-CSRF-01–05. There are **8 selected browser cases**: UI-REVIEW-01–04 each at desktop 1440×1000 and mobile 390×844. They run the built UI against the real API/test database; only UI-REVIEW-04 explicitly injects list responses to inspect empty/error/loading states. Its session-expiry check updates an actual test session and signs in again through the in-app link without reloading. See the [UI contract and test mapping](docs/sprint-1.md#ui-review-contract--issue-12--pr-19). The [organizer baseline](evidence/sprint-1/organizer-integration-baseline-2026-11-02.json), original [CSRF failing](evidence/sprint-1/csrf-red.txt)/[passing](evidence/sprint-1/csrf-green.txt) runs and [new expiry regression](evidence/sprint-1/ui-expiry-red-2026-11-04.json) remain preserved.
 
-Coverage: valid/invalid login, persisted sessions and logout/expiry, CSRF, role/ownership/private-data access, field boundaries, SQL constraints, duplicate/full/closed rejection, independent API-instance races for the last place and concurrent duplicate submissions, restart persistence, and desktop/mobile browser journeys.
+This verification unit adds **four browser cases**, INT-UI-01/02 at both viewports, for **12 browser cases total** with zero retries. Two separate Participant sessions submit for one remaining place; assertions compare 201/409 API outcomes, the sole SQL row and winner/loser/owner screens. Pagination uses 201 real owned-event fixtures plus foreign events and observes actual offset 0/200 responses. The old prepared six-case `sprint1.spec.ts` overlaps the stronger accepted `ui-review.spec.ts` and is superseded here; all accepted UI assertions remain unchanged. See the [verification contract](docs/sprint-1.md#verification-review-contract--issue-13--pr-20).
 
-## Configuration and security
+[Actual staging revalidation](evidence/sprint-1/staging-ui-revalidation-2026-11-06.json) records build/43 tests/eight browser cases at merged UI source `484027e`, before accepting UI Issues #12/#22/#23. The older `tdd-red.txt`, `test-results.txt`, `browser-results.txt` and `source-manifest.json` in evidence/sprint-1 retain their original implementation identities/counts; they are historical evidence, not current-source execution. Current hosted results and generated source manifests are linked from PR #20 / Issue #13.
 
-| Variable          | Purpose                                                                    |
-| ----------------- | -------------------------------------------------------------------------- |
-| DATABASE_URL      | PostgreSQL application connection; required                                |
-| TEST_DATABASE_URL | Dedicated disposable database, name ending `_test`                         |
-| SESSION_SECRET    | Random 32+ characters; required; changing it invalidates signed cookies    |
-| PORT              | API/production UI port, default 3000                                       |
-| NODE_ENV          | `production` enables Secure cookies and trusts one terminating proxy       |
-| DEMO_PASSWORD     | 12+ characters; required only by local seed; ignored for existing accounts |
-| POSTGRES_PASSWORD | Optional Compose database password; default is local synthetic example     |
+Tests intentionally clear only `TEST_DATABASE_URL`, whose database name must end in `_test`. Use a separate disposable database and run database/browser suites sequentially. Build before running browser tests. Generated local logs/manifests are under ignored `artifacts/`; hosted CI artifacts identify the submitted head. Required CI builds the application, runs the tests available on this branch, builds the Docker image and uploads evidence. Docker/Compose execution on the implementation machine and GCP deployment are separate gates; Compose is introduced in PR #21 and GCP is Lab 5 work.
 
-Eight-hour server sessions are stored in PostgreSQL, not process memory; login rotates the ID/CSRF token; logout revokes it. HttpOnly/SameSite cookies, server role/ownership checks, Argon2id password hashes and synchronizer CSRF tokens protect the workflow. Login limits 20 failed attempts per IP per 15 minutes per API process. Deploy behind a correctly configured HTTPS proxy; multi-instance deployment should centralize login throttling at the gateway. No real secrets belong in Git, Docker images, or browser storage. `/api/health` checks database connectivity. Event/public/roster lists use pages of 200 with `?offset=` and a `page.nextOffset`; UI loads subsequent pages.
+## Why GitHub may show fewer files
 
-## Container and delivery status
+The repository homepage displays its selected branch. main holds accepted releases; sprint1-staging holds integrated work awaiting release. If main shows only the initial docs, open [sprint1-staging](https://github.com/PhraewaS/event-system/tree/sprint1-staging) to view the already-pushed application. Files appear on main after the separately reviewed staging-to-main release PR is merged. Local .env, node_modules, dist, artifacts, .local and Windows desktop.ini stay ignored; they are not missing application source.
 
-Docker/CI files are prepared; Docker is not installed on the implementation machine, so local Docker execution is **not verified**. With Docker installed and a random `SESSION_SECRET` in `.env`:
+## Review and integration workflow
 
-```sh
+Verification PR #20 received same-team approval from guluJa at 094266a and was merged into staging at de67c3877703e49d0e1a1ca0da7ec0de94edd35d. Issue #13 is accepted for verification scope. Delivery PR #21 / Issue #5 adds Compose/templates and release guidance, with its own independent review required. Issue #6 owns the separate release PR from sprint1-staging into main. Earlier foundation/authentication process deviations remain recorded.
+
+The [Kanban](https://github.com/users/PhraewaS/projects/3/views/2) tracks Issues. Ready work uses PR Review; review findings use Fixing. One independent teammate approval, passing required `build-and-test`, an up-to-date branch and resolved conversations are required to merge. Use the PR's Reviewers sidebar for the current teammate request; Assignees alone do not request review. An actual review must state a specific check, finding or reason for approval. Authors cannot approve their own PRs.
+
+PR review is performed by the other developer in the same team: PhraewaS and guluJa review each other's changes. Cross-team accounts do not substitute for that course gate, even if GitHub grants Write access. Cross-team UAT begins in Lab 6 on an actual released version: the other group executes the linked cases, records the release/commit and results, raises defect Issues, and retests the relevant released version after fixes. Existing cross-team code approvals are additional historical feedback, not completed UAT. No UAT result is claimed now.
+
+After reviewed staging integration and acceptance for this item's scope, record the merge and close its Issue/move it to Done. Manual Development linking does not replace acceptance evidence. Follow the remaining dependent PRs in order; [Issue #6](https://github.com/PhraewaS/event-system/issues/6) tracks full sprint integration and a separately reviewed release PR from staging to `main`. No release is accepted yet.
+
+The original implementation branch `feat/sprint-1` and superseded PR #10 preserve the earlier history. This series reconstructs bounded review units from that implementation; it does not invent an earlier issue-first/TDD sequence. Follow the official [issue linking](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue) and [protected branch review](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches) guidance.
+
+
+## Local containers and delivery
+
+Docker Compose uses PostgreSQL 17 with a named event-data volume. A healthy database precedes migration; app starts only after migration succeeds. Set a random SESSION_SECRET in the ignored .env and optionally a URL-safe POSTGRES_PASSWORD (it is interpolated into the local connection URL). Then run:
+
+~~~sh
 docker compose up --build
-```
+~~~
 
-Open http://localhost:3000. Compose uses its own PostgreSQL container/volume; `migrate` must succeed before the application starts. No demo accounts are inserted automatically. Seed the **local** Compose database with:
+Open http://localhost:3000. No accounts are seeded automatically. In another terminal seed only the local Compose database:
 
-```sh
-docker compose exec -e DEMO_PASSWORD=Gather-demo-2026! app node dist/server/seed.js
-```
+~~~sh
+docker compose exec -e "DEMO_PASSWORD=Gather-demo-2026!" app node dist/server/seed.js
+~~~
 
-Production mode rejects demo seeding. `docker compose down` preserves data; deleting its volume deletes the database. The production image supports the one-off release migration command `node dist/server/migrate.js` before starting the server.
+Local Compose uses HTTP/development cookie mode; the runtime image defaults to production for HTTPS deployments. Production rejects demo seeding. docker compose down preserves the named database volume. Hosted CI validates Compose configuration and builds the image. Docker is unavailable on the implementation machine; container startup/restart/persistence execution remains Lab 5 Issue #7, with GCP delivery. Image/config checks do not establish runtime execution.
 
-The [public repository](https://github.com/PhraewaS/event-system) is connected as `origin`, with a [six-stage Kanban](https://github.com/users/PhraewaS/projects/3/views/2) and [Sprint 1 milestone](https://github.com/PhraewaS/event-system/milestone/1). Each bounded change has its own Issue, `feature/sprint1-…-<issue>` branch and PR. The former all-in-one PR #10 and `feat/sprint-1` preserve the initial implementation history; the new review units are explicitly reconstructed from that snapshot. They do not invent an earlier issue-first or TDD timeline.
-
-Current staging is `sprint1-staging` (renamed from `sprint/1`); protections still require the Actions build-and-test check, an up-to-date branch, one independent approval and resolved conversations, including for administrators. Force pushes/deletion are blocked. Feature PRs ultimately integrate into staging, followed by a separately reviewed release PR to main and an accepted tag. Current dependent Draft PRs temporarily compare against their parent feature branch to keep each diff isolated. After the parent is reviewed/merged, update from staging, retarget the child to sprint1-staging, rerun checks and obtain the required review; do not merge Draft children into feature branches.
-
-Issues #1–#4 cover the domain APIs, #11 foundation/contracts, #12 role UI, #13 verification/evidence, #5 repository delivery and #6 final staging/release acceptance. Issues #7–#9 retain Lab 5 and later features. Each of PRs #14–#21 is manually linked to its own Issue in GitHub Development; PR #19 also links defect #22. The Development Kanban displays Issue cards with their linked PRs. All work retains every project item, including any separately added PR cards; Sprint 1 Kanban filters to `is:issue label:sprint:1`, keeping later backlog available in the other views.
-
-For new work, follow Issue + contract → feature/fix branch from current `sprint1-staging` → PR into staging → independent teammate review → reviewed merge and acceptance → full staging integration → separately reviewed release PR to `main` → accepted tag. The existing reconstructed Draft dependency stack is preparation for serial review; it does not mean the parent features are already accepted. Request the teammate under **Reviewers**: assigning them under Assignees alone does not request a review. Record a specific check, question, finding or reason for approval.
-
-Kanban meanings: Backlog = later/uncommitted work; Specified = contract ready; Started = implementation or dependency/integration pending; PR Review = ready with current checks and an independent review request; Fixing = review findings or failures being corrected; Done = independently reviewed, merged and accepted for the item's scope with evidence. A Development link or green CI alone does not complete an Issue. Check linked Issue state after merge and record acceptance before Done. [Issue #6](https://github.com/PhraewaS/event-system/issues/6) holds the live integration/release checklist.
-
-CI runs the build, the actual tests present in each partial review unit, and Docker build. Browser installation/E2E execute once the verification unit supplies the browser specifications. The complete snapshot preserves all 18 original tests unchanged and adds two real-database foundation cases plus an authentication-boundary case and two client-CSRF regressions: **23 tests**, followed by the same **six browser scenarios**. [Actions](https://github.com/PhraewaS/event-system/actions) records the tested commit and actual per-PR result; [original evidence](evidence/sprint-1/) retains its original commit identity. `guluJa` remains the nominated teammate; approval and release acceptance are separate human events.
-
-GCP deployment and completed CI/CD are due in Lab 5. The planned deployment is Cloud Run + Cloud SQL PostgreSQL + Secret Manager, with release migrations and an approved main-to-release pipeline. No cloud resources were created or deployed. See the engineering baseline for official documentation sources and the remaining release gates.
+Feature/bug Issue forms and the PR template require stable AC/test traceability, full criteria in descriptions and same-team review. They become repository defaults after the reviewed release is merged into main. Final release review, actual merge/tag and released-version UAT are separate acceptance events.

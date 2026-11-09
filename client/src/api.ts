@@ -65,8 +65,10 @@ export async function api<T>(
       response.status === 401 &&
       path !== "/auth/me" &&
       path !== "/auth/login"
-    )
+    ) {
+      csrfToken = null;
       window.dispatchEvent(new window.Event("gather:expired"));
+    }
     if (body.error?.code === "CSRF_INVALID") csrfToken = null;
     const fields = body.error?.fields
       ?.map(
@@ -90,8 +92,10 @@ export async function collection<T>(path: string): Promise<T[]> {
     });
     const body = await response.json();
     if (!response.ok) {
-      if (response.status === 401)
+      if (response.status === 401) {
+        csrfToken = null;
         window.dispatchEvent(new window.Event("gather:expired"));
+      }
       throw new ApiError(
         response.status,
         body.error?.code,
