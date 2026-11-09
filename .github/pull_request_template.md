@@ -9,6 +9,10 @@
 - Contract/SDS:
 - AC IDs → actual test IDs:
 
+## Acceptance Criteria
+
+<!-- Include the complete stable AC checklist directly here, with observable outcomes. Links alone do not replace the criteria. Keep acceptance pending until actual independent review/integration. -->
+
 ## Validation and evidence
 
 <!-- Commands, real results, commit/run links, and relevant limits. Include red/green evidence for meaningful rule/defect/change work. -->

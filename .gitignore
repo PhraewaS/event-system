@@ -8,3 +8,6 @@ test-results/
 playwright-report/
 *.log
 .local/
+
+# Windows folder metadata
+[Dd]esktop.ini

@@ -41,6 +41,8 @@ jobs:
         run: npx playwright install --with-deps chromium
       - if: ${{ hashFiles('tests/e2e/*.spec.ts') != '' }}
         run: npm run test:e2e
+      - name: Validate Compose configuration
+        run: docker compose --env-file .env.example config --quiet
       - run: docker build -t gather:ci .
       - name: Record source and submitted commit
         if: ${{ always() && steps.checkout.outcome == 'success' }}
