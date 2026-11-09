@@ -1,0 +1,32 @@
+name: Defect or regression
+description: Reproduce a defect, define its fix contract and preserve regression evidence.
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Affected commit/release and requirement IDs
+      placeholder: "Commit/tag; FR/BR/AC IDs; related issue or PR"
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Preconditions and reproduction steps
+      description: Include role, ownership, inputs and relevant environment. Do not include passwords, cookies or real secrets.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: test
+    attributes:
+      label: Regression acceptance criteria and evidence
+      description: Name the stable AC/test IDs, failing test, intended fix and required passing tests. Branch from current sprint staging and request teammate review.
+    validations:
+      required: true

@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_USER: event_app
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-demo-password}
+      POSTGRES_DB: event_system_dev
+    volumes:
+      - event-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U event_app -d event_system_dev]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  migrate:
+    build: .
+    command: [node, dist/server/migrate.js]
+    environment:
+      DATABASE_URL: postgresql://event_app:${POSTGRES_PASSWORD:-local-demo-password}@db:5432/event_system_dev
+    depends_on:
+      db:
+        condition: service_healthy
+  app:
+    build: .
+    ports:
+      - 3000:8080
+    environment:
+      # Local Compose uses HTTP. Hosted deployments must use production + HTTPS.
+      NODE_ENV: development
+      DATABASE_URL: postgresql://event_app:${POSTGRES_PASSWORD:-local-demo-password}@db:5432/event_system_dev
+      SESSION_SECRET: ${SESSION_SECRET:?Set a random SESSION_SECRET in .env}
+      PORT: 8080
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+volumes:
+  event-data:

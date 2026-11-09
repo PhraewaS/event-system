@@ -1,6 +1,6 @@
-# Gather — Sprint 1: verification
+# Gather — Event registration (Sprint 1)
 
-Review unit 7/8: [Issue #13](https://github.com/PhraewaS/event-system/issues/13) → [PR #20](https://github.com/PhraewaS/event-system/pull/20). This unit retains the accepted role UI checks, adds browser integration checks for competing reservations/pagination and records actual post-merge UI revalidation. Repository templates and Compose remain PR #21.
+Gather is a React → Express → PostgreSQL event registration app. Organizers publish capacity-limited events and inspect owned rosters; Participants reserve places and view private registrations. Current verification: 43 unit/API/DB/client tests and 12 desktop/mobile browser cases.
 
 This is a scoped, cumulative review snapshot. The [engineering baseline](docs/sprint-1.md) describes the complete target increment; later features and historical full-increment evidence do not represent functionality or tests on this branch. PR #21 still contains pending delivery tooling; its older evidence does not replace current-source verification.
 
@@ -8,7 +8,7 @@ This is a scoped, cumulative review snapshot. The [engineering baseline](docs/sp
 
 Use Node 24 and PostgreSQL 15+. React/TypeScript/Vite → Express API → persistent PostgreSQL follows the lab stack. Versioned SQL and `pg` make database constraints and transactions explicit.
 
-1. Check out `feature/sprint1-verification-evidence-13` after cloning the repository.
+1. Clone the repository. Until the reviewed release reaches main, check out sprint1-staging for the integrated application; main is the accepted-release branch.
 2. Create separate disposable development/test databases once in `psql`:
 
    ```sql
@@ -69,9 +69,13 @@ This verification unit adds **four browser cases**, INT-UI-01/02 at both viewpor
 
 Tests intentionally clear only `TEST_DATABASE_URL`, whose database name must end in `_test`. Use a separate disposable database and run database/browser suites sequentially. Build before running browser tests. Generated local logs/manifests are under ignored `artifacts/`; hosted CI artifacts identify the submitted head. Required CI builds the application, runs the tests available on this branch, builds the Docker image and uploads evidence. Docker/Compose execution on the implementation machine and GCP deployment are separate gates; Compose is introduced in PR #21 and GCP is Lab 5 work.
 
+## Why GitHub may show fewer files
+
+The repository homepage displays its selected branch. main holds accepted releases; sprint1-staging holds integrated work awaiting release. If main shows only the initial docs, open [sprint1-staging](https://github.com/PhraewaS/event-system/tree/sprint1-staging) to view the already-pushed application. Files appear on main after the separately reviewed staging-to-main release PR is merged. Local .env, node_modules, dist, artifacts, .local and Windows desktop.ini stay ignored; they are not missing application source.
+
 ## Review and integration workflow
 
-Parent PR #19 received same-team approval from guluJa at `c731749b37f7ed8444a5cc72ee9521e2f2d13331` and was merged into staging at `484027edcaa3f4849b1f999fc0b3e1052be6a328`. Client-CSRF/Login/Re-login was revalidated on that exact merged source before closing UI Issues #12/#22/#23. PR #20 targets staging for verification review and is natively linked to Issue #13. Its own same-team approval/merge/acceptance remain required. Earlier foundation/authentication review-sequence deviations remain preserved in Issues #11/#1.
+Verification PR #20 received same-team approval from guluJa at 094266a and was merged into staging at de67c3877703e49d0e1a1ca0da7ec0de94edd35d. Issue #13 is accepted for verification scope. Delivery PR #21 / Issue #5 adds Compose/templates and release guidance, with its own independent review required. Issue #6 owns the separate release PR from sprint1-staging into main. Earlier foundation/authentication process deviations remain recorded.
 
 The [Kanban](https://github.com/users/PhraewaS/projects/3/views/2) tracks Issues. Ready work uses PR Review; review findings use Fixing. One independent teammate approval, passing required `build-and-test`, an up-to-date branch and resolved conversations are required to merge. Use the PR's Reviewers sidebar for the current teammate request; Assignees alone do not request review. An actual review must state a specific check, finding or reason for approval. Authors cannot approve their own PRs.
 
@@ -80,3 +84,22 @@ PR review is performed by the other developer in the same team: PhraewaS and gul
 After reviewed staging integration and acceptance for this item's scope, record the merge and close its Issue/move it to Done. Manual Development linking does not replace acceptance evidence. Follow the remaining dependent PRs in order; [Issue #6](https://github.com/PhraewaS/event-system/issues/6) tracks full sprint integration and a separately reviewed release PR from staging to `main`. No release is accepted yet.
 
 The original implementation branch `feat/sprint-1` and superseded PR #10 preserve the earlier history. This series reconstructs bounded review units from that implementation; it does not invent an earlier issue-first/TDD sequence. Follow the official [issue linking](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue) and [protected branch review](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches) guidance.
+
+
+## Local containers and delivery
+
+Docker Compose uses PostgreSQL 17 with a named event-data volume. A healthy database precedes migration; app starts only after migration succeeds. Set a random SESSION_SECRET in the ignored .env and optionally a URL-safe POSTGRES_PASSWORD (it is interpolated into the local connection URL). Then run:
+
+~~~sh
+docker compose up --build
+~~~
+
+Open http://localhost:3000. No accounts are seeded automatically. In another terminal seed only the local Compose database:
+
+~~~sh
+docker compose exec -e "DEMO_PASSWORD=Gather-demo-2026!" app node dist/server/seed.js
+~~~
+
+Local Compose uses HTTP/development cookie mode; the runtime image defaults to production for HTTPS deployments. Production rejects demo seeding. docker compose down preserves the named database volume. Hosted CI validates Compose configuration and builds the image. Docker is unavailable on the implementation machine; container startup/restart/persistence execution remains Lab 5 Issue #7, with GCP delivery. Image/config checks do not establish runtime execution.
+
+Feature/bug Issue forms and the PR template require stable AC/test traceability, full criteria in descriptions and same-team review. They become repository defaults after the reviewed release is merged into main. Final release review, actual merge/tag and released-version UAT are separate acceptance events.
