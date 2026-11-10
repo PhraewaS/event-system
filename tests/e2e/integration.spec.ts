@@ -22,8 +22,22 @@ async function signIn(page: Page, email: string) {
   await page.goto("/login");
   await page.getByLabel("Email address", { exact: true }).fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
+  const result = page.waitForResponse(response =>
+    new URL(response.url()).pathname === "/api/auth/login" && response.request().method() === "POST");
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  const response = await result;
+  expect(response.status()).toBe(200);
+  expect((await response.json()).data.user.email).toBe(email);
+  await expect(page).toHaveURL(/\/events$/);
   await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
+}
+async function signOut(page: Page) {
+  const result = page.waitForResponse(response =>
+    new URL(response.url()).pathname === "/api/auth/logout" && response.request().method() === "POST");
+  await page.getByRole("button", { name: "Sign out" }).click();
+  expect((await result).status()).toBe(204);
+  await expect(page.getByRole("button", { name: "Sign out" })).toHaveCount(0);
+  expect((await page.request.get("/api/auth/me")).status()).toBe(401);
 }
 async function noOverflow(page: Page) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
@@ -71,7 +85,7 @@ test("INT-UI-01 / AC-VER-02 competing reservations reconcile winner, loser and o
     await noOverflow(loser);
     await loser.screenshot({ path: `artifacts/screenshots/last-place-loser-${info.project.name}.png`, fullPage: true });
 
-    await page.getByRole("button", { name: "Sign out" }).click();
+    await signOut(page);
     await signIn(page, "organizer@example.test");
     await page.goto(`/organizer/events/${eventId}`);
     await expect(page.getByRole("cell", { name: winnerEmail, exact: true })).toBeVisible();

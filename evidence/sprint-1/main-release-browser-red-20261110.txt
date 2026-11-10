@@ -1,0 +1,81 @@
+Actual hosted red evidence. Source: 0fb7e11408d86f33d97724c0830fd5f53eee7e1b
+Run: https://github.com/PhraewaS/event-system/actions/runs/42819320782
+This is the first main execution, not an execution on the later fix source. ANSI color codes and trailing whitespace are removed; outcomes and timestamps are preserved.
+
+build-and-test	Run npm run test:e2e	﻿2026-11-10T12:52:20.5331542Z ##[group]Run npm run test:e2e
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:20.5331838Z ^[[36;1mnpm run test:e2e^[[0m
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:20.5344936Z shell: /usr/bin/bash -e {0}
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:20.5345185Z env:
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:20.5345714Z   DATABASE_URL: ***localhost:5432/event_system_test
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:20.5346226Z   TEST_DATABASE_URL: ***localhost:5432/event_system_test
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:20.5346629Z   SESSION_SECRET: ci-synthetic-session-secret-at-least-32-characters
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:20.5346993Z   NODE_ENV: test
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:20.5347191Z ##[endgroup]
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:20.6254020Z
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:20.6254717Z > gather-event-system@0.1.0 test:e2e
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:20.6255077Z > playwright test
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:20.6255213Z
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:22.2677291Z
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:22.2678014Z Running 12 tests using 1 worker
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:22.2678251Z
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:24.6925181Z   ✓   1 [desktop] › tests/e2e/integration.spec.ts:32:1 › INT-UI-01 / AC-VER-02 competing reservations reconcile winner, loser and owner screens (1.6s)
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:25.7506275Z   ✓   2 [desktop] › tests/e2e/integration.spec.ts:84:1 › INT-UI-02 / AC-VER-03 discovery and owned screens consume actual second pages without foreign data (1.0s)
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:28.0449800Z   ✓   3 [desktop] › tests/e2e/ui-review.spec.ts:34:1 › UI-REVIEW-01 / AC-12-01,04,05,07,08 publish → register → persisted personal view → owner roster (2.1s)
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:28.9502054Z   ✓   4 [desktop] › tests/e2e/ui-review.spec.ts:133:1 › UI-REVIEW-02 / AC-12-01,02,08 invalid login, role restrictions and ownership (895ms)
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:30.0028602Z   ✓   5 [desktop] › tests/e2e/ui-review.spec.ts:179:1 › UI-REVIEW-03 / AC-12-03,04,07 discovery, validation and closed event states (1.0s)
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:31.0925011Z   ✓   6 [desktop] › tests/e2e/ui-review.spec.ts:234:1 › UI-REVIEW-04 / AC-12-06,07 loading, empty, API failure and expired private identity (1.1s)
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:38.5607233Z   ✘   7 [mobile] › tests/e2e/integration.spec.ts:32:1 › INT-UI-01 / AC-VER-02 competing reservations reconcile winner, loser and owner screens (6.6s)
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:40.3677270Z   ✓   8 [mobile] › tests/e2e/integration.spec.ts:84:1 › INT-UI-02 / AC-VER-03 discovery and owned screens consume actual second pages without foreign data (1.1s)
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:42.7349347Z   ✓   9 [mobile] › tests/e2e/ui-review.spec.ts:34:1 › UI-REVIEW-01 / AC-12-01,04,05,07,08 publish → register → persisted personal view → owner roster (2.2s)
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:43.6844033Z   ✓  10 [mobile] › tests/e2e/ui-review.spec.ts:133:1 › UI-REVIEW-02 / AC-12-01,02,08 invalid login, role restrictions and ownership (938ms)
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:44.9505469Z   ✓  11 [mobile] › tests/e2e/ui-review.spec.ts:179:1 › UI-REVIEW-03 / AC-12-03,04,07 discovery, validation and closed event states (1.3s)
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1058055Z   ✓  12 [mobile] › tests/e2e/ui-review.spec.ts:234:1 › UI-REVIEW-04 / AC-12-06,07 loading, empty, API failure and expired private identity (1.1s)
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1678334Z
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1683914Z
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1697468Z   1) [mobile] › tests/e2e/integration.spec.ts:32:1 › INT-UI-01 / AC-VER-02 competing reservations reconcile winner, loser and owner screens
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1698392Z
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1698633Z     Error: expect(locator).toBeVisible() failed
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1699011Z
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1699452Z     Locator: getByRole('cell', { name: 'participant@example.test', exact: true })
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1700092Z     Expected: visible
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1700448Z     Timeout: 5000ms
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1700851Z     Error: element(s) not found
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1701122Z
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1701277Z     Call log:
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1701943Z       - Expect "toBeVisible" getByRole('cell', { name: 'participant@example.test', exact: true }) with timeout 5000ms
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1702837Z       - waiting for getByRole('cell', { name: 'participant@example.test', exact: true })
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1703147Z
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1703154Z
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1703332Z       75 |     await signIn(page, "organizer@example.test");
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1704058Z       76 |     await page.goto(`/organizer/events/${eventId}`);
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1704574Z     > 77 |     await expect(page.getByRole("cell", { name: winnerEmail, exact: true })).toBeVisible();
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1705080Z          |                                                                              ^
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1705477Z       78 |     await expect(page.locator("tbody tr")).toHaveCount(1);
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1705970Z       79 |     await expect(page.locator(".roster-summary strong")).toHaveText(["1", "0", "1"]);
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1706402Z       80 |     await noOverflow(page);
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1706859Z         at /home/runner/work/event-system/event-system/tests/e2e/integration.spec.ts:77:78
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1707185Z
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1707636Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1708404Z     artifacts/playwright-results/integration-INT-UI-01-AC-V-c6e13-ner-loser-and-owner-screens-mobile/test-failed-1.png
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1709219Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1709491Z
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1709848Z     attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1710607Z     artifacts/playwright-results/integration-INT-UI-01-AC-V-c6e13-ner-loser-and-owner-screens-mobile/test-failed-1.png
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1711390Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1711768Z
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1712255Z     Error Context: artifacts/playwright-results/integration-INT-UI-01-AC-V-c6e13-ner-loser-and-owner-screens-mobile/error-context.md
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1713025Z
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1713493Z     Error Context: artifacts/playwright-results/integration-INT-UI-01-AC-V-c6e13-ner-loser-and-owner-screens-mobile/error-context.md
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1714003Z
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1714395Z     attachment #5: trace (application/zip) ─────────────────────────────────────────────────────────
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1715111Z     artifacts/playwright-results/integration-INT-UI-01-AC-V-c6e13-ner-loser-and-owner-screens-mobile/trace.zip
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1715619Z     Usage:
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1715730Z
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1716229Z         npx playwright show-trace artifacts/playwright-results/integration-INT-UI-01-AC-V-c6e13-ner-loser-and-owner-screens-mobile/trace.zip
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1716752Z
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1717066Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1717359Z
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1717456Z   1 failed
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1718091Z     [mobile] › tests/e2e/integration.spec.ts:32:1 › INT-UI-01 / AC-VER-02 competing reservations reconcile winner, loser and owner screens
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.1718639Z   11 passed (25.0s)
+build-and-test	Run npm run test:e2e	2026-11-10T12:52:46.2273780Z ##[error]Process completed with exit code 1.
