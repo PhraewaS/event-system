@@ -1,8 +1,34 @@
 # Sprint 1 engineering baseline and feature contracts
 
-> This document combines the target Sprint 1 contracts and historical complete-increment evidence. Consult this branch’s README for its implemented review scope, runnable commands and actual tests; later features/evidence are introduced by subsequent PRs. The active integration branch is `sprint1-staging`. Independent acceptance remains pending.
+> Current accepted product baseline: [v0.1.0](https://github.com/PhraewaS/event-system/releases/tag/v0.1.0) at main `7532716bbe96b8d7d9cea33b3b063ba16bf746d2`, published 10 November 2026. [Issue #6](https://github.com/PhraewaS/event-system/issues/6) is closed/Done after actual main CI and release/tag verification. The active integration branch remains `sprint1-staging`. This documentation correction is tracked in [Issue #30](https://github.com/PhraewaS/event-system/issues/30); its own review/integration state is recorded there and it does not rewrite the original tag/archive. Dated contracts and old pending states below are explicitly historical snapshots, not the current release status.
 
 Baseline: 29 October 2026. Target: 8 November 2026. This single document combines the required SRS, feature inventory/traceability, System SDS, feature SDS, AC and STS to avoid duplicate documents. The supplied course brief is the product authority. Linked official documentation below supplies technical guidance; it does not define business policy.
+
+## Accepted release and actual evidence index
+
+Accepted release #29: guluJa [APPROVED](https://github.com/PhraewaS/event-system/pull/29#pullrequestreview-5842989660) staging `6db75f1544dd648b1818bbcf876f2b9b3daf9490` on 10 November 2026 at 13:55:39 UTC, then merged at 13:55:53 UTC into main `7532716bbe96b8d7d9cea33b3b063ba16bf746d2`. Main tree `941018ed84114dd702d573d8cb53ecbcc87dde47` equals reviewed staging and the tested release integration. Tag `v0.1.0` targets this exact main commit; 59 tracked source hashes match its hosted manifest. Original release #24/main 0fb7e11 remains historical RED and is not relabelled as passing.
+
+| Requirement / AC | Actual tests or evidence | Accepted result and source |
+| --- | --- | --- |
+| FR-01 / AC-01–03 / BR-04 | T-01–03, AUTH-BOUND-01–06, T-13–15, CLIENT-CSRF-01–05 | Included in 43/43 tests at main 7532716; [raw main output](https://github.com/PhraewaS/event-system/releases/download/v0.1.0/sprint-1-main-ci.log) |
+| FR-02/03 / AC-04–05, AC-PUB-01 / BR-01/03/04 | T-04/05, PUB-BOUND-01–03, PUB-UNIT-01 | Valid/invalid publication, Organizer role and server ownership, public discovery; same actual main suite |
+| FR-03/04 / AC-06–09 / BR-01–04 | T-06–09, REG-BOUND-01–03, REG-CONC-01 | Persistent own registration, duplicate/full/deadline rejection, independent API instances/last-place race and private ownership; same main suite |
+| FR-05 / AC-10–11 / BR-04 / NFR-01/04 | T-10/11, ORG-BOUND-01–04, FOUND-01/02 | Owned events/rosters, schema/seed/persistence and bounded owner-only pagination; same main suite |
+| AC-12, AC-12-01–08, AC-UI-EXP-01/02 / NFR-03 | UI-REVIEW-01–04 × desktop/mobile | Eight real-browser cases within current 12/12; UI-REVIEW-04 alone declares injected list responses for loading/empty/503 states |
+| AC-VER-02/03 / BR-01/02 / NFR-04 | INT-UI-01/02 × desktop/mobile | Four further browser cases: winner/loser/owner/SQL consistency and complete real pagination; [raw browser results](https://github.com/PhraewaS/event-system/releases/download/v0.1.0/sprint-1-browser-results.json) |
+| AC-AUTH-SYNC-01–04 | Actual #28 guluJa approval/merge, exact staging local and hosted validation | Accepted at staging 6db75f1; [fix record #27](https://github.com/PhraewaS/event-system/issues/27), [staging CI](https://github.com/PhraewaS/event-system/actions/runs/42825944757/job/129863142516) |
+| AC-REL-01–05 | Separate #29 release review, actual main push CI, tree/file audit and verified tag/assets | Accepted in [closed Issue #6](https://github.com/PhraewaS/event-system/issues/6); original process exceptions below remain exceptions |
+
+
+
+[Main CI](https://github.com/PhraewaS/event-system/actions/runs/42829070132/job/129873990822) at `7532716bbe96b8d7d9cea33b3b063ba16bf746d2` passed clean install, production build, **43 unit/API/DB/client tests**, **12 desktop/mobile browser cases**, zero failures/skips/retries, Compose config and Docker image build. Permanent [release evidence JSON](https://github.com/PhraewaS/event-system/releases/download/v0.1.0/sprint-1-release-evidence.json) binds source hashes, review/merge, main execution and file digests. Its two companion assets preserve the actual full CI output and browser results. CI artifact sprint-1-evidence ID 13769664166 records the same checkout; permanent release assets avoid relying only on the 30-day workflow artifact.
+
+Separate actual executions: exact corrected staging 6db75f1 passed local production build/43 tests/12 browser and [hosted staging checks](https://github.com/PhraewaS/event-system/actions/runs/42825944757/job/129863142516); [release PR CI](https://github.com/PhraewaS/event-system/actions/runs/42826991379/job/129866787385) tested its integration with the then-current main; actual main push CI above tested 7532716. The local staging execution is not a new local main run. Earlier d04ed58 assistant/hosted 12/12 and guluJa local 8 passes/4 default timeouts plus a focused two-Desktop-journey 120-second rerun remain separate dated results. The focused rerun is not a full local 12/12 pass.
+
+**Scope and recorded limitations:** the runnable Sprint 1 UI → API → persistent PostgreSQL workflow, schema/migrations/seed, auth/roles/ownership, publication, registration and organizer rosters are accepted at the repository release. Foundation/auth PRs #14/#15 were checked by the same-team developer after merge; this does not satisfy their original pre-merge-review sequence. Initial Git history starts after the original red/green cycle, so no earlier test commit or Issue/PR history is claimed. Their original records remain below. No course grading decision is inferred from repository acceptance.
+
+**Dates and remaining gates:** target 8 November 2026; actual release 10 November 2026 at 14:00:37 UTC. Actual submission time is not established by repository metadata. Docker image/config checks are hosted; local Compose startup/restart/persistence and GCP remain Lab 5 #7, released-version cross-team UAT Lab 6, and cancellation/capacity editing/check-in/attendance later scope. The original v0.1.0 archive retains its old README/SDS; Issue #30 records this supplementary documentation revision and any subsequent reviewed promotion. No tag, asset or recorded result is rewritten.
+
 
 ## SRS: actors, scope and decisions
 
@@ -46,7 +72,7 @@ Database: `users` (UUID, unique lower-case email, display name, Argon2id hash, c
 
 Identity lifecycle: Argon2id passwords; express-session with PostgreSQL store. Cookie is HttpOnly, SameSite=Lax, Path=/; Secure in production. Eight-hour fixed lifetime. Session ID and CSRF token rotate on successful login; previous session is destroyed. Logout is POST with CSRF protection and destroys server session and cookie. Expired sessions become anonymous; purge expired rows every 15 minutes with the application cleanup job. Server reads role/identity from database on every protected request. No bearer tokens or credentials in localStorage. Synchronizer CSRF token required on all POSTs, including login. Failed login attempts are rate limited (20/IP/15min per API process); TLS terminates at the deployment proxy. Production requires configured DATABASE_URL, random SESSION_SECRET and valid HTTPS proxy setup.
 
-UI: responsive sidebar/nav, discover/search, event detail, sign-in, private registrations, owned events, publish form and roster. Loading/empty/error states; labels, keyboard controls, focus visibility, polite status messages. Datetimes entered in browser local time and sent as ISO UTC; displayed with timezone. Search filters the bounded event list.
+UI: responsive sidebar/nav, discover/search, event detail, sign-in, private registrations, owned events, publish form and roster. Loading/empty/error states; labels, keyboard controls, focus visibility, polite status messages. Datetimes entered in browser local time and sent as ISO UTC; displayed with timezone. Lists consume successive 200-row API pages; search filters the loaded published events.
 
 ## API/data specifications
 
@@ -69,6 +95,10 @@ JSON envelopes: success `{data: object|array}` (lists also include `page:{offset
 | GET /api/health                    | None                                                                  | 200 if database reachable, otherwise 503                                  |
 
 Field limits: title 3–120 trimmed characters, description 10–4000, location 2–200. API datetimes must be ISO instants with timezone offsets, not ambiguous local timestamps. Client cannot set role, organizerId, participantId, status, or registration ID. Publication is immediate; no draft state in Sprint 1.
+
+<details><summary>Source-specific feature contracts and refinement history — old workflow states describe their recorded snapshots</summary>
+
+The contracts/AC/STS and original source references below are retained. Their pending/review statements belong to those feature snapshots; current accepted outcomes are in the release index above.
 
 ## Authentication review contract — Issue #1 / PR #15
 
@@ -205,6 +235,9 @@ Evidence/provenance: on 6 November the assistant checked out actual staging `484
 
 Workflow/DoD: actual same-team current-source approval and staging merge of PR #19, followed by the recorded Client-CSRF/Login/Re-login staging revalidation, precede scoped acceptance/closure of Issues #12/#22/#23. This branch synchronizes accepted staging, resolves README-only conflict, retains accepted assertions, implements the recorded test plan, updates this existing SDS/README and inspects its bounded diff/configuration. Production build, 43 tests and 12 browser cases plus current required hosted Docker/source evidence must pass before PR #20/Issue #13 move to PR Review with guluJa requested and full AC directly in the description. Findings return both cards to Fixing; actual approval/reviewed staging merge and scoped acceptance precede Done/closure. Delivery PR #21 stays Draft while its parent awaits acceptance. Full staging/release acceptance remains Issue #6; completed GCP delivery Lab 5 and released-version cross-team UAT Lab 6. No new publication/registration/cancellation/capacity-change/attendance feature is introduced. Sources consulted: [Playwright assertions](https://playwright.dev/docs/test-assertions), [real response observation](https://playwright.dev/docs/api/class-page#page-wait-for-response), [local server lifecycle](https://playwright.dev/docs/test-webserver), [node-postgres transactions](https://node-postgres.com/features/transactions), [GitHub reviews](https://docs.github.com/en/pull-requests/reference/pull-request-reviews).
 
+
+</details>
+
 ## Feature-level SDS, acceptance criteria and STS (original implementation baseline)
 
 F-01 depends on user/session migrations. Bootstrap CSRF → submit credentials → verify hash → regenerate session → retrieve identity → protected requests → logout/expiry. F-02 depends on F-01 and event migration: validate all inputs and role → insert event owned by caller → return visible published record. F-03 depends on F-01/F-02: acquire event row `FOR UPDATE` in one checked-out connection's transaction → check duplicate → database-clock deadline → count → insert → commit; every rejection rolls back. Independent API instances must honor the same row lock. F-04 depends on these records: server filters owner before exposing roster; never trust a caller-supplied user ID. Error and permission behavior is specified in the matrix/API above.
@@ -224,7 +257,7 @@ F-01 depends on user/session migrations. Bootstrap CSRF → submit credentials �
 | AC-11 | Database constraints reject invalid persistent records       | T-11 DB: duplicate key, invalid role/capacity/deadline, broken FK → SQL constraint errors                                                                                                  |
 | AC-12 | Complete browser journey works at desktop/mobile sizes       | UI-REVIEW-01–04 refine original T-12: publish/register/persisted view/roster, invalid login, forbidden routes, closed/full state, loading/empty/error/session expiry; no horizontal overflow |
 
-Definition of Done for F-01–F-04: contracts precede code; meaningful failing tests captured before implementation; linked tests pass against disposable real PostgreSQL; production build passes; browser critical journeys pass; migrations/seed/setup reproduce; no real secrets committed; diff inspected. GitHub issue/board links, branch/PR, independent teammate review and submitted-commit evidence are required delivery gates. The repository/board/issues and protections are now configured; teammate review and release acceptance remain pending. Authors cannot self-approve. Do not claim these external gates are complete locally.
+Definition of Done for F-01–F-04: contracts precede code; meaningful failing tests are captured before implementation; linked tests pass against disposable real PostgreSQL; production build/browser critical journeys/migration/seed/setup pass; no real secrets are committed; the diff is inspected. GitHub Issue/board links, feature/fix PRs, actual independent teammate review, scoped staging integration and submitted-source evidence remain delivery gates; authors cannot self-approve. Current product acceptance is recorded in the release index and closed Issue #6. This definition does not erase the documented initial Git/TDD-history and #14/#15 pre-merge-review deviations or claim every historical step happened in the required order.
 
 ## Delivery and planned deployment
 
@@ -232,7 +265,7 @@ Sprint 1 must run locally; completed Docker/CI/CD and GCP deployment are due in 
 
 Course workflow after repo creation: issues referencing FR/F/AC and this contract → feature/fix branches from `sprint1-staging` → reviewed PR into staging → integration tests → independently reviewed release PR to main → tag accepted commit. Record genuine local results tied to submitted commit; preserve red/green evidence. No invented issues, reviews, approvals or deployment claims.
 
-Reviewer roles clarified by the stakeholder on 1 November 2026: PhraewaS/guluJa are the development team; poom2548/meebotsompurin-stack belong to the cross-team UAT group. The other developer reviews behavior, tests and changes against AC and the actual source head, records specific checks/results/findings and approves only after corrections/checks pass. Write access or a cross-team approval does not establish same-team review. PR #16 is approved/merged by the same-team sequence; PR #17 will request guluJa after validation. PRs #14/#15 retain their real review/merge history and the recorded retrospective acceptance in closed Issues #11/#1; the original missing pre-merge review deviations remain part of the release evidence.
+Reviewer roles clarified by the stakeholder on 1 November 2026: PhraewaS/guluJa are the development team; poom2548/meebotsompurin-stack belong to the cross-team UAT group. The other developer reviews behavior, tests and changes against AC/current source and records actual checks/results/findings before approving new work. Accepted feature/fix/release records are linked in closed Issue #6. PRs #14/#15 retain real original merges and retrospective same-team checks in closed Issues #11/#1; those checks do not recreate the missing pre-merge sequence. Historical source-specific contracts preserve the earlier workflow states in their dated sections.
 
 Cross-team UAT starts in Lab 6 on an actual released version. Record the release/tag or commit, tester, test/AC IDs, inputs and observable results; link defect Issues to fixes and rerun relevant cases against the subsequent released version. Cross-team UAT does not replace development PR review. Prior cross-team code approvals are historical feedback, not released-version UAT evidence. No cross-team UAT execution or acceptance is claimed at this stage.
 
@@ -243,6 +276,10 @@ Cross-team UAT starts in Lab 6 on an actual released version. Record the release
 - [Argon2 implementation](https://github.com/ranisalt/node-argon2), [OWASP password storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html), [OWASP CSRF](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)
 - [PostgreSQL locks](https://www.postgresql.org/docs/current/explicit-locking.html), [pg transactions](https://node-postgres.com/features/transactions), [parameterized queries](https://node-postgres.com/features/queries)
 - [Playwright webServer](https://playwright.dev/docs/test-webserver), [Cloud Run persistence](https://docs.cloud.google.com/run/docs/container-contract#filesystem), [Cloud SQL from Cloud Run](https://docs.cloud.google.com/sql/docs/postgres/connect-run)
+
+<details><summary>Original implementation, Git bootstrap and reconstructed review-series records — historical states and counts</summary>
+
+These are dated provenance records, including the initial Git-after-red/green limitation. Their old pending gates, branch pointers and test counts are not current release claims. The accepted 7532716 results and remaining assessment limits are indexed above.
 
 ## Actual execution evidence
 
@@ -299,11 +336,20 @@ Staging was renamed to `sprint1-staging` without moving its commit or weakening 
 
 The original `feat/sprint-1` and PR #10 preserve the earlier combined implementation and hosted runs. PR #10 is superseded by the scoped series and is not an accepted/merged release. No original branch or review history was rewritten. Each PR in the table is now manually linked to its dedicated Issue through GitHub Development; PR #19 also links defect #22. Each Issue records its branch, scope, dependency and eventual staging target. Foundation moves to PR Review when its hosted check passes and an independent teammate is requested under Reviewers. Dependent units remain Draft/Started with blocked:dependency until their parent is accepted. Release acceptance remains Specified; Lab 5/later features remain Backlog. Done requires actual independent review, reviewed staging merge and acceptance for the item's scope, with evidence; inspect linked Issue state after merge rather than treating linkage or CI as completion.
 
+
+### Historical demonstration pointer
+
+Current complete source for local demonstrations: `feature/sprint1-github-delivery-5`. API/UI business behavior is preserved; only the API file's formatting differs, with an equivalent parsed syntax tree. Build/real-DB/browser results remain execution evidence, not assumed from this statement.
+
+</details>
+
 #### Repository workflow and project views
 
 New work starts with an Issue and feature contract before creating a feature/fix branch from the current `sprint1-staging` head. The prepared dependency stack above is an explicitly reconstructed exception for existing implementation, not evidence of already accepted dependencies. A normal feature/fix PR targets staging. A release PR targets main only after actual staging integration/system/acceptance checks and independent review. Preserve real red/green execution evidence for meaningful rule/defect changes; do not invent earlier process history.
 
-Manually link an Issue using Development; closing keywords alone do not establish the link when a PR targets a non-default branch. The Issue is the work/acceptance contract and the PR is the proposed change. Request the independent teammate in **Reviewers**; **Assignees** identify work ownership and do not replace a review request. The review must contain a specific check, question, finding or reason for approval. Required checks, an up-to-date base, independent teammate approval, stale-review dismissal and resolved conversations remain protected-branch gates. On 10 November 2026 the owner explicitly authorized disabling only main require_last_push_approval to resolve the two-person-team deadlock after guluJa approved release #24 but had also merged the latest staging fix. Main still requires one non-author approval, strict build-and-test, stale-review dismissal, resolved conversations and admin enforcement; force pushes/deletions remain disabled. Staging protection was not changed.
+Manually link an Issue using Development; closing keywords alone do not establish the link when a PR targets a non-default branch. The Issue is the work/acceptance contract; the PR is its proposed change. Request the independent teammate in Reviewers; Assignees identify work ownership and do not replace review. A review must contain a specific check, question, finding or reason. Current main and sprint1-staging protection, verified 10 November 2026: one non-author approval, stale-review dismissal, strict required build-and-test, resolved conversations and admin enforcement; force pushes/deletions remain disabled. The owner-authorized `require_last_push_approval` option is false on both branches.
+
+Policy chronology: on 10 November at 12:48 UTC, only main last-push approval was disabled to resolve the two-person-team deadlock after guluJa both merged the latest staging fix and approved release #24; staging was unchanged at that first action. At 13:12 UTC the owner separately authorized the same one-field adjustment on sprint1-staging. Before/after audits verified every other protection field unchanged. [Issue #6](https://github.com/PhraewaS/event-system/issues/6) retains both records. This optional GitHub setting is not the course requirement for independent teammate review; that requirement remains enforced.
 
 All work retains every project item, including separately added PR cards. Development Kanban filters to `is:issue` and shows linked pull requests on Issue cards. Sprint 1 Kanban filters to `is:issue label:sprint:1`; Lab 5/later Issues remain visible in the broader backlog. Separate PR cards must use a status consistent with their linked Issue; they are not duplicate feature contracts.
 
@@ -316,11 +362,15 @@ All work retains every project item, including separately added PR cards. Develo
 | Fixing | Review findings or failed checks are being corrected and re-tested |
 | Done | Specific independent review, reviewed staging merge and item acceptance recorded |
 
-[Issue #6](https://github.com/PhraewaS/event-system/issues/6) is the live integration/release checklist. After each accepted parent, update the child from staging, retarget it to staging, rerun checks and request a fresh independent review before merge. After acceptance, verify the linked Issue state and record the reviewed merge/evidence before closing it or moving it to Done. PR #19 and its synchronized foundation ancestor contain the corrections for Issue #22; the defect additionally requires integrated regression/browser evidence. GCP deployment remains Lab 5 work in Issue #7.
+[Issue #6](https://github.com/PhraewaS/event-system/issues/6) is the closed acceptance record for product release v0.1.0; its final main checks/tag and evidence are complete. For new work, use its own Issue, feature/fix/docs branch and independent review; record actual scoped integration before Done. Issue #30 is this post-release documentation correction and remains separately tracked. Do not reopen the completed product milestone merely to imply these later docs are already in the original archive. Lab 5 delivery remains Issue #7.
 
 Official workflow references: [manual Issue/PR linking](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue), [changing a PR base](https://docs.github.com/en/pull-requests/how-tos/create-pull-requests/changing-the-base-branch-of-a-pull-request), [project filters](https://docs.github.com/en/issues/planning-and-tracking-with-projects/customizing-views-in-your-project/filtering-projects), and [built-in project workflows](https://docs.github.com/en/issues/planning-and-tracking-with-projects/automating-your-project/using-the-built-in-automations).
 
-Current complete source for local demonstrations: `feature/sprint1-github-delivery-5`. API/UI business behavior is preserved; only the API file's formatting differs, with an equivalent parsed syntax tree. Build/real-DB/browser results remain execution evidence, not assumed from this statement.
+Accepted runnable application source: `v0.1.0` / main `7532716bbe96b8d7d9cea33b3b063ba16bf746d2`. Use the README setup for that release. Issue #30 records this documentation correction independently of product acceptance; subsequent staged docs or main updates require their own recorded review/integration.
+
+<details><summary>Historical defect and delivery review contracts — original RED/GREEN sources and then-pending gates retained</summary>
+
+The following records describe their original correction/review stages. #22/#23, delivery #21 and synchronization #28 are accepted through the recorded integration/release sequence; their old pending statements do not reopen them. Original failed outputs, assertions, identities and limitations stay unchanged.
 
 ### CSRF regression found during hosted review validation
 
@@ -347,3 +397,10 @@ The contract was recorded in Issue #27 before implementation, after first main C
 AC-AUTH-SYNC-01: server/UI account switch completes before private navigation. AC-AUTH-SYNC-02: preserve every original capacity/winner/loser/roster/security assertion, zero retries and default budgets. AC-AUTH-SYNC-03: retain actual main red execution, then source-specific build/43 tests/full 12 browser and hosted config/image evidence. AC-AUTH-SYNC-04: actual same-team review, staging integration, follow-up main release and main CI before Issue #6 release/tag acceptance. STS AUTH-SYNC-RED maps observed mobile INT-UI-01 to AC-01/02/03; AUTH-SYNC-GREEN runs both INT-UI-01 viewports and the complete inherited suite against real PostgreSQL; AUTH-SYNC-DIFF verifies only synchronization/docs/evidence changes. The original failure is saved in evidence/sprint-1/main-release-browser-red-20261110.txt. A fix readiness pass is not independent acceptance or a successful main release.
 
 Official references: [Playwright authentication](https://playwright.dev/docs/auth), [async assertions](https://playwright.dev/docs/test-assertions) and [trace viewer](https://playwright.dev/docs/trace-viewer).
+
+
+</details>
+
+## Documentation correction contract — Issue #30
+
+The [pre-implementation contract](https://github.com/PhraewaS/event-system/issues/30) defines AC-DOC-01–05: current README/release index, current SDS/history/policy separation, preserved provenance and date/Lab limits, two-document-only scope with unchanged v0.1.0 tag/assets, and independent reviewed staging integration. STS DOC-STATUS-01, DOC-PROVENANCE-01, DOC-SCOPE-01 and DOC-RELEASE-01 inspect those outcomes; DOC-CI-01 records current docs-head hosted checks plus Issue/PR/reviewer/project state. This wording-only correction adds no product tests or artificial TDD cycle. Actual validation/review/integration evidence belongs to that Issue and its linked docs PR; product acceptance remains the earlier v0.1.0 record.
