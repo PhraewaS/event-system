@@ -1,0 +1,38 @@
+
+> gather-event-system@0.1.0 test
+> vitest run --reporter=verbose
+
+
+ RUN  v5.0.5 C:/Users/User/OneDrive/Documents/SE/Group Project/event-system
+
+ ✓ tests/client-csrf.test.ts > CLIENT-CSRF-01 concurrent initialization preserves the current session token for a protected mutation 27ms
+ ✓ tests/client-csrf.test.ts > CLIENT-CSRF-02 a failed initialization can be retried without retaining a rejected request 1ms
+ ✓ tests/sprint1.test.ts > F-01 Identity and session security > T-01 / AC-01 valid and invalid login, generic rejection, password hashing 117ms
+ ✓ tests/sprint1.test.ts > F-01 Identity and session security > T-02 / AC-02 session rotation, expiry, logout revocation, recreation persistence 129ms
+ ✓ tests/sprint1.test.ts > F-01 Identity and session security > T-03 / AC-03 authentication and CSRF enforced, safe errors 63ms
+ ✓ tests/sprint1.test.ts > F-02 Publication > T-04 / AC-04 roles and server-assigned ownership 88ms
+ ✓ tests/sprint1.test.ts > F-02 Publication > T-05 / AC-05 publication boundaries leave storage unchanged 74ms
+ ✓ tests/sprint1.test.ts > F-03 Registration and persistence > T-06 / AC-06 full API journey survives independent application/pool recreation 147ms
+ ✓ tests/sprint1.test.ts > F-03 Registration and persistence > T-07 / AC-07 duplicate, full, deadline, missing and forged registration 126ms
+ ✓ tests/sprint1.test.ts > F-03 Registration and persistence > T-08 / AC-08 two independent API instances compete for final place 187ms
+ ✓ tests/sprint1.test.ts > F-03 Registration and persistence > T-09 / AC-09 private registration owner restrictions 105ms
+ ✓ tests/sprint1.test.ts > F-04 Organizer ownership and data integrity > T-10 / AC-10 role and event ownership enforced independently 119ms
+ ✓ tests/sprint1.test.ts > F-04 Organizer ownership and data integrity > T-11 / AC-11 database constraints and migration/seed reproducibility 420ms
+ ✓ tests/security.test.ts > T-13 / AC-01,03 failed-login throttling preserves successful use 488ms
+ ✓ tests/security.test.ts > T-14 / AC-02,03 production cookies require HTTPS and retain CSRF protections 34ms
+ ✓ tests/security.test.ts > T-15 / AC-03,04,10 current database role is authoritative and bodies/pages are bounded 52ms
+ ✓ tests/foundation.test.ts > FOUND-01 health endpoint verifies the real persistent database 21ms
+ ✓ tests/foundation.test.ts > FOUND-02 migrations and seed are repeatable and survive an independent connection 130ms
+ ✓ tests/auth-boundaries.test.ts > AUTH-BOUND-01 identity and login/logout enforce authentication and CSRF before domain routes exist 71ms
+ ✓ tests/rules.test.ts > T-07 unit / AC-07 registration rule boundaries > accepts immediately before the deadline 1ms
+ ✓ tests/rules.test.ts > T-07 unit / AC-07 registration rule boundaries > rejects exactly at and after the deadline 0ms
+ ✓ tests/rules.test.ts > T-07 unit / AC-07 registration rule boundaries > duplicate takes precedence when full or closed 0ms
+ ✓ tests/rules.test.ts > T-07 unit / AC-07 registration rule boundaries > capacity boundary rejects only when all places are taken 0ms
+
+ Test Files  6 passed (6)
+      Tests  23 passed (23)
+   Start at  22:41:31
+   Duration  8.80s (tests 77%, import 21%, transform 1%)
+
+    Isolate  6 workers spawned · ~757ms startup each (spawn + environment, per file)
+             at least ~3.78s faster with isolate: false — reuses workers across files instead of one per file

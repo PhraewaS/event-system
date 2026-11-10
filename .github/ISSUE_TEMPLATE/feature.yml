@@ -1,0 +1,41 @@
+name: Feature or planned change
+description: Define a bounded feature contract before implementation.
+title: "[Feature] "
+labels: ["feature"]
+body:
+  - type: input
+    id: traceability
+    attributes:
+      label: Requirement and feature IDs
+      description: Link the relevant FR/BR/NFR, feature ID, sprint and contract.
+      placeholder: "FR-04, BR-02, F-03; Sprint 1; docs/sprint-1.md"
+    validations:
+      required: true
+  - type: textarea
+    id: contract
+    attributes:
+      label: Behavior, scope and permissions
+      description: Describe workflow, validation, errors, role/ownership restrictions and UI/API/data changes. Update the linked SDS first.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria and test specification
+      description: Give stable AC/test IDs, inputs/preconditions, expected results, levels and negative/boundary cases.
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Definition of Done and evidence
+      value: |
+        - [ ] Contract and acceptance/test IDs agreed before implementation.
+        - [ ] Feature/fix branch created from current sprint staging.
+        - [ ] Meaningful failing test captured before rule/change work.
+        - [ ] Implementation and relevant tests pass; evidence tied to commit.
+        - [ ] PR targets sprint staging and links this issue.
+        - [ ] A teammate reviews behavior, tests and permissions; no self-approval.
+        - [ ] Integration/acceptance checks pass before release PR to main.
+    validations:
+      required: true
