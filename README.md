@@ -2,7 +2,7 @@
 
 Gather is a React → Express → PostgreSQL event registration app. Organizers publish capacity-limited events and inspect owned rosters; Participants reserve places and view private registrations. Current verification: 43 unit/API/DB/client tests and 12 desktop/mobile browser cases.
 
-This is a scoped, cumulative review snapshot. The [engineering baseline](docs/sprint-1.md) describes the complete target increment; later features and historical full-increment evidence do not represent functionality or tests on this branch. PR #21 still contains pending delivery tooling; its older evidence does not replace current-source verification.
+The [engineering baseline](docs/sprint-1.md) defines the Sprint 1 increment and its acceptance evidence. Delivery PR #21 / Issue #5 has been accepted and merged into sprint1-staging at d04ed58. Release PR #24 is undergoing release review; main awaits its separately approved merge and release record in Issue #6. Historical evidence retains its original source identity; current results must be attributed to their actual source and runner.
 
 ## Local setup for this branch
 
@@ -67,7 +67,19 @@ This verification unit adds **four browser cases**, INT-UI-01/02 at both viewpor
 
 [Actual staging revalidation](evidence/sprint-1/staging-ui-revalidation-2026-11-06.json) records build/43 tests/eight browser cases at merged UI source `484027e`, before accepting UI Issues #12/#22/#23. The older `tdd-red.txt`, `test-results.txt`, `browser-results.txt` and `source-manifest.json` in evidence/sprint-1 retain their original implementation identities/counts; they are historical evidence, not current-source execution. Current hosted results and generated source manifests are linked from PR #20 / Issue #13.
 
-Tests intentionally clear only `TEST_DATABASE_URL`, whose database name must end in `_test`. Use a separate disposable database and run database/browser suites sequentially. Build before running browser tests. Generated local logs/manifests are under ignored `artifacts/`; hosted CI artifacts identify the submitted head. Required CI builds the application, runs the tests available on this branch, builds the Docker image and uploads evidence. Docker/Compose execution on the implementation machine and GCP deployment are separate gates; Compose is introduced in PR #21 and GCP is Lab 5 work.
+### Execution records by source and runner
+
+The following are separate runs of d04ed58, not a combined success claim:
+
+| Execution | Unit/API tests and build | Browser outcome / limits | Evidence |
+| --- | --- | --- | --- |
+| Assistant, Final staging on 9 November | Build and 43 tests passed | Full default suite: 12/12 passed, zero retries | Issue #6 source/log hashes; staging/release CI links below |
+| guluJa local release review | Build and 43 tests reported passed | Default full run: 8 passes and 4 timeouts at 30 seconds; focused rerun of two Desktop journeys with 120 seconds passed unchanged assertions. This is not a full local 12/12 pass. | [Reviewer report](https://github.com/PhraewaS/event-system/pull/24#pullrequestreview-5826613204) |
+| Hosted CI at d04ed58 | Build and 43 tests passed; Compose config and image build passed | Full suite: 12/12 passed | [Staging CI](https://github.com/PhraewaS/event-system/actions/runs/42618680936), [Release CI](https://github.com/PhraewaS/event-system/actions/runs/42618689044) |
+
+Current README-only revision CI is recorded in its PR and retains the same test assertions and default timeout. The reviewer's timeout observations remain a recorded reproduction limit; no product/test timeout is increased by this documentation fix.
+
+Tests intentionally clear only `TEST_DATABASE_URL`, whose database name must end in `_test`. Use a separate disposable database and run database/browser suites sequentially. Build before running browser tests. Generated local logs/manifests are under ignored `artifacts/`; hosted CI artifacts identify the submitted head. Required CI builds the application, runs the tests available on this branch, builds the Docker image and uploads evidence. Compose configuration is already included through accepted PR #21. Actual container startup/restart/persistence execution and completed GCP delivery remain Lab 5 Issue #7 gates.
 
 ## Why GitHub may show fewer files
 
@@ -75,7 +87,7 @@ The repository homepage displays its selected branch. main holds accepted releas
 
 ## Review and integration workflow
 
-Verification PR #20 received same-team approval from guluJa at 094266a and was merged into staging at de67c3877703e49d0e1a1ca0da7ec0de94edd35d. Issue #13 is accepted for verification scope. Delivery PR #21 / Issue #5 adds Compose/templates and release guidance, with its own independent review required. Issue #6 owns the separate release PR from sprint1-staging into main. Earlier foundation/authentication process deviations remain recorded.
+Verification PR #20 / Issue #13 is accepted. Delivery PR #21 was independently reviewed and approved by guluJa at c1088b0, then merged by guluJa into staging d04ed58 on 9 November 2026; Issue #5 is accepted/Done. Release PR #24 from sprint1-staging into main is undergoing release review, including the README correction tracked in Issue #25. After the correction is reviewed/merged into staging, its revised source/CI must receive a fresh release assessment. After an approved main merge, verify main files/checks and record the actual release commit/tag and evidence in Issue #6 before final acceptance. Earlier foundation/authentication process deviations remain recorded.
 
 The [Kanban](https://github.com/users/PhraewaS/projects/3/views/2) tracks Issues. Ready work uses PR Review; review findings use Fixing. One independent teammate approval, passing required `build-and-test`, an up-to-date branch and resolved conversations are required to merge. Use the PR's Reviewers sidebar for the current teammate request; Assignees alone do not request review. An actual review must state a specific check, finding or reason for approval. Authors cannot approve their own PRs.
 
