@@ -20,8 +20,22 @@ async function signIn(page: Page, email: string) {
   await page.goto("/login");
   await page.getByLabel("Email address", { exact: true }).fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
+  const result = page.waitForResponse(response =>
+    new URL(response.url()).pathname === "/api/auth/login" && response.request().method() === "POST");
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  const response = await result;
+  expect(response.status()).toBe(200);
+  expect((await response.json()).data.user.email).toBe(email);
+  await expect(page).toHaveURL(/\/events$/);
   await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
+}
+async function signOut(page: Page) {
+  const result = page.waitForResponse(response =>
+    new URL(response.url()).pathname === "/api/auth/logout" && response.request().method() === "POST");
+  await page.getByRole("button", { name: "Sign out" }).click();
+  expect((await result).status()).toBe(204);
+  await expect(page.getByRole("button", { name: "Sign out" })).toHaveCount(0);
+  expect((await page.request.get("/api/auth/me")).status()).toBe(401);
 }
 async function noOverflow(page: Page) {
   expect(
@@ -157,7 +171,7 @@ test("UI-REVIEW-02 / AC-12-01,02,08 invalid login, role restrictions and ownersh
   const forbidden = await page.request.post("/api/events", { data: {} });
   expect(forbidden.status()).toBe(403);
   expect((await forbidden.json()).error.code).toBe("FORBIDDEN");
-  await page.getByRole("button", { name: "Sign out" }).click();
+  await signOut(page);
   await expect(
     page.getByRole("link", { name: "Sign in", exact: false }),
   ).toBeVisible();
@@ -220,7 +234,7 @@ test("UI-REVIEW-03 / AC-12-03,04,07 discovery, validation and closed event state
   await pool.query(
     "UPDATE events SET registration_deadline=now()-interval '1 hour' WHERE id='20000000-0000-4000-8000-000000000003'",
   );
-  await page.getByRole("button", { name: "Sign out" }).click();
+  await signOut(page);
   await signIn(page, "participant@example.test");
   await page.goto("/events/20000000-0000-4000-8000-000000000003");
   await expect(
