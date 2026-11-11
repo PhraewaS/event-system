@@ -15,6 +15,12 @@ The [engineering baseline](docs/sprint-1.md) combines the SRS, feature inventory
 
 Permanent release assets: [source/review/CI evidence](https://github.com/PhraewaS/event-system/releases/download/v0.1.0/sprint-1-release-evidence.json), [full main CI output](https://github.com/PhraewaS/event-system/releases/download/v0.1.0/sprint-1-main-ci.log), [actual browser results](https://github.com/PhraewaS/event-system/releases/download/v0.1.0/sprint-1-browser-results.json). These results describe the accepted source above. Checks for this later documentation revision are recorded separately in Issue #30 and its linked PR.
 
+## Deliverable 1 documents and three-sprint scope
+
+The existing [combined engineering baseline](docs/sprint-1.md#srs-actors-scope-and-decisions) contains the whole-product SRS, [feature/requirement traceability](docs/sprint-1.md#feature-inventory-and-requirements-traceability), System/feature SDS, AC/STS/DoD and [three-sprint plan](docs/sprint-1.md#three-sprint-plan). The 11 November supplement is tracked in [Issue #34](https://github.com/PhraewaS/event-system/issues/34); its docs PR still requires independent review/integration. Sprint 1 F-01–04 is the accepted v0.1.0 application; Sprint 2 F-05 cancellation/re-registration/capacity and Sprint 3 F-06 check-in/attendance are planned, not implemented. Future rules are proposed decisions to confirm in their feature contracts before coding.
+
+The supplied Deliverable 1 rubric requires **one self-contained PDF with complete Parts A–E and selected execution/process evidence in Part F**, A–F page navigation, both students' names/IDs, contributor/AI-use disclosure and the immutable release reference. GitHub/ZIP links do not replace PDF contents. See [evidence/submission preparation](docs/sprint-1.md#deliverable-1-evidence-and-submission-preparation) for the actual AC/test-file mapping, test excerpts, reviewed workflow samples, verified contributor roles and outstanding PDF/identity confirmation. This docs follow-up does not claim PDF assembly/LEB2 submission or change v0.1.0.
+
 ## Local setup for this branch
 
 Use Node 24 and PostgreSQL 15+. React/TypeScript/Vite → Express API → persistent PostgreSQL follows the lab stack. Versioned SQL and `pg` make database constraints and transactions explicit.
