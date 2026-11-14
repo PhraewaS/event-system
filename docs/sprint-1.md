@@ -2,7 +2,7 @@
 
 > Current accepted product baseline: [v0.1.0](https://github.com/PhraewaS/event-system/releases/tag/v0.1.0) at main `7532716bbe96b8d7d9cea33b3b063ba16bf746d2`, published 10 November 2026. [Issue #6](https://github.com/PhraewaS/event-system/issues/6) is closed/Done after actual main CI and release/tag verification. The active integration branch remains `sprint1-staging`. This documentation correction is tracked in [Issue #30](https://github.com/PhraewaS/event-system/issues/30); its own review/integration state is recorded there and it does not rewrite the original tag/archive. Dated contracts and old pending states below are explicitly historical snapshots, not the current release status.
 
-Baseline: 29 October 2026. Target: 8 November 2026. This single document combines the required SRS, feature inventory/traceability, System SDS, feature SDS, AC and STS to avoid duplicate documents. The supplied course brief is the product authority. Linked official documentation below supplies technical guidance; it does not define business policy.
+Baseline: 29 October 2026. Target: 8 November 2026. Whole-product planning supplement: 11 November 2026; 29 November checkpoint plan refined on 14 November after review, [Issue #34](https://github.com/PhraewaS/event-system/issues/34), pending independent review/integration. This single document combines the required SRS, feature inventory/traceability, System SDS, feature SDS, AC and STS to avoid duplicate documents. The supplied course brief is the product authority. Linked official documentation below supplies technical guidance; it does not define business policy.
 
 ## Accepted release and actual evidence index
 
@@ -32,27 +32,164 @@ Separate actual executions: exact corrected staging 6db75f1 passed local product
 
 ## SRS: actors, scope and decisions
 
-Actors: Participant and Organizer, exactly one role per account. No administrator bypass. Seeded accounts suffice. Sprint 1 delivers publish → discover → register → view own registration → owner views roster. Cancellation, capacity editing, check-in and attendance reports belong to later sprints; no UI/API pretends these are available.
+Revision for [Issue #34](https://github.com/PhraewaS/event-system/issues/34), 11 November 2026. The stakeholder problem is coordinating published events with limited places while keeping registrations private and giving organizers reliable rosters and attendance totals. The context is a small university/community event service using synthetic data. The whole-product baseline covers publication, capacity, registration/cancellation, organizer management, check-in and attendance reporting. It does not claim that later features are in v0.1.0.
 
-Working Sprint 1 decisions (proposed to stakeholder; no contrary instruction received): duplicate requests return 409, including when the event is full; registration closes at an explicit deadline no later than the event start; deadline equality is closed; capacity is immutable after publication in Sprint 1. Later capacity reductions must not fall below active registrations. Later cancellation must release a place and allow re-registration. These future rules are planning, not implemented features.
+| Actor | Responsibilities and record boundaries |
+| --- | --- |
+| Visitor | Discover public events/details; sign in. No private registrations, rosters or management access. |
+| Participant | Sign in/out, discover/register and retrieve own registration. Sprint 2 adds cancellation/re-registration of own record. Cannot publish, edit capacity, inspect another person's private registration or check anyone in. |
+| Organizer | Sign in/out, publish and manage own events/rosters. Sprint 2 adds owned-event capacity changes; Sprint 3 adds check-in/reporting for own events. No broader organizer/admin bypass. |
+| Development team / cross-team testers | Maintain/review releases and test synthetic data. These are engineering responsibilities, not extra application roles. Cross-team UAT is a separate Lab 6 gate. |
 
-| ID     | Requirement / measurable rule                                                                              | Feature                   | Sprint |
-| ------ | ---------------------------------------------------------------------------------------------------------- | ------------------------- | ------ |
-| FR-01  | Login, logout, current identity; seeded Participant/Organizer                                              | F-01 Identity             | 1      |
-| FR-02  | Organizer publishes title, description, location, start, deadline and capacity                             | F-02 Publication          | 1      |
-| FR-03  | Discover published events and remaining places                                                             | F-03 Registration         | 1      |
-| FR-04  | Participant registers and views only their own registrations                                               | F-03 Registration         | 1      |
-| FR-05  | Organizer lists own events and each owned event's roster                                                   | F-04 Organizer management | 1      |
-| FR-06  | Cancellation and editable capacity                                                                         | F-05 Changes              | Later  |
-| FR-07  | Check-in and attendance reports                                                                            | F-06 Attendance           | Later  |
-| BR-01  | Capacity is an integer 1–1,000,000; never oversubscribe, even concurrently                                 | F-02/F-03                 | 1      |
-| BR-02  | One registration per participant/event; duplicates return 409                                              | F-03                      | 1      |
-| BR-03  | Start and deadline are future instants; deadline ≤ start; close at deadline                                | F-02/F-03                 | 1      |
-| BR-04  | Server derives identity and event ownership; client cannot assign them                                     | All                       | 1      |
-| NFR-01 | Committed users/events/registrations/sessions survive app restart                                          | All                       | 1      |
-| NFR-02 | Negative auth, role, ownership, input and concurrent-capacity tests run against real PostgreSQL            | All                       | 1      |
-| NFR-03 | Browser UI works at 390px and 1440px without horizontal overflow                                           | All                       | 1      |
-| NFR-04 | JSON request body ≤16KiB; list responses bounded to 200 rows per page, with offset/nextOffset continuation | All                       | 1      |
+Exactly one application role per account; seeded accounts suffice. Sprint 1 delivers publish → discover → register → retrieve persisted own registration → owner views roster. Exclusions for the complete baseline: payment, messaging/email integrations, self-registration/recovery, multiple roles, administrators, public attendee lists, event deletion/drafts, general title/date editing, QR scanning, check-out and report export. Cancellation/capacity editing and check-in/reports are included in the product but excluded from the Sprint 1 implementation.
+
+| ID | Observable functional requirement | Feature | Establish / verify |
+| --- | --- | --- | --- |
+| FR-01 | Login, logout and current identity use seeded Participant/Organizer accounts and server-owned sessions. | F-01 Identity | Sprint 1; retain in 2/3 |
+| FR-02 | Organizer publishes title, description, location, start, deadline and positive integer capacity; caller becomes owner. | F-02 Publication | Sprint 1 |
+| FR-03 | Anyone discovers published events with remaining places and whether registration is open. | F-03 Registration | Sprint 1; active-only counts in 2 |
+| FR-04 | Participant registers and retrieves only own persistent registrations; concurrent requests cannot oversubscribe. | F-03 Registration | Sprint 1; re-registration in 2 |
+| FR-05 | Organizer lists only owned events and reads each owned event's roster/counts. | F-04 Organizer management | Sprint 1; state/count regressions in 2/3 |
+| FR-06 | Participant cancels own active registration and may re-register when eligible; Organizer changes only owned-event capacity without going below active registrations. | F-05 Changes | Sprint 2; Issue #8 |
+| FR-07 | Organizer checks in an eligible active registration for an owned event and retrieves deterministic private attendance totals. | F-06 Attendance | Sprint 3; Issue #9 |
+
+### Business rules and planning decisions
+
+BR-01–04 retain their original Sprint 1 meaning. BR-05–10 are explicit future planning assumptions proposed in this revision; they require owner/stakeholder confirmation in the relevant feature contract before coding. A documentation approval does not prove stakeholder confirmation. Until then there is no cancellation, capacity-update or check-in endpoint in v0.1.0.
+
+| ID | Rule / observable boundary | Allocation and current status |
+| --- | --- | --- |
+| BR-01 | Capacity is an integer 1–1,000,000; active registrations never exceed capacity, including competing requests. | Sprint 1 established; Sprint 2 extends counting to state transitions |
+| BR-02 | One registration per participant/event in Sprint 1; repeated active registration returns 409, including when full/closed. In Sprint 2, reactivation must still leave at most one active registration. | Sprint 1 established; Sprint 2 extension |
+| BR-03 | On publication start/deadline are future timezone-qualified instants and deadline ≤ start. Registration is closed when database time ≥ deadline, evaluated after acquiring the event lock. | Sprint 1 established; same gate for Sprint 2 re-registration |
+| BR-04 | Server derives identity and checks role plus ownership; caller-supplied identities never widen access. | All features; Sprint 1 established, re-verify in 2/3 |
+| BR-05 | Proposed: only the participant owning an active registration may cancel before its registration deadline. A cancellation releases exactly one place atomically. For an already CANCELLED owned row return its existing state without another release. An ACTIVE row at/after deadline is rejected without change. | F-05 / Sprint 2; planned, confirmation pending |
+| BR-06 | Proposed: cancelled registration can be reactivated only before deadline with an available place. Repeated/reactivated competing requests use the same duplicate/deadline/capacity checks. Cancelled records consume no place. | F-05 / Sprint 2; planned, confirmation pending |
+| BR-07 | Proposed: only the event owner may change capacity before deadline; keep integer bounds and reject capacity below current active count. Equal-to-count is valid. Register/cancel/reactivate/capacity change serialize on the same event row; failure preserves prior data. | F-05 / Sprint 2; planned, confirmation pending |
+| BR-08 | Proposed: only the owning Organizer may check in an ACTIVE registration at/after event start. Cancelled/nonexistent/foreign records cannot be checked in. Repeating check-in returns the existing result without a second attendance record. | F-06 / Sprint 3; planned, confirmation pending |
+| BR-09 | Proposed: private report for one owned event gives activeRegistered, checkedIn, notCheckedIn = activeRegistered − checkedIn, and attendancePercent = 100 × checkedIn / activeRegistered (0 when denominator is 0). Read counts from one consistent DB snapshot; round display to two decimal places. | F-06 / Sprint 3; planned, confirmation pending |
+| BR-10 | Proposed: read/edit/report/check-in ownership follows the registration's event owner, never a supplied organizer ID. No public roster/report or Participant check-in; future wrong-role/foreign access follows current 403/404 privacy conventions. | F-05/F-06 / Sprints 2/3; planned, confirmation pending |
+
+### Important NFR targets and verification allocation
+
+| ID | Measurable target | Practical verification | Establish / extend |
+| --- | --- | --- | --- |
+| NFR-01 | Committed users/events/registrations/sessions survive application stop/restart or a new API/pool using the same DB; future cancellation/check-in states also survive. | FOUND-02/manual M-FOUND checks, T-02/T-06, ORG-BOUND-04; later state persistence checks. Durable DB, not browser/container files. | Sprint 1; regression/extension 2/3; actual container/cloud persistence Lab 5 |
+| NFR-02 | Every protected operation has negative authentication/role/ownership checks; no private data on denied requests. Domain/persistence/concurrency tests use real PostgreSQL; important pure boundary logic has unit checks. | T-01–11, T-13–15, AUTH/PUB/REG/ORG boundary suites, rules.test.ts; new mutation/report checks in 2/3. No mock-only persistence claim. | Sprint 1; re-verify 2/3 |
+| NFR-03 | Selected critical journeys work at 390px and 1440px without horizontal page overflow; labels and loading/empty/error/status behavior are observable. | UI-REVIEW-01–04 and INT-UI-01/02 at both viewports; later cancellation/check-in/report journeys reuse both sizes. | Sprint 1; extend 2/3 |
+| NFR-04 | JSON request bodies ≤16KiB; each list response ≤200 rows with offset/nextOffset continuation and caller-scoped complete retrieval. | T-15, PUB-BOUND-02, REG-BOUND-03, ORG-BOUND-02/03, INT-UI-02; apply limits to future lists and reports. | Sprint 1; re-verify 2/3 |
+| NFR-05 | Reproduce setup from committed dependency lockfile, numbered/checksummed migrations and idempotent synthetic seed with no private secrets in Git/client/PDF. Container/app restarts preserve DB storage; accepted main deployment is repeatable through the approved pipeline. | Clean-install/build/setup inspection; hosted config/image checks exist. Actual Compose runtime/restart and GCP pipeline/deployment evidence must be recorded in Lab 5 Issue #7; regression thereafter. | Design in Sprint 1; runtime/cloud verification Lab 5, maintain Sprints 2/3 |
+
+### Assumptions, resolutions and open decisions
+
+| ID | Decision / question | Resolution, owner and evidence |
+| --- | --- | --- |
+| DEC-01 | Duplicate precedence, deadlines, changing capacity in Sprint 1 | Adopted working Sprint 1 decisions: duplicate → 409 even full/closed; explicit deadline with equality closed; capacity immutable after publication. Retained implementation/tests and original assumptions; no retroactive stakeholder approval claim. |
+| DEC-02 | Cancellation/re-registration lifecycle | Proposed BR-05/06; reuse one participant/event row with ACTIVE/CANCELLED state. Confirm cancellation cutoff and repeated-cancel behavior with owner/stakeholder in Issue #8 contract before coding. |
+| DEC-03 | Capacity changes and concurrent allocation | Proposed BR-07; owner only, before deadline, never below active count, same event lock as registration. Confirm in Issue #8; no date/title editing added. |
+| DEC-04 | Check-in eligibility/window and correction | Proposed BR-08: at/after start, active registrations only, duplicate is idempotent. Closing time, undo and backdating are not defined/implemented; decide explicitly in Issue #9 contract. Baseline proposes no automatic close and no undo/backdating. |
+| DEC-05 | Attendance denominator/privacy | Proposed BR-09/10: ACTIVE registrations, one snapshot, zero-denominator 0, private owner-only on-screen summary. Confirm in Issue #9; exports excluded. |
+| DEC-06 | Same-team review and AI assistance | PhraewaS/guluJa are developers; the other two accounts are cross-team testers. Follow actual review records and disclose AI assistance and historical review/TDD gaps; no invented pair-work or equal-commit claim. |
+| DEC-07 | Submission authority and immutable assessment version | Supplied Deliverable 1 rubric governs Parts A–F and PDF format; supplied master brief governs product/theme. v0.1.0 remains at 7532716; this 11 November supplement is later documentation. Confirm student names/IDs, theme assignment and actual LEB2 submission with the team; not established by GitHub metadata. |
+
+## Feature inventory and requirements traceability
+
+This is the whole-product inventory, not a list of completed features. Verification names beginning PLAN- are reserved planning labels, not executable tests or pass results; full later AC/STS are deliberately deferred until each feature contract is approved.
+
+| Feature / system responsibility | Scope / related requirements | Dependencies | Sprint / verification / state |
+| --- | --- | --- | --- |
+| F-01 Identity | FR-01, BR-04, NFR-01/02/05; persisted identity/session/CSRF | User/session schema, configuration/seed | Sprint 1 established; AC-01–03 / T-01–03, AUTH-BOUND, T-13–15; accepted |
+| F-02 Publication | FR-02, BR-01/03/04, NFR-01/02/03/04 | F-01, event schema | Sprint 1; AC-04/05, AC-PUB-01 / T-04/05, PUB-BOUND, PUB-UNIT, UI-REVIEW; accepted |
+| F-03 Registration | FR-03/04, BR-01–04, NFR-01–04 | F-01/F-02, registration schema/transaction | Sprint 1; AC-06–09 / T-06–09, REG-BOUND/CONC, rules.test.ts, UI/INT-UI; accepted |
+| F-04 Organizer management | FR-05, BR-04, NFR-01–04 | F-01/F-02/F-03 | Sprint 1; AC-10/11 / T-10/11, ORG-BOUND, UI-REVIEW; accepted |
+| F-05 Changes | FR-06, BR-01–07/10, NFR-01–05; own cancellation/reactivation and owner capacity updates | Accepted F-01–04; reviewed Issue #8 state/migration/UI/API contract | Sprint 2; PLAN-CHANGE-01 unit + real-DB/API concurrency/permissions/persistence + desktop/mobile journey; planned, not implemented |
+| F-06 Attendance | FR-07, BR-04/08/09/10, NFR-01–05; owner check-in and attendance summary | F-01/F-04 plus F-05 registration state semantics; reviewed Issue #9 contract | Sprint 3; PLAN-ATT-01 unit aggregation + real-DB/API ownership/idempotence/persistence + browser journey; planned, not implemented |
+| SYS-DELIVERY (named cross-cutting responsibility) | NFR-05; schema/config/secret/setup, reviewed CI/release/Docker/GCP | F-01–04 runnable product; approved Lab 5 GCP access | Design/Sprint 1 config-image checks; runtime/cloud Lab 5 Issue #7; maintain in 2/3 |
+| SYS-QUALITY (named cross-cutting responsibility) | NFR-01–04 across F-01–06; regression, release acceptance, Lab 6 UAT/retest | Each feature's contract/tests/review; actual released version | Sprint 1 verification #13/#6 accepted; extend in 2/3; UAT is a separate Lab 6 gate |
+
+| Requirement | Feature / responsibility | Establish and verify; later re-verification |
+| --- | --- | --- |
+| FR-01 | F-01 | S1 AC-01–03, auth/session tests; S2/S3 regression |
+| FR-02 | F-02 | S1 AC-04/05, publication tests/UI |
+| FR-03 | F-03 | S1 AC-PUB-01/AC-06, discovery/API/UI; S2 active-only counts |
+| FR-04 | F-03 | S1 AC-06–09, registration/ownership/concurrency; S2 reactivation |
+| FR-05 | F-04 | S1 AC-10/11, owner API/UI; S2/S3 state/count consistency |
+| FR-06 | F-05 | S2 PLAN-CHANGE-01, cancellation/reactivation/capacity API/DB/UI |
+| FR-07 | F-06 | S3 PLAN-ATT-01, check-in/report API/DB/UI |
+| BR-01 | F-02/F-03/F-05 | S1 T-05/T-07/T-08; S2 capacity/cancel/register races |
+| BR-02 | F-03/F-05 | S1 T-07/T-08; S2 repeated cancellation/reactivation races |
+| BR-03 | F-02/F-03/F-05 | S1 T-05/T-07/REG-CONC-01; S2 exact cutoff and lock-wait cases |
+| BR-04 | F-01–06 | S1 auth/role/owner tests; S2/S3 every new protected operation |
+| BR-05 | F-05 | S2 PLAN-CHANGE-01, own/foreign/repeated/deadline cancellation |
+| BR-06 | F-05 | S2 PLAN-CHANGE-01, no-place/closed/reactivation/duplicate races |
+| BR-07 | F-05 | S2 PLAN-CHANGE-01, bounds/equal-count/below-count/wrong owner/concurrency |
+| BR-08 | F-06 | S3 PLAN-ATT-01, active/cancelled/early/repeated/foreign check-in |
+| BR-09 | F-06 | S3 PLAN-ATT-01, zero/mixed/all-present counts and snapshot consistency |
+| BR-10 | F-05/F-06 | S2/S3 PLAN-CHANGE-01/PLAN-ATT-01, 401/403/404/no private leak |
+| NFR-01 | SYS-QUALITY, F-01–06 | S1 persistence tests/manual evidence; S2/S3 state persistence; Lab 5 durable runtime |
+| NFR-02 | SYS-QUALITY, F-01–06 | S1 real-DB/security/unit suites; S2/S3 negative and boundary coverage |
+| NFR-03 | SYS-QUALITY, F-01–06 | S1 12 desktop/mobile cases; S2/S3 new critical UI paths |
+| NFR-04 | SYS-QUALITY, F-02–06 | S1 body/pagination checks; S2/S3 new collection/mutation bounds |
+| NFR-05 | SYS-DELIVERY, F-01–06 | S1 setup/source/config/image evidence; Lab 5 runtime/GCP; S2/S3 clean upgrade/release |
+
+Coverage gaps are explicit: later FR-06/07 and BR-05–10 have a feature, sprint and planned verification but no implementation/executable acceptance evidence yet. NFR-05 runtime/cloud verification remains Issue #7. Proposed decisions DEC-02–05 are not stakeholder-approved changes. Existing accepted S1 behavior/IDs remain stable; document change #34 and feature contracts must record any approved future policy revision.
+
+## Three-sprint plan
+
+Course checkpoints are targets, not backdated completion claims. Scope fits two students by retaining the modular monolith and deferring recovery/admin/payments/export integrations. Implement bounded subfeatures sequentially on branches from that sprint's staging; do not create all future branches/contracts now.
+
+| Sprint / checkpoint | Goal and included features | Dependencies / bounded order | Completion outcome and evidence gate |
+| --- | --- | --- | --- |
+| Sprint 1 — Deliverable 1, 8 November 2026 | Small deployable publication → registration → persisted retrieval → owned roster. F-01, F-02, F-03, F-04; SYS-QUALITY and delivery design. | Schema/seed → identity → publication → capacity-safe registration → owner APIs → role UI → integration → reviewed staging/main release. | Runnable UI/API/PostgreSQL, real roles/session, rejection/ownership/concurrency tests, setup and accepted main release. Actual v0.1.0 acceptance/publication occurred 10 November; 43/43 tests + 12/12 browser and original process/date exceptions retained. A self-contained PDF/submission is a separate deliverable, not proved by release acceptance. |
+| Sprint 2 — Deliverable 2, 29 November 2026 | Complete F-05 cancellation/reactivation and owner-capacity changes, retain F-01–04 regression, and integrate the tested F-06 check-in slice defined below. | Confirm DEC-02/03 in Issue #8; contracts/AC/STS → state migration → cancellation/reactivation → owner-capacity updates under the same lock → UI/count regression. F-06 depends on accepted F-05 state semantics and Issue #9 contract. Issue #7 is a required dependency for the integrated main candidate and actual GCP deployment by this checkpoint. | All Sprint 2 scope complete/reviewed/verified; meaningful F-06 owner-check-in/idempotence path implemented and tested; integrated candidate on main with matching tag/commit/CI/GCP revision and post-deployment journey/persistence evidence. Separate Sprint 2 accepted release remains identifiable. Missing deployment or unexecuted F-06 checks block checkpoint readiness; local work may continue but cannot substitute for this gate. |
+| Sprint 3 — progress checkpoint 29 November; complete by 13 December 2026 | F-06 first delivers the real owner-check-in/idempotence workflow by 29 November; finish owner-only attendance reporting, regression/hardening and UAT retests in bounded follow-up work. | Confirm DEC-04/05 and record contracts/AC/STS for all remaining F-06 work before implementation. F-05 state semantics → attendance migration → owner check-in/UI → tested main/GCP checkpoint → bounded report/UI completion and final verification. | By 29 November the check-in slice is implemented/tested in the deployed integrated candidate, not an empty screen or specification alone. The remaining-work register below bounds report completion and defects before 13 December; primary workflows are not reserved for the final two days. |
+
+### 29 November integrated checkpoint and remaining work
+
+Planning refinement requested by [guluJa review of PR #35](https://github.com/PhraewaS/event-system/pull/35#pullrequestreview-5903829498), 14 November 2026. Authority: supplied project_deliverable_2_v1.pdf, section 2 (page 1), sections 3.3/3.5 (pages 2–3), and section 4.2 (page 5). Deliverable 1 requires deployment design, not actual cloud deployment; the later Deliverable 2 requires an integrated main candidate actually deployed on GCP. This is a future checkpoint plan, not implementation, a passing test result or a new deployment claim in this docs PR.
+
+**F-06 minimum working slice by 29 November:** an authenticated Organizer opens an owned event's roster, checks in an eligible ACTIVE registration at/after the event start, sees persisted checked-in state after reload, and repeats the action without a second attendance row. The server derives the acting Organizer/timestamp and rejects anonymous, Participant, foreign-event, cancelled-registration and early check-in requests without writes. Eligibility/start/idempotence follow proposed BR-08/10 and DEC-04; confirm policy in the Issue #9 contract before coding. Exact endpoint/request/error definitions and stable feature AC/test IDs must be recorded there, not invented as implemented routes here. Full contracts/AC/STS must cover the remaining F-06 reporting scope as well, not only this first slice.
+
+| Planned checkpoint verification | Observable expected outcome | Evidence to retain at the actual candidate version |
+| --- | --- | --- |
+| PLAN-ATT-CHECKIN-UNIT (reserved planning label, not an existing test) | Active/start eligibility and rejection rules exercise before/at-start and cancelled boundaries; expected errors are explicit. | Actual unit file/test names, input/expected/actual, RED/GREEN where meaningful and tested commits |
+| PLAN-ATT-CHECKIN-API (planned real API/DB checks) | Owner succeeds; wrong role/owner/CSRF/eligibility fails safely; repeated and competing check-ins leave one attendance row; a fresh API/pool reads the saved result. | Actual AC/test IDs, HTTP/error outcomes, SQL assertions, migration/fixture source and passing/failing/skipped counts |
+| PLAN-ATT-CHECKIN-UI (planned selected browser journey) | Organizer's owned roster action calls real API/DB, shows saved check-in after reload and repeat; disallowed access cannot check in. Verify the baseline desktop/mobile sizes. | Captioned UI/API/DB evidence and actual executed browser results tied to the candidate, with no mock-only persistence claim |
+| PLAN-D2-REGRESSION (planned integration) | Original S1 publish/register/retrieve/owner-roster journey, both meaningful S2 changes and the F-06 slice still work together with auth/ownership. | Actual build/suite/system/acceptance commands/results on main candidate; AC-to-file/result/version matrix, unresolved defects and skipped tests disclosed |
+
+F-05's cancellation/reactivation and owner-capacity changes must have separately identifiable feature contracts/evidence selections for Deliverable 2's two meaningful Sprint 2 examples; retain the aggregate F-05/FR-06 trace and assign bounded subfeature IDs when those contracts are recorded. Do not move required Sprint 2 work to Sprint 3 to mark completion without an approved scope revision.
+
+**Issue #7 dependency and checkpoint release gate:** [Lab 5 delivery Issue #7](https://github.com/PhraewaS/event-system/issues/7) must provide the approved repeatable main-release deployment process and durable database before the 29 November candidate can be ready. Follow course GCP access instructions; this docs PR creates no resources. Planned chain: reviewed Sprint 2 acceptance → reviewed F-06 check-in integration → actual integrated main build/regression/acceptance → immutable candidate tag/commit and CI run → pipeline deployment to a recorded GCP revision/application URL → post-deployment critical journey and durable-data checks. Keep the separate Sprint 2 accepted version identifiable, and record which later F-06 work is included in the candidate. Preserve v0.1.0 separately.
+
+Required future proof from Issue #7/candidate acceptance: Docker/config/migration execution; repeatable delivery run; candidate tag/commit ↔ CI ↔ deployed revision/URL mapping; safe synthetic S1/S2/check-in journeys after deployment; retrieval of saved data after application/service restart or revision replacement with the same persistent DB; results/counts and known failures. Runtime/deployment proof is additional to image/config validation. An unavailable cloud environment is a tracked blocker with an owner/next action, not permission to call the checkpoint deployed/ready.
+
+### Team allocation and review responsibilities
+
+Allocation corrected on 14 November 2026 following [guluJa's clarification](https://github.com/PhraewaS/event-system/pull/35#issuecomment-6876794369) and the repository owner's instruction. Confirmed work allocation is distinct from completed implementation or accepted review:
+
+| Scope | Development / contract owner | Independent reviewer | Current meaning |
+| --- | --- | --- | --- |
+| Sprint 1, F-01–04 | PhraewaS | guluJa | Recorded Sprint 1 contribution/review history; original retrospective-review exceptions remain disclosed |
+| Sprint 2, F-05 | guluJa | PhraewaS | Confirmed future development split; no Sprint 2 implementation or passing results claimed here |
+| Sprint 3, F-06 check-in and reporting | TBC — team agreement pending | TBC after developer is agreed; the other non-author teammate reviews | Do not assign check-in/report contracts or implementation to either student by assumption; confirm in Issue #9 before work starts |
+| Shared release/deployment or cross-feature work not covered by the agreed split | TBC in the owning Issue (#7 for deployment) | Other non-author teammate once the change author is assigned | A deadline/checkpoint does not by itself allocate this work |
+
+The target dates below remain a proposed plan. Sprint 1/2 responsibilities follow the confirmed allocation above; Sprint 3 and unconfirmed shared responsibilities remain **TBC**, not implicitly assigned to PhraewaS or guluJa. Resolving the Sprint 3 owner/reviewer is an open planning dependency before its contract/implementation starts; the required 29 November working-progress/deployment gate is unchanged. Pair work, actual AC IDs and tested/accepted versions must be recorded as they occur. Plan around the 1–11 December examination period by completing principal workflow implementation before it and keeping remaining work bounded.
+
+| Target | Bounded work / feature or decision | Confirmed allocation or TBC / dependencies / next action | Planned evidence and status gate |
+| --- | --- | --- | --- |
+| By 22 November | F-05/F-06 policy and contracts; DEC-02–05, complete remaining F-06 AC/STS | F-05: guluJa prepares, PhraewaS reviews. F-06: owner/reviewer TBC in Issue #9; choose the other non-author reviewer after owner agreement. Issues #8/#9 confirm scope, eligibility, cutoff and report denominator | Approved contracts before code; no future test/acceptance claimed now |
+| By 26 November | F-05 cancellation/reactivation and owned-capacity changes | guluJa implementation; PhraewaS independent review; requires accepted state migration/lock rules, Issue #8 | All planned Sprint 2 AC verified and reviewed/integrated; separate accepted Sprint 2 tag/commit identified |
+| By 27 November | F-06 owned-event check-in/idempotence slice | F-06 development/contract owner TBC; reviewer TBC (other non-author teammate). Confirm assignment in Issue #9; requires F-05 states, contract and attendance migration | Real unit/API/DB/selected UI checks, role/ownership/duplicate/persistence results; slice source/AC status recorded |
+| By 28 November; ready no later than 29 November | Integrated main candidate and actual GCP delivery | Release/deployment owner TBC in Issue #7; reviewer is the other non-author teammate once assigned. S2 changes remain guluJa development / PhraewaS review; F-06 assignment remains TBC. Pipeline/access/durable DB and accepted F-05/F-06 slice are prerequisites | Main build/regression/acceptance, candidate/deployed version mapping and post-deploy journey/persistence proof; missing gate remains blocked |
+| By 3 December | Remaining bounded F-06 report calculation/API/UI and zero/mixed/all-present cases, BR-09 | F-06 report development/contract owner TBC; reviewer TBC (other non-author teammate), to agree in Issue #9. Requires check-in data/confirmed denominator; enumerate exact missing AC after checkpoint | Real owner-only report journey/unit/API/DB results and migration persistence; no main workflow first scheduled for 12–13 December |
+| By 7 December | Targeted report/access/cross-feature defects and integration | Assign the actual defect owner in its Issue using the agreed feature split where applicable (S1 PhraewaS; S2 guluJa; S3 TBC); the other non-author teammate reviews. Candidate retests remain required | Each defect has affected AC, owner, next action, fix/tested version and remaining status |
+| By 11 December | Final regression and relevant released-version UAT retests | Both developers coordinate; cross-team testers execute their own UAT; depends on actual released fixes | Source-bound results and unresolved-work register; do not claim UAT from code review |
+| 12 December readiness; 13 December final handoff | Freeze accepted final release, documentation/evidence and final video | Both developers coordinate handoff; authored changes require the other teammate review. Requires completed baseline, review, deployed version and readiness check | Final tag/commit/deployment mapping, readable submission and honestly disclosed remaining limits |
+
+At the actual 29 November checkpoint, replace planning-only status with a remaining-work register naming exact feature/AC or defect, achieved status and tested commit, missing verification, owner, dependency, next action and completion target. Planned, implemented, tested and accepted are distinct states. No current F-06/Issue #7 work is marked done by this plan.
+
+Feasibility/risk treatment: F-05 is bounded to two mutations plus reactivation using the current registration path; F-06 is one attendance entity and on-screen report. Confirm time/denominator decisions before test design; preserve lock order (event before registration) to prevent cross-feature races. If scope or dates change, record decision/owner/reason in the relevant Issue and revise this plan/traceability through review; do not silently drop baseline features. Two-student review remains mandatory; use sequential PRs rather than self-approval. One open later-scope Issue per feature is sufficient until a bounded contract needs sub-Issues.
 
 ## System-level SDS
 
@@ -73,6 +210,32 @@ Database: `users` (UUID, unique lower-case email, display name, Argon2id hash, c
 Identity lifecycle: Argon2id passwords; express-session with PostgreSQL store. Cookie is HttpOnly, SameSite=Lax, Path=/; Secure in production. Eight-hour fixed lifetime. Session ID and CSRF token rotate on successful login; previous session is destroyed. Logout is POST with CSRF protection and destroys server session and cookie. Expired sessions become anonymous; purge expired rows every 15 minutes with the application cleanup job. Server reads role/identity from database on every protected request. No bearer tokens or credentials in localStorage. Synchronizer CSRF token required on all POSTs, including login. Failed login attempts are rate limited (20/IP/15min per API process); TLS terminates at the deployment proxy. Production requires configured DATABASE_URL, random SESSION_SECRET and valid HTTPS proxy setup.
 
 UI: responsive sidebar/nav, discover/search, event detail, sign-in, private registrations, owned events, publish form and roster. Loading/empty/error states; labels, keyboard controls, focus visibility, polite status messages. Datetimes entered in browser local time and sent as ISO UTC; displayed with timezone. Lists consume successive 200-row API pages; search filters the loaded published events.
+
+### Whole-product design extension (planned, not present in v0.1.0)
+
+The current schema above and [001_initial.sql](../server/migrations/001_initial.sql) remain unchanged. Major relationships now are users 1→many owned events, users 1→many registrations, events 1→many registrations; registrations has a unique (participant,event) pair. Sessions reference authenticated identity logically and expire independently. Future model allocation:
+
+| Entity / relationship | Planned fields and constraints | Migration / validation owner |
+| --- | --- | --- |
+| registrations, Sprint 2 extension | Add constrained ACTIVE/CANCELLED status, registered_at for latest activation and nullable cancelled_at; backfill existing rows ACTIVE without changing IDs/created_at. Retain the existing unique participant/event pair and reuse that row on reactivation. Cancelled rows do not count as places. | F-05 / Issue #8: new numbered/checksummed migration, not an edit to applied 001; seed stays idempotent and preserves existing accounts/bookings. Verify upgrade on populated synthetic data and unchanged S1 retrieval. |
+| events, Sprint 2 capacity mutation | Existing positive capacity and owner FK retained. Check new capacity ≥ active count in the same locked transaction, not an unsupported cross-row CHECK. No new stored seat counter. | F-05: server role/owner checks; all register/cancel/reactivate/capacity paths acquire event lock first and use DB clock after lock. |
+| attendance, Sprint 3 new entity | UUID, registration_id UNIQUE FK, checked_in_by Organizer user FK, checked_in_at DB timestamp; one registration has zero/one attendance record. No client-supplied identity/time. | F-06 / Issue #9: additive migration; server verifies event ownership, ACTIVE state and start before insert. Duplicate returns existing result; all writers obey same lock order. |
+| attendance report, Sprint 3 derived view | Compute BR-09 counts from active registrations and attendance in one consistent query/snapshot, scoped to event owner. No mutable summary counter or extra public report table. | F-06: zero-denominator, foreign records, repeated check-in, persisted counts and role/ownership tests. |
+
+Technical basis: [PostgreSQL row locks](https://www.postgresql.org/docs/17/explicit-locking.html#LOCKING-ROWS) and [constraint limitations](https://www.postgresql.org/docs/17/ddl-constraints.html). SQL locking/constraints are technical mechanisms; cancellation windows/check-in policy remain the proposed product decisions above. The retained pair uniqueness avoids needing a second active row or a partial unique index in this proposed design.
+
+| Planned protected action | Anonymous | Participant | Organizer | Sprint |
+| --- | --- | --- | --- | --- |
+| Cancel/reactivate registration | 401 | Own only; foreign 404 | 403 | 2 |
+| Change event capacity | 401 | 403 | Own event only; foreign 404 | 2 |
+| Check in registration | 401 | 403 | Registration of own event only; foreign 404 | 3 |
+| View attendance report | 401 | 403 | Own event only; foreign 404 | 3 |
+
+Planned navigation: Sprint 2 adds cancellation status/action/confirmation to My registrations and capacity edit to owned-event management. Refresh public/private counts from successful server responses; rejected conflicts preserve entered values and show the domain error, never optimistic success. Sprint 3 adds eligible-attendee check-in actions and attendance summary within the owned event, including empty/error/loading states and accessible status feedback. Role menus are convenience; backend permissions above are authoritative. Existing event detail/search remain public; attendee/report information remains private.
+
+API planning uses the existing JSON envelopes, 400/401/403/404/409 conventions, session/CSRF on all mutations, body/list bounds and safe errors. Exact later methods/paths, schemas and response fields must be specified in Issue #8/#9 feature contracts before implementation; no planned route is advertised as an implemented endpoint in the API table below. New feature AC/STS must include DB/permission/state/concurrency negatives and selected real UI journeys.
+
+Configuration/delivery allocation: DATABASE_URL, TEST_DATABASE_URL, SESSION_SECRET, DEMO_PASSWORD, PORT and NODE_ENV are described in [README configuration](../README.md#seed-and-configuration) and [.env.example](../.env.example). Keep synthetic credentials local; no secrets in Git/client/PDF. Same-origin UI/API can share one Cloud Run service; Artifact Registry stores its image, Cloud SQL PostgreSQL stores all durable records/sessions, Secret Manager supplies production configuration. Release migration job precedes traffic; runtime/cloud persistence, credentials/IAM and an approved deploy pipeline are Lab 5 Issue #7 evidence, not established by design or image build. Sprints 2/3 re-verify forward migration, durable state and deployment after changes.
 
 ## API/data specifications
 
@@ -95,6 +258,151 @@ JSON envelopes: success `{data: object|array}` (lists also include `page:{offset
 | GET /api/health                    | None                                                                  | 200 if database reachable, otherwise 503                                  |
 
 Field limits: title 3–120 trimmed characters, description 10–4000, location 2–200. API datetimes must be ISO instants with timezone offsets, not ambiguous local timestamps. Client cannot set role, organizerId, participantId, status, or registration ID. Publication is immediate; no draft state in Sprint 1.
+
+## Deliverable 1 evidence and submission preparation
+
+This section supplements existing contracts/DoD with a current source index; it is not the required self-contained submission PDF. The supplied CPE 334 Deliverable 1 rubric requires complete Parts A–E and selected execution/process evidence in Part F directly in one PDF, with names/IDs, repository, immutable release and A–F page navigation. Suggested separate Markdown filenames are optional; this combined existing document avoids duplication.
+
+| Rubric part | Existing source in this document | IDs / remaining presentation work |
+| --- | --- | --- |
+| A SRS (10) | [SRS](#srs-actors-scope-and-decisions), rules/NFR/decisions | FR-01–07, BR-01–10, NFR-01–05, DEC-01–07; include complete baseline in PDF |
+| B inventory/traceability (10) | [Inventory and traceability](#feature-inventory-and-requirements-traceability) | F-01–06, SYS-DELIVERY/QUALITY; include both tables and explicit gaps |
+| C System SDS (15) | [System SDS](#system-level-sds), [API/data](#apidata-specifications), [delivery](#delivery-and-planned-deployment) | Current model/permissions/session/config and clearly labelled planned S2/S3 extensions |
+| D plan (5) | [Three-sprint plan](#three-sprint-plan) | All feature IDs, dates, dependencies and outcomes; future verification is planned |
+| E Sprint 1 contracts (20) | Original baseline plus source-specific feature/UI/verification/delivery/fix contracts retained below | Include all relevant SDS/UI/API/data, stable AC/STS and Product DoD; retain revision sequence and original process limits |
+| F working product/evidence (20) | Accepted index, tables/excerpts/history/contributions below and source-specific records | Select actual output/screenshots and readable workflow/board evidence; captions/page references and team identities still need final PDF assembly |
+
+### Source-bound results and actual test locations
+
+Submitted application remains v0.1.0 at 7532716bbe96b8d7d9cea33b3b063ba16bf746d2. Main [run 42829070132](https://github.com/PhraewaS/event-system/actions/runs/42829070132/job/129873990822) executed npm ci, npm run build, npm test -- --reporter=verbose and npm run test:e2e: build passed, 43/43 unit/API/DB/client tests and 12/12 browser cases, zero failures/skips/retries. This is the hosted release run. Exact local staging 6db75f1 and separate docs-head CI are not relabelled as local execution at release commit. Existing historical failed runs and reviewer timeouts remain disclosed in README/history.
+
+The following rows resolve planned IDs to actual files/named tests; a shared passing suite is not a separate pass count for each row. Existing contract tables give inputs/actions/expected outcomes and levels. UI-REVIEW/INT-UI each execute at both viewports. Manual/config/review checks are labelled separately.
+
+| Sprint 1 AC | Planned / actual test IDs and actual file | Accepted result / level |
+| --- | --- | --- |
+| AC-FOUND-01–03 | FOUND-01/02 in [foundation.test.ts](../tests/foundation.test.ts), M-FOUND-01–04 historical acceptance record | Current FOUND tests pass within 43; separate original a7a370c build/2 tests and manual checks retain their own source and UI scope |
+| AC-01 | T-01; AUTH-BOUND-02/05 in [sprint1.test.ts](../tests/sprint1.test.ts), [auth-boundaries.test.ts](../tests/auth-boundaries.test.ts) | Pass in 43; API/real DB |
+| AC-02 | T-02; AUTH-BOUND-01/04/06 in same API/auth files | Pass in 43; session/DB persistence, expiry/revocation |
+| AC-03 | T-03/T-13/T-14/T-15, AUTH-BOUND; [security.test.ts](../tests/security.test.ts), sprint1/auth files | Pass in 43; role/CSRF/server identity/API/DB |
+| AC-04 | T-04, PUB-BOUND-01/03 in sprint1.test.ts | Pass in 43; Organizer/owner publication API/DB |
+| AC-05 | T-05, PUB-BOUND-03, PUB-UNIT-01 in sprint1.test.ts | Pass in 43; unit validation + API/DB boundaries |
+| AC-PUB-01 | PUB-BOUND-02 in sprint1.test.ts | Pass in 43; real persisted discovery/pagination |
+| AC-06 | T-06 in sprint1.test.ts | Pass in 43; independent API/pool persistent journey |
+| AC-07 | T-07, REG-BOUND-02, REG-CONC-01 in sprint1.test.ts; named T-07 unit boundaries in [rules.test.ts](../tests/rules.test.ts) | Pass in 43; unit/API/DB duplicate/full/deadline |
+| AC-08 | T-08, REG-CONC-01 in sprint1.test.ts | Pass in 43; independent instances/DB locks |
+| AC-09 | T-09, REG-BOUND-01/03 in sprint1.test.ts | Pass in 43; private owner/pagination API/DB |
+| AC-10 | T-10, ORG-BOUND-01–04 in sprint1.test.ts | Pass in 43; independent role and event ownership |
+| AC-11 | T-11 in sprint1.test.ts, FOUND-01/02 in [foundation.test.ts](../tests/foundation.test.ts) | Pass in 43; constraints/real DB/setup. Earlier manual foundation checks retain their own source, not a new release manual run |
+| AC-12 / AC-12-01 | UI-REVIEW-01/02 in [ui-review.spec.ts](../tests/e2e/ui-review.spec.ts) | Pass within 12; real UI login/logout/current identity/persistence |
+| AC-12-02 | UI-REVIEW-02 plus T-03/T-10/ORG-BOUND-01 | Pass; UI and authoritative backend access evidence |
+| AC-12-03 | UI-REVIEW-01/03 in ui-review.spec.ts | Pass; discovery/search/full/closed views |
+| AC-12-04 | UI-REVIEW-01/03 plus publication API tests | Pass; real publication/invalid input/no write |
+| AC-12-05 | UI-REVIEW-01 plus T-06–09/REG checks | Pass; SQL/persisted reload/owner roster |
+| AC-12-06 | UI-REVIEW-04; CLIENT-CSRF-03–05 in [client-csrf.test.ts](../tests/client-csrf.test.ts) | Pass; real session expiry/re-login; only declared list loading/empty/503 responses injected |
+| AC-12-07 | UI-REVIEW-01–04, INT-UI-01/02 | Pass at 390px/1440px; selected journeys, not all devices |
+| AC-12-08 | CLIENT-CSRF-01/02, UI-REVIEW-01/02 | Pass; bootstrap/logout/re-login; historical Issue #22 RED/GREEN retained |
+| AC-UI-EXP-01/02 | CLIENT-CSRF-03/04 and invalid-credential control CLIENT-CSRF-05, UI-REVIEW-04 | Pass; historical Issue #23 RED source and merged-staging confirmation remain distinct |
+| AC-VER-01 | All inherited 43 tests + UI-REVIEW-01–04 | Pass at release; original assertions preserved |
+| AC-VER-02 | INT-UI-01 in [integration.spec.ts](../tests/e2e/integration.spec.ts), T-08/REG-CONC-01 | Pass; last-place winner/loser/SQL/roster |
+| AC-VER-03 | INT-UI-02 in integration.spec.ts | Pass; >200 real fixtures and private complete pagination |
+| AC-VER-04 | [Recorded merged UI staging checks](../evidence/sprint-1/staging-ui-revalidation-2026-11-06.json) at 484027e | Historical executed build/43 tests/8 browsers before defect closure; separate from release 12 |
+| AC-VER-05 | Actual #20/#13 review/integration plus current-source CI | Process/manual acceptance evidence in those records; not an automated product-test count |
+| AC-DEL-01–05 | DEL-CONFIG-01 hosted Compose config; DEL-MANUAL-01/REL-PLAN-01 inspection; #21/#5 and #29/#6 | Accepted configuration/review/release gates. Image/config pass; no local container/GCP run claimed |
+| AC-AUTH-SYNC-01–04 | AUTH-SYNC-RED/GREEN/DIFF; UI/INT suites and #28/#27, #29/#6 | Actual prior 11/12 RED retained; accepted release 12/12, unchanged budgets/retries/assertions |
+| AC-REL-01–05 | #29/#6 and permanent release evidence JSON | Actual reviewed main acceptance/tag/source/CI; process checks, not extra automated cases |
+
+### Two real automated test excerpts
+
+Both excerpts are copied from [tests/sprint1.test.ts at v0.1.0](https://github.com/PhraewaS/event-system/blob/7532716bbe96b8d7d9cea33b3b063ba16bf746d2/tests/sprint1.test.ts); common actor/publish/register helpers create real session/API/PostgreSQL fixtures. T-08 and T-10 are named passing tests in the release output above. Ellipses/excerpt boundaries omit unrelated assertions, not new test code.
+
+Domain rule: T-08 / AC-08. Separate authenticated Participant agents use independent API instances against one real capacity-1 event. Expected HTTP statuses are 201/409 and the persisted row count is exactly one:
+
+~~~ts
+const owner = await actor("organizer@example.test");
+const a = await actor();
+const b = await actor("participant2@example.test", secondApp);
+for (let attempt = 0; attempt < 5; attempt++) {
+  const event = await publish(owner, { capacity: 1 });
+  const results = await Promise.all([
+    register(a, event.id),
+    register(b, event.id),
+  ]);
+  expect(results.map((r) => r.status).sort()).toEqual([201, 409]);
+  expect(results.find((r) => r.status === 409)?.body.error.code).toBe(
+    "EVENT_FULL",
+  );
+  expect(
+    (
+      await pool.query(
+        "SELECT count(*)::int AS n FROM registrations WHERE event_id=$1",
+        [event.id],
+      )
+    ).rows[0].n,
+  ).toBe(1);
+}
+~~~
+
+Ownership/role: T-10 / AC-10. Owner gets the saved roster; a different Organizer gets 404 and a Participant gets 403:
+
+~~~ts
+const owner = await actor("organizer@example.test");
+const other = await actor("organizer2@example.test");
+const participant = await actor();
+const event = await publish(owner);
+await register(participant, event.id).expect(201);
+const roster = await owner.agent
+  .get(`/api/events/${event.id}/registrations`)
+  .expect(200);
+expect(roster.body.data).toHaveLength(1);
+expect(roster.body.data[0].participant.email).toBe(
+  "participant@example.test",
+);
+await other.agent.get(`/api/events/${event.id}/registrations`).expect(404);
+await participant.agent
+  .get(`/api/events/${event.id}/registrations`)
+  .expect(403);
+~~~
+
+### Reviewed workflow samples and honest version sequence
+
+| Completed Issue / PR | Feature/contract and author branch | Actual teammate review and staging integration | Accepted main lineage |
+| --- | --- | --- | --- |
+| [Issue #3](https://github.com/PhraewaS/event-system/issues/3) / [PR #17](https://github.com/PhraewaS/event-system/pull/17) | F-03, FR-03/04, AC-06–09; Registration review contract. Author PhraewaS; feature/sprint1-registration-3 → sprint1-staging. | guluJa [specific check](https://github.com/PhraewaS/event-system/pull/17#pullrequestreview-5736769754) 2 Nov 12:48:08 UTC inspected locks, cutoff, privacy/pagination and 30 tests; [APPROVED](https://github.com/PhraewaS/event-system/pull/17#pullrequestreview-5737638998) 13:56:54 UTC; staging merge b225e83667b2c443c2a53edcf66c1e75d0ce9b7d at 13:57:03 UTC. | Included through reviewed staging releases into accepted 7532716 / #29; release/main source manifest and tests above |
+| [Issue #27](https://github.com/PhraewaS/event-system/issues/27) / [PR #28](https://github.com/PhraewaS/event-system/pull/28) | Browser authentication synchronization contract, AC-AUTH-SYNC-01–04. Author PhraewaS; fix/browser-auth-synchronization-27 → sprint1-staging. | guluJa [specific check](https://github.com/PhraewaS/event-system/pull/28#pullrequestreview-5842541718) 10 Nov 13:22:52 UTC checked logout/identity sequencing, trace and preserved assertions; [APPROVED](https://github.com/PhraewaS/event-system/pull/28#pullrequestreview-5842710053) 13:35:22 UTC; staging merge 6db75f1544dd648b1818bbcf876f2b9b3daf9490 at 13:35:36 UTC. | #29 approved 13:55:39 UTC; merged to main 7532716 at 13:55:53 UTC; actual main CI passed before v0.1.0 publication |
+
+Contract/test-design chronology: initial baseline was on disk on 29 October before implementation, but Git began after its first RED/GREEN; this is a disclosed historical limit, not commit-proven TDD. Issue #3 records its refinement on 2 November before added characterization checks; reviewed implementation/test source 1b913d1 is dated 2 November (12:03:34 UTC). These checks characterized existing behavior; they are not a reconstructed original RED/GREEN cycle.
+
+Actual defect sequence is preserved: first main 0fb7e11 [failed browser run](https://github.com/PhraewaS/event-system/actions/runs/42819320782) → Issue #27 recorded contract/observed RED before correction → fix source a4df49fb926edaca200c535fb3e22145a650e254 (10 November 12:59:34 UTC) and passing fix CI → actual #28 approval → staging 6db75f1 scoped validation → independently approved #29 → main 7532716 CI. The original [RED excerpt](../evidence/sprint-1/main-release-browser-red-20261110.txt) remains. Issue #23 separately retains committed RED 8bb4e2c, focused client 2 failures/3 passes and one failing desktop regression before correction; subsequent merged UI 484027e build/43/8 and accepted main 43/12 are separate GREEN records, not one invented run.
+
+The [Kanban](https://github.com/users/PhraewaS/projects/3/views/2) holds actual item state. Accepted product Issue #6 is closed/Done; later #7/#8/#9 remain open. Supplementary docs Issue #34 stays open until independent approval, staging integration and scoped evidence; PR Review is readiness, not completion. The final PDF must capture a dated board/history screenshot and include its release reference rather than depend solely on live links.
+
+### Team participation and AI-use declaration
+
+This table records evidence-backed Sprint 1 contributions, not future Sprint 2/3 implementation. The confirmed future allocation is Sprint 2 guluJa development / PhraewaS review; Sprint 3 remains TBC as stated in the plan.
+
+| Developer account | Evidence-backed contribution | Boundaries / confirmation |
+| --- | --- | --- |
+| PhraewaS | Author account for the implementation/test/docs branches and repository workflow, including #17/#28 and docs follow-ups; coordinated scoped staging/release corrections and evidence. Authorship and merges are traceable in Issues/PRs/commits. | AI-assisted work must not be represented as unaided implementation. Student must supply full name/ID and confirm personal activities/understanding before submission. |
+| guluJa | Same-team behavior/test/diff review, concrete findings and independent approvals, including #17/#28/#29/#31/#33; local execution report in [#24 review](https://github.com/PhraewaS/event-system/pull/24#pullrequestreview-5826613204). | Local report's 8 passes/4 default timeouts and focused two-case rerun are retained separately from full hosted passes. Student must supply full name/ID and confirm activities/understanding. |
+
+No unverified pair-programming session or equal code-commit split is asserted. If pair work occurred, the students must identify who did what and when in the relevant Issue/PR and update this table with genuine evidence. Both must understand and be able to explain the schema, transaction, permissions, tests and released behavior; approvals/commit totals alone do not demonstrate that understanding.
+
+AI-use declaration: OpenAI Codex assisted with scaffolding, application/test implementation and fixes, online-document consultation, documentation drafting, GitHub workflow operations and execution/evidence inspection under the repository owner's instructions. Actual human reviews/approvals belong to the named GitHub accounts; the assistant did not impersonate approvals. Tests/CI and file/source checks support execution claims; AI statements are not test evidence. Students remain responsible for checking correctness, understanding the work and following course AI-disclosure rules. No full prompt transcript is required by this rubric.
+
+### Remaining PDF and course-handoff work
+
+This docs PR prepares repository content; it does not create or submit the one required PDF. Before LEB2 handoff:
+
+- Confirm both students' full names/IDs and selected theme/context against the master brief; do not invent identities from GitHub handles.
+- Put complete Parts A–E and selected Part F directly in the PDF, in A–F order. Add contents plus A–F page-range/ID navigation using final actual pages.
+- Include readable normal UI→API→DB journey and persisted retrieval, meaningful rejection, login/logout and backend role/ownership evidence. Caption each with feature/AC, role, preconditions, steps, expected/actual results and source commit; annotate synthetic dates/fault injection.
+- Embed actual build/test commands/output with passing/failing/skipped counts, this full AC/results mapping and the two selected test excerpts. Reproduce from the accepted tag if extra local evidence is needed; never relabel staging/hosted results as a local tag run.
+- Add readable screenshots/history for the two reviewed samples, final board and release; include contributor confirmation, AI-use and all known process/date/test limits.
+- Include a short setup summary from README (Node 24, PostgreSQL 15+, separate dev/test DB, local .env, npm ci, db:migrate, db:seed, dev/build/start/test commands). Deliver synthetic seed access safely; no real secrets.
+- The existing ZIP is a supplementary source/evidence package, not a substitute for PDF contents; its earlier export is not silently updated by this docs PR.
+- Target deadline is 8 November 2026 23:59; actual release publication is 10 November 14:00:37 UTC. Actual LEB2 submission/any extension is unverified; retain real dates and obtain course guidance, never backdate.
+
+No separate Deliverable 1 demo video, GCP URL or completed Docker/CI/CD deployment is required by this supplied rubric; those delivery gates belong to Lab 5. Cross-team UAT is Lab 6. No guaranteed grade or fully compliant original historical workflow is claimed.
 
 <details><summary>Source-specific feature contracts and refinement history — old workflow states describe their recorded snapshots</summary>
 
@@ -237,6 +545,20 @@ Workflow/DoD: actual same-team current-source approval and staging merge of PR #
 
 
 </details>
+
+## Foundation review contract — Issue #11 / PR #14 (historical source)
+
+This consolidates the original [Issue #11 contract](https://github.com/PhraewaS/event-system/issues/11) for complete repository/PDF contract coverage; it is not a new feature, execution or backdated pre-code contract. Scope: schema/migrations/seed and the initial UI→health API→PostgreSQL page at a7a370cd55e61cac012b89f1bc0114c8ab85aa58; supports F-01–04, BR-01/02 and NFR-01/02/05. Domain screens/auth flows were excluded at that stage and added later. The initial health-only UI has since been replaced by the accepted product screens.
+
+| AC | Observable original foundation outcome | STS: level; preconditions/action → expected result; actual evidence |
+| --- | --- | --- |
+| AC-FOUND-01 | Fresh/repeatable DB schema, positive capacity/FKs/unique registration; seed twice gives four hashed users/three events and preserves IDs/values/hashes/dates; records remain after new app/connection. | FOUND-02 API/DB: disposable migrated DB, repeat migration/seed and fresh connection → same records. M-FOUND-01/02/04 manual/scripted inspection additionally checks SQL negatives, preserved field values and actual application restart; do not attribute all of these assertions to FOUND-02. |
+| AC-FOUND-02 | With DB available health API gives 200/data.status=ok and original foundation UI says connected. After isolated DB outage API gives 503 DATABASE_UNAVAILABLE and original UI says unavailable without raw SQL/credentials. | FOUND-01 API/real DB covers 200. M-FOUND-03 separately exercises connected/outage API/UI using an isolated disposable proxy; screenshots/results recorded. No foundation automated browser suite existed. |
+| AC-FOUND-03 | README/local configuration reproduces setup/build/health and two foundation tests; exact-head hosted build/tests/image/source upload pass; no real configured credentials committed. | M-FOUND-04 setup/config inspection; [foundation hosted run](https://github.com/PhraewaS/event-system/actions/runs/40909030366/job/123571616163) proves two tests/build/image at a7a370c. Local dependencies were reused; image build does not prove container runtime/GCP. |
+
+UI/API/data: the historical health screen called GET /api/health and displayed connected/unavailable states; successful JSON and safe 503 errors follow the existing envelopes. Initial migration establishes users/events/registrations/session/schema_migrations and constraints described above. No login/domain UI was claimed for this partial foundation snapshot. Preconditions use a separate disposable *_test DB and synthetic accounts; never interrupt shared PostgreSQL to simulate failure.
+
+Actual additional [foundation acceptance record](../evidence/sprint-1/foundation-acceptance-2026-10-31.json) and connected/unavailable screenshots retain their original source. DoD required documented setup, real persistence/constraints, no secrets, meaningful tests/build and independent review/integration. PR #14 missed pre-merge same-team review; guluJa's [retrospective assessment](https://github.com/PhraewaS/event-system/issues/11#issuecomment-6571607308) closed the scoped follow-up but cannot satisfy the original pre-merge sequence. Current release's 43 tests include FOUND-01/02; historical two-test/manual UI results remain separate.
 
 ## Feature-level SDS, acceptance criteria and STS (original implementation baseline)
 
@@ -404,3 +726,8 @@ Official references: [Playwright authentication](https://playwright.dev/docs/aut
 ## Documentation correction contract — Issue #30
 
 The [pre-implementation contract](https://github.com/PhraewaS/event-system/issues/30) defines AC-DOC-01–05: current README/release index, current SDS/history/policy separation, preserved provenance and date/Lab limits, two-document-only scope with unchanged v0.1.0 tag/assets, and independent reviewed staging integration. STS DOC-STATUS-01, DOC-PROVENANCE-01, DOC-SCOPE-01 and DOC-RELEASE-01 inspect those outcomes; DOC-CI-01 records current docs-head hosted checks plus Issue/PR/reviewer/project state. This wording-only correction adds no product tests or artificial TDD cycle. Actual validation/review/integration evidence belongs to that Issue and its linked docs PR; product acceptance remains the earlier v0.1.0 record.
+
+
+## Deliverable baseline refinement contract — Issue #34
+
+The [pre-edit contract](https://github.com/PhraewaS/event-system/issues/34) defines AC-BASELINE-01–07 and BASELINE-SRS-01, BASELINE-SDS-01, BASELINE-PLAN-01, BASELINE-EVIDENCE-01, BASELINE-SCOPE-01, BASELINE-RELEASE-01 and BASELINE-CI-01. It covers the whole-product SRS/trace/SDS, explicit three-sprint plan and repository evidence/handoff index in these two existing documents. Reviewer-requested AC-BASELINE-08 / BASELINE-CHECKPOINT-01 adds a concrete 29 November F-06 working slice and Issue #7 integrated main/GCP/evidence dependency, checked against Deliverable 2 sections 2, 3.3, 3.5 and 4.2; all outcomes are future plans, not new implementation or acceptance. AC-BASELINE-09 / BASELINE-ALLOCATION-01 records the subsequent confirmed Sprint 1/2 development/review split and explicitly unconfirmed Sprint 3/shared allocation; original contribution/history evidence is not rewritten. This is a post-release documentation supplement, not a new product test cycle or completed submission PDF. Actual docs-head CI, independent guluJa approval, staging integration and unchanged v0.1.0 proof belong to that Issue/linked PR; main promotion remains separate.
