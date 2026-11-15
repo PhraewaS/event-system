@@ -14,7 +14,7 @@ const app = createApp(pool, secret);
 const password = "Auth-boundary-synthetic-password!";
 beforeAll(async () => {
   await migrate(pool);
-  await pool.query("TRUNCATE registrations,events,users,session CASCADE");
+  await pool.query("TRUNCATE registrations,events,users,session,login_rate_limits CASCADE");
   await seed(pool, password);
 });
 afterAll(async () => {

@@ -38,13 +38,13 @@ Use Node 24 and PostgreSQL 15+. React/TypeScript/Vite → Express API → persis
    CREATE DATABASE event_system_test OWNER event_app;
    ```
 
-3. Copy `.env.example` to `.env`, adjust the connection URLs and replace `SESSION_SECRET` using random output from:
+3. Copy the root `.env.example` to the root `.env` (an identical example is provided at `server/.env.example`), adjust the connection URLs and replace `SESSION_SECRET` using random output from:
 
    ```sh
    node -e "console.log(require('node:crypto').randomBytes(48).toString('hex'))"
    ```
 
-4. Run:
+4. Set `DEMO_PASSWORD` in `.env` to your own 12–256 character secret, then run:
 
    ```sh
    npm ci
@@ -59,18 +59,25 @@ For the built application run `npm run build` then `npm start` and open http://l
 
 ## Seed and configuration
 
-Four synthetic accounts are seeded: `organizer@example.test`, `organizer2@example.test`, `participant@example.test`, and `participant2@example.test`. Their initial password is `DEMO_PASSWORD` from the local environment. Passwords use Argon2id. Seed reruns preserve existing accounts, hashes, dates and registrations; three sample events are inserted once. Seeding is disabled in production.
+Four synthetic accounts are seeded: `organizer@example.test`, `organizer2@example.test`, `participant@example.test`, and `participant2@example.test`. Their initial password is `DEMO_PASSWORD` from the local environment. Passwords use Argon2id. Seed reruns preserve existing accounts, hashes, dates and registrations; three sample events are inserted once. Production seeding is blocked unless an explicit UAT job sets `ALLOW_DEMO_SEED=true`; keep that flag and `DEMO_PASSWORD` off the web service.
 
 | Variable | Purpose |
 | --- | --- |
 | DATABASE_URL | Persistent application PostgreSQL connection |
 | TEST_DATABASE_URL | Separate disposable database ending in `_test` |
 | SESSION_SECRET | Random value of at least 32 characters; reserve for session signing |
-| DEMO_PASSWORD | At least 12 characters; required for local demo seeding |
+| DEMO_PASSWORD | Secret of 12–256 characters; required only for explicit demo seeding |
+| ALLOW_DEMO_SEED | Defaults false; explicit opt-in for production UAT seed jobs |
+| DB_POOL_MAX | PostgreSQL connections per instance, 1–100; defaults to 10 |
+| POSTGRES_PASSWORD | Local Compose only; URL-safe password, defaults to the synthetic local example |
 | PORT | Application port; defaults to 3000 |
 | NODE_ENV | Development locally; production for deployed builds |
 
 Local sample credentials are synthetic. Never commit `.env` or real credentials. Migration names/checksums are stored in PostgreSQL; add new numbered migrations rather than changing applied files. Relationships and constraints are defined in [001_initial.sql](server/migrations/001_initial.sql).
+
+## Cloud Run preparation
+
+See the [Cloud Run audit and deployment checklist](docs/cloud-run-readiness.md) for the six lab checks, extra GCP gates, migration/seed commands and smoke test. `GET /api/ready` returns `{ "status": "ready", "db": "connected" }` only when PostgreSQL responds, otherwise HTTP 503. Login throttling is stored in PostgreSQL across instances and restarts. Run `npm run smoke -- https://YOUR-SERVICE-URL` after deployment. Cloud resources and deployment evidence remain pending.
 
 ## Verification for this snapshot
 
@@ -127,13 +134,13 @@ Docker Compose uses PostgreSQL 17 with a named event-data volume. A healthy data
 docker compose up --build
 ~~~
 
-Open http://localhost:3000. No accounts are seeded automatically. In another terminal seed only the local Compose database:
+Open http://localhost:3000. No accounts are seeded automatically. In another terminal, set `DEMO_PASSWORD` to your own secret in the terminal environment without printing it, then seed only the local Compose database:
 
 ~~~sh
-docker compose exec -e "DEMO_PASSWORD=Gather-demo-2026!" app node dist/server/seed.js
+docker compose exec -e DEMO_PASSWORD app node dist/server/seed.js
 ~~~
 
-Local Compose uses HTTP/development cookie mode; the runtime image defaults to production for HTTPS deployments. Production rejects demo seeding. docker compose down preserves the named database volume. Hosted CI validates Compose configuration and builds the image. Docker is unavailable on the implementation machine; container startup/restart/persistence execution remains Lab 5 Issue #7, with GCP delivery. Image/config checks do not establish runtime execution.
+Local Compose uses HTTP/development cookie mode; the runtime image defaults to production for HTTPS deployments. Production rejects demo seeding unless the separate UAT seed job explicitly opts in. docker compose down preserves the named database volume. Hosted CI validates Compose configuration and builds the image. Docker is unavailable on the implementation machine; container startup/restart/persistence execution remains Lab 5 Issue #7, with GCP delivery. Image/config checks do not establish runtime execution.
 
 Feature/bug Issue forms and the PR template are present on accepted main and require stable AC/test traceability, full criteria in PR descriptions and same-team review. Actual local Compose startup/restart/persistence, completed GCP delivery and released-version UAT retain their separate Lab 5/6 evidence gates.
 
@@ -144,4 +151,4 @@ Feature/bug Issue forms and the PR template are present on accepted main and req
 - Target: **8 November 2026**. Actual v0.1.0 release publication: **10 November 2026, 14:00:37 UTC**. Repository release/milestone acceptance does not prove an actual submission time or determine how the course assesses that timing. Dates are not backdated.
 - Docker image/config checks passed in hosted CI; actual local Compose startup/restart/persistence and GCP remain [Lab 5 #7](https://github.com/PhraewaS/event-system/issues/7). Released-version cross-team UAT is Lab 6. Cancellation/capacity editing (#8) and check-in/attendance (#9) remain later scope.
 
-See the engineering baseline for original contracts, source-specific review/provenance records and the current acceptance index. This documentation correction adds no product feature, test assertion, timeout/retry change or new evidence for the original tag.
+See the engineering baseline for original contracts, source-specific review/provenance records and the current acceptance index. The Cloud Run preparation changes on this branch add readiness and deployment safeguards; they do not alter the original accepted tag or its historical evidence.

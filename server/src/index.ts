@@ -11,7 +11,7 @@ const port = Number(process.env.PORT ?? 3000);
 if (!Number.isInteger(port) || port < 1 || port > 65535)
   throw new Error("Invalid PORT.");
 const server = app.listen(port, "0.0.0.0", () =>
-  console.log(`Gather API ready at http://localhost:${port}`),
+  console.log(`Gather API listening on port ${port}`),
 );
 const pruning = setInterval(
   () => {
@@ -28,5 +28,5 @@ for (const signal of ["SIGINT", "SIGTERM"] as const)
     server.close(() => {
       void pool.end().finally(() => process.exit(0));
     });
-    setTimeout(() => process.exit(1), 10000).unref();
+    setTimeout(() => process.exit(1), 9000).unref();
   });

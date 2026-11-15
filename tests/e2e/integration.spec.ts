@@ -13,7 +13,7 @@ const password = "Synthetic-integration-browser-2026!";
 
 test.beforeAll(async () => {
   await migrate(pool);
-  await pool.query("TRUNCATE registrations,events,users,session CASCADE");
+  await pool.query("TRUNCATE registrations,events,users,session,login_rate_limits CASCADE");
   await seed(pool, password);
 });
 test.afterAll(async () => { await pool.end(); });
