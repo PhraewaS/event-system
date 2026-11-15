@@ -1,6 +1,6 @@
 # Gather — Event registration (Sprint 1)
 
-Gather is a React → Express → PostgreSQL event registration app. Organizers publish capacity-limited events and inspect owned rosters; Participants reserve places and view private registrations. Current verification: 43 unit/API/DB/client tests and 12 desktop/mobile browser cases.
+Gather is a React → Express → PostgreSQL event registration app. Organizers publish capacity-limited events and inspect owned rosters; Participants reserve places and view private registrations. This branch has 47 unit/API/DB/client tests and 12 desktop/mobile browser cases. Hosted PR #39 CI passed 47/47 and 12/12 at 7ea91c9; the reviewer's separate local browser run passed 11 with one Desktop INT-UI-01 timeout, detailed below.
 
 The [engineering baseline](docs/sprint-1.md) combines the SRS, feature inventory/traceability, System and feature SDS, AC and STS. The accepted application release is [v0.1.0](https://github.com/PhraewaS/event-system/releases/tag/v0.1.0) at main `7532716bbe96b8d7d9cea33b3b063ba16bf746d2`, published on 10 November 2026 after guluJa reviewed, approved and merged [release PR #29](https://github.com/PhraewaS/event-system/pull/29). [Issue #6](https://github.com/PhraewaS/event-system/issues/6) and the original Sprint 1 milestone are closed/Done. The documentation correction tracked in [Issue #30](https://github.com/PhraewaS/event-system/issues/30) supplements that accepted release; it does not change its tag, original source archive or evidence.
 
@@ -89,11 +89,23 @@ npm run test:e2e
 node scripts/evidence.mjs
 ```
 
-The cumulative suite contains **43 unit/API/database/client tests**. The **12 browser cases** comprise UI-REVIEW-01–04 at desktop 1440×1000/mobile 390×844 (eight cases) plus INT-UI-01/02 at both sizes (four cases), with zero configured retries. They run the built UI against the real API/disposable PostgreSQL database. Only UI-REVIEW-04 explicitly injects list responses for loading/empty/503 states; its session-expiry/re-login scenario uses a real stored session and the in-app link without reload. See the [UI contract and mapping](docs/sprint-1.md#ui-review-contract--issue-12--pr-19) and [verification contract](docs/sprint-1.md#verification-review-contract--issue-13--pr-20).
+The current branch suite contains **47 unit/API/database/client tests**: the 43 inherited v0.1.0 cases plus CLOUD-01–04. The accepted v0.1.0 release retains its original 43-test evidence. The **12 browser cases** comprise UI-REVIEW-01–04 at desktop 1440×1000/mobile 390×844 (eight cases) plus INT-UI-01/02 at both sizes (four cases), with zero configured retries. They run the built UI against the real API/disposable PostgreSQL database. Only UI-REVIEW-04 explicitly injects list responses for loading/empty/503 states; its session-expiry/re-login scenario uses a real stored session and the in-app link without reload. See the [UI contract and mapping](docs/sprint-1.md#ui-review-contract--issue-12--pr-19) and [verification contract](docs/sprint-1.md#verification-review-contract--issue-13--pr-20).
 
 INT-UI-01 checks two actual Participant sessions competing for the last place: 201/409 API outcomes, the sole saved SQL row, persistent winner view, loser error/disabled state and owner roster must agree. INT-UI-02 uses 201 real owned-event fixtures plus foreign events and observes actual offset 0/200 responses. The old six-case `sprint1.spec.ts` is superseded by the accepted suites; original domain/security assertions and default timeout/retry settings are retained. The [organizer baseline](evidence/sprint-1/organizer-integration-baseline-2026-11-02.json), [CSRF RED](evidence/sprint-1/csrf-red.txt)/[GREEN](evidence/sprint-1/csrf-green.txt) and [expiry RED](evidence/sprint-1/ui-expiry-red-2026-11-04.json) remain source-specific historical evidence.
 
 [Actual staging revalidation](evidence/sprint-1/staging-ui-revalidation-2026-11-06.json) records build/43 tests/eight browser cases at merged UI source `484027e`, before accepting UI Issues #12/#22/#23. The older `tdd-red.txt`, `test-results.txt`, `browser-results.txt` and `source-manifest.json` in evidence/sprint-1 retain their original implementation identities/counts; they are historical evidence, not current-source execution. Current accepted main results and source hashes are linked in the release/evidence index above; PR #20 / Issue #13 retain their earlier verification results.
+
+### Cloud Run preparation — source-specific verification
+
+[PR #39](https://github.com/PhraewaS/event-system/pull/39), source 7ea91c98b7797465cf349aaf083b7b4cb36e8275, adds four tests and PostgreSQL-shared login counters. Its [hosted CI](https://github.com/PhraewaS/event-system/actions/runs/43718365737/job/132824718905) passed build, 47/47 tests, all 12/12 browser cases, Compose validation and Docker image build. Detailed [AC/test/manual-check mapping](docs/cloud-run-pr.md#acceptance-criteria-and-verification-mapping) separates readiness/shared-counter automation from operator-invoked seed/pool/smoke checks and pending cloud gates.
+
+| Runner at 7ea91c9 | Actual result |
+| --- | --- |
+| Assistant local Windows runs | Build/47 tests and full browser 12/12 passed in separate recorded runs. |
+| guluJa local review | Build/47 tests, built-server smoke and seed checks passed; default browser run had 11 passes and Desktop INT-UI-01 timeout at 30 seconds. The [review](https://github.com/PhraewaS/event-system/pull/39#pullrequestreview-5911000444) reports substantial browser/page startup time in the trace; this does not establish an application defect. |
+| Hosted PR CI | Build/47 tests, browser 12/12 (17.4 seconds), Compose configuration and Docker image build passed. |
+
+These are separate executions. The reviewer timeout is retained, not replaced by CI or the assistant's local passes; browser assertions, default timeouts and zero retries are unchanged. This documentation follow-up awaits exact-head CI/re-review in the live PR; the original 43-test v0.1.0 records below remain historical evidence for that release.
 
 ### Execution records by source and runner
 

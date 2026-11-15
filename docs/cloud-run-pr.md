@@ -25,21 +25,52 @@ Gather had a database check at /api/health but lacked the lab smoke endpoint /ap
 
 Run node dist/server/migrate.js from the built image before routing traffic; migration 002 creates the shared login counter table. Configure NODE_ENV=production, a stable Secret Manager SESSION_SECRET, Cloud SQL DATABASE_URL and the pool/instance budget. Production UAT seed jobs alone may set ALLOW_DEMO_SEED=true and receive DEMO_PASSWORD.
 
-See [additional GCP gates](cloud-run-readiness.md#gcp-gates--verify-before-trafficuat). IAM, Cloud SQL, backups/restore, image build/scan, deployed smoke/journeys and rollback verification are pending. This PR does not claim a completed GCP deployment.
+See [additional GCP gates](https://github.com/PhraewaS/event-system/blob/refactor/2-cloud-ready/docs/cloud-run-readiness.md#gcp-gates--verify-before-trafficuat). Image build passed in hosted CI; image scanning, IAM, Cloud SQL, backups/restore, deployed smoke/journeys and rollback verification remain pending. This PR does not claim a completed GCP deployment.
 
-## Validation
+## Acceptance criteria and verification mapping
 
-Local verification on 15 November 2026 (Windows, Node 24.19.0):
+These IDs make the implemented Cloud Run preparation outcomes explicit for review; they are recorded after implementation in response to the review, not claimed as a pre-implementation/TDD contract. Checked items mean source behavior/verification is complete; independent approval and merge remain pending.
 
-- npm run build: passed (TypeScript and production Vite bundle).
-- npm test -- --reporter=verbose: 47/47 tests passed, including CLOUD-01–04 and cross-instance login blocking in T-13.
-- npm run test:e2e: 12/12 desktop/mobile browser journeys passed with zero configured retries.
-- Built server with NODE_ENV=production on a temporary local port: /api/ready, the UI document and its JavaScript asset passed scripts/smoke.mjs.
-- Built production seed CLI: blocked by default; rejected a missing password after opt-in; two explicit environment-secret seed runs preserved all existing test account hashes and did not print the supplied password.
-- git diff --check: passed.
+| AC ID | Observable acceptance outcome | Verification and type |
+| --- | --- | --- |
+| AC-CLOUD-01 | GET /api/ready queries PostgreSQL, returns 200 with status=ready/db=connected when available, or 503 with status=not_ready on query failure; neither response creates a session or exposes database internals. | Automated CLOUD-01–02 in tests/cloud-run.test.ts; CLOUD-01 also checks Cache-Control=no-store. |
+| AC-CLOUD-02 | Login counters are shared across independent pools/instances/recreation: 40 concurrent increments yield each count 1–40 once, then a fresh store sees 41; successful decrement works; after 20 failed logins a fresh app returns 429, and DB-clock expiry permits login again. Expired counters are pruned on requests. | Automated CLOUD-03–04 and T-13 in tests/security.test.ts. |
+| AC-CLOUD-03 | Seed CLI rejects production execution without explicit ALLOW_DEMO_SEED=true and rejects missing DEMO_PASSWORD; an opted-in secret supplied through the environment is not printed. Two reruns preserve existing account IDs/hashes; source requires 12–256 characters and ON CONFLICT preserves existing events. | CLOUD-MANUAL-SEED-01 below; inherited automated T-11 / FOUND-02 cover migration/seed reruns and persisted data. Production opt-in/output checks are outside Vitest/CI. |
+| AC-CLOUD-04 | DB_POOL_MAX defaults to 10; 1 and 100 are accepted; 0, 101, fractions and non-numbers are rejected. Pool options set connectionTimeoutMillis=5000, statement_timeout=10000 and query_timeout=12000. | CLOUD-MANUAL-POOL-01 below; configuration inspection, not an elapsed-time/load test. |
+| AC-CLOUD-05 | PostgreSQL stores sessions; login requires credentials/CSRF with no requester bypass/default password UI; no upload route writes local files. Server reads PORT and listens on 0.0.0.0; SIGTERM closes server/pool with a 9-second forced-exit fallback. | CLOUD-MANUAL-SOURCE-01 inspection; inherited automated T-02, T-14 and AUTH-BOUND-06 cover session recreation/expiry and production cookies. No live Cloud Run shutdown test is claimed. |
+| AC-CLOUD-06 | Both environment examples are identical and document all eight process.env settings plus local Compose POSTGRES_PASSWORD, using synthetic examples and comments for optional settings; Vite client has no environment reads. | CLOUD-MANUAL-ENV-01 source/example audit. |
+| AC-CLOUD-07 | Against a running built production server, scripts/smoke.mjs succeeds only after database readiness, built UI root/module markup and a same-origin JavaScript response with JavaScript content type pass. | CLOUD-MANUAL-SMOKE-01 below, operator-invoked command outside the automated suite. |
+| AC-CLOUD-08 | README/System SDS describe 47 current tests and PostgreSQL-shared throttling; source-bound CI and local browser runs are separated, historical v0.1.0 43-test evidence is retained, and cloud/runtime/review gates remain explicit. | CLOUD-MANUAL-DOC-01 diff/link/history inspection; exact-head hosted regression results recorded separately below. |
 
-All database verification used the guarded disposable *_test database. Docker image build/startup and real GCP deployment checks remain unverified here; the Docker CLI is unavailable. Existing CI builds the image when this branch is submitted. The Windows build/test runners needed permission to start child processes; their approved runs passed.
+## Automated checks — source 7ea91c9
+
+[Hosted CI](https://github.com/PhraewaS/event-system/actions/runs/43718365737/job/132824718905) submitted head 7ea91c98b7797465cf349aaf083b7b4cb36e8275 passed on 15 November 2026: clean install, production build, 47/47 tests in seven files (CLOUD-01–04, T-13 and inherited tests), 12/12 browser cases (17.4 seconds total), Compose configuration validation, Docker image build and evidence upload. The CI tests the PR integration checkout; submitted head and run are identified separately from the accepted v0.1.0 release. Docker build success does not prove actual application-container startup or GCP deployment.
+
+## Manual/operator-invoked checks — source 7ea91c9
+
+These inspections and scripted commands were invoked outside Vitest/Playwright/hosted CI; they are not extra cases in the 47-test count. Seed, pool-option and built-server smoke checks were repeated successfully on 15 November 2026 before the documentation revision.
+
+| Check ID | Reproducible procedure / actual result | Limit |
+| --- | --- | --- |
+| CLOUD-MANUAL-SEED-01 | On a guarded disposable *_test DB, run node dist/server/seed.js with NODE_ENV=production: without opt-in it exits nonzero; with opt-in but empty DEMO_PASSWORD it exits nonzero. Supply a generated 12–256-character environment secret and run twice; compare SELECT id,password_hash FROM users ORDER BY id before/after and inspect captured stdout/stderr without printing the secret. Both opted-in runs succeeded, existing accounts/hashes matched, secret absent from output. Reviewer independently reported seed checks passed. | Existing-account preservation/output/CLI policy checked; not a production account-rotation or Cloud Run Job execution test. |
+| CLOUD-MANUAL-POOL-01 | Import built createPool with a synthetic URL, vary DB_POOL_MAX through unset, 1, 100, 0, 101, 1.5 and bad; inspect pool.options then close each pool. Actual default/valid max values were 10/1/100; invalid values rejected; timeout options were 5000/10000/12000 ms. | No connection is opened by this option inspection. Runtime timeout duration and total GCP connection capacity are not measured. |
+| CLOUD-MANUAL-SMOKE-01 | Start built server with NODE_ENV=production, random SESSION_SECRET, PORT=3197 and the guarded TEST_DATABASE_URL used as DATABASE_URL; run node scripts/smoke.mjs http://127.0.0.1:3197. Database readiness, built HTML and real JavaScript asset passed; stop the temporary process. Reviewer independently reported smoke passed. | Local HTTP smoke; deployed HTTPS/cookie/IAM/proxy behavior remains a GCP gate. |
+| CLOUD-MANUAL-ENV-01 | Enumerate process.env/import.meta.env in server, client, tests, scripts and configs; compare to both examples. All eight direct reads and Compose-only POSTGRES_PASSWORD documented; examples identical; no Vite client environment reads. | Synthetic placeholders require replacement; real settings are not published. |
+| CLOUD-MANUAL-SOURCE-01 | Inspect app.ts, index.ts, migration 002, seed entry points and login UI for session storage, no bypass/upload/default password, PORT binding and shutdown handling. Outcomes match AC-CLOUD-05 and the six-item lab checklist. | Source inspection, not a deployed infrastructure check. |
+| CLOUD-MANUAL-DOC-01 | Inspect changed README/System SDS/PR/audit, links and retained historical records; run git diff --check. Current count/shared-store design corrected; source and runner identity separated; release evidence and application/test implementation retained. | Approval and integration belong to the independent reviewer, not this inspection. |
+
+## Separate browser execution records
+
+| Source / runner | Build + unit/API/DB/client | Browser result | Evidence / interpretation |
+| --- | --- | --- | --- |
+| 7ea91c9 — assistant Windows local runs before initial PR | Build + 47/47 passed | Full suite 12/12 passed; separate recorded runs, zero configured retries | Prior local execution record; not substituted for the reviewer's local run below. |
+| 7ea91c9 — guluJa local review | Build + 47/47 passed; seed and built-server smoke passed | Default full run: 11 passed; Desktop INT-UI-01 timed out at 30 seconds | [Actual review](https://github.com/PhraewaS/event-system/pull/39#pullrequestreview-5911000444) reports substantial time in browser/page startup in the trace; application defect not established. No timeout/retry/assertion change or focused rerun is claimed. |
+| 7ea91c9 — hosted PR CI | Build + 47/47 passed; Compose + Docker build passed | 12/12 passed, 17.4 seconds total | [Source-bound CI](https://github.com/PhraewaS/event-system/actions/runs/43718365737/job/132824718905); separate environment/run, does not erase the reviewer's timeout. |
+
+## Revision and remaining gates
+
+This follow-up changes documentation/evidence only; application, migrations, test assertions, default browser timeout and zero-retry policy stay unchanged from 7ea91c9. Hosted validation of the new documentation head is recorded in the live PR after its run finishes; the source-bound 7ea91c9 run above is not relabelled as a new-head run. No independent acceptance, actual container startup/persistence, GCP deployment or completed UAT is claimed.
 
 ## Review and integration
 
-Deployment work relates to Issue #7. Independent review, GitHub Development linkage, CI/image build and integration remain pending. This file is the versioned PR body. Same-team guluJa review and approval must precede merge into sprint1-staging. Issue #7 stays open until its broader container/GCP deployment gates are complete.
+Deployment work relates to Issue #7. guluJa requested changes at 7ea91c9; this documentation revision addresses both findings and awaits re-review. CI and Docker build at 7ea91c9 passed; native Development linkage and reviewed integration remain pending. This file is the versioned PR body. Same-team guluJa review and approval must precede merge into sprint1-staging. Issue #7 stays open until its broader container/GCP deployment gates are complete.
