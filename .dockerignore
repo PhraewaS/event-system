@@ -7,3 +7,7 @@ node_modules
 artifacts
 dist
 test-results
+
+.aws
+.codex
+.agents

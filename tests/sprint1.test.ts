@@ -70,7 +70,7 @@ const register = (who: Actor, id: string, body: unknown = {}) =>
 beforeAll(async () => {
   await migrate(pool);
   // This suite owns only the explicitly named disposable *_test database.
-  await pool.query("TRUNCATE registrations, events, users, session CASCADE");
+  await pool.query("TRUNCATE registrations, events, users, session, login_rate_limits CASCADE");
   await seed(pool, password);
 });
 afterAll(async () => {

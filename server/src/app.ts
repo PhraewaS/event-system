@@ -22,6 +22,7 @@ import {
 } from "./validation.js";
 import { AppError } from "./errors.js";
 import { registerParticipant } from "./registrations.js";
+import { PostgresRateLimitStore } from "./rate-limit-store.js";
 
 declare module "express-session" {
   interface SessionData {
@@ -140,6 +141,7 @@ export function createApp(pool: Pool, secret: string, production = false) {
     parallelism: 1,
   });
   const loginLimit = rateLimit({
+    store: new PostgresRateLimitStore(pool),
     windowMs: 15 * 60 * 1000,
     limit: 20,
     skipSuccessfulRequests: true,
@@ -153,6 +155,14 @@ export function createApp(pool: Pool, secret: string, production = false) {
         },
       });
     },
+  });
+  app.get("/api/ready", async (_req, res) => {
+    try {
+      await pool.query("SELECT 1");
+      res.json({ status: "ready", db: "connected" });
+    } catch {
+      res.status(503).json({ status: "not_ready" });
+    }
   });
   app.get("/api/health", async (_req, res) => {
     try {

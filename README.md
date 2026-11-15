@@ -1,6 +1,6 @@
 # Gather — Event registration (Sprint 1)
 
-Gather is a React → Express → PostgreSQL event registration app. Organizers publish capacity-limited events and inspect owned rosters; Participants reserve places and view private registrations. Current verification: 43 unit/API/DB/client tests and 12 desktop/mobile browser cases.
+Gather is a React → Express → PostgreSQL event registration app. Organizers publish capacity-limited events and inspect owned rosters; Participants reserve places and view private registrations. This branch has 47 unit/API/DB/client tests and 12 desktop/mobile browser cases. Hosted PR #39 CI passed 47/47 and 12/12 at 7ea91c9; the reviewer's separate local browser run passed 11 with one Desktop INT-UI-01 timeout, detailed below.
 
 The [engineering baseline](docs/sprint-1.md) combines the SRS, feature inventory/traceability, System and feature SDS, AC and STS. The accepted application release is [v0.1.0](https://github.com/PhraewaS/event-system/releases/tag/v0.1.0) at main `7532716bbe96b8d7d9cea33b3b063ba16bf746d2`, published on 10 November 2026 after guluJa reviewed, approved and merged [release PR #29](https://github.com/PhraewaS/event-system/pull/29). [Issue #6](https://github.com/PhraewaS/event-system/issues/6) and the original Sprint 1 milestone are closed/Done. The documentation correction tracked in [Issue #30](https://github.com/PhraewaS/event-system/issues/30) supplements that accepted release; it does not change its tag, original source archive or evidence.
 
@@ -38,13 +38,13 @@ Use Node 24 and PostgreSQL 15+. React/TypeScript/Vite → Express API → persis
    CREATE DATABASE event_system_test OWNER event_app;
    ```
 
-3. Copy `.env.example` to `.env`, adjust the connection URLs and replace `SESSION_SECRET` using random output from:
+3. Copy the root `.env.example` to the root `.env` (an identical example is provided at `server/.env.example`), adjust the connection URLs and replace `SESSION_SECRET` using random output from:
 
    ```sh
    node -e "console.log(require('node:crypto').randomBytes(48).toString('hex'))"
    ```
 
-4. Run:
+4. Set `DEMO_PASSWORD` in `.env` to your own 12–256 character secret, then run:
 
    ```sh
    npm ci
@@ -59,18 +59,25 @@ For the built application run `npm run build` then `npm start` and open http://l
 
 ## Seed and configuration
 
-Four synthetic accounts are seeded: `organizer@example.test`, `organizer2@example.test`, `participant@example.test`, and `participant2@example.test`. Their initial password is `DEMO_PASSWORD` from the local environment. Passwords use Argon2id. Seed reruns preserve existing accounts, hashes, dates and registrations; three sample events are inserted once. Seeding is disabled in production.
+Four synthetic accounts are seeded: `organizer@example.test`, `organizer2@example.test`, `participant@example.test`, and `participant2@example.test`. Their initial password is `DEMO_PASSWORD` from the local environment. Passwords use Argon2id. Seed reruns preserve existing accounts, hashes, dates and registrations; three sample events are inserted once. Production seeding is blocked unless an explicit UAT job sets `ALLOW_DEMO_SEED=true`; keep that flag and `DEMO_PASSWORD` off the web service.
 
 | Variable | Purpose |
 | --- | --- |
 | DATABASE_URL | Persistent application PostgreSQL connection |
 | TEST_DATABASE_URL | Separate disposable database ending in `_test` |
 | SESSION_SECRET | Random value of at least 32 characters; reserve for session signing |
-| DEMO_PASSWORD | At least 12 characters; required for local demo seeding |
+| DEMO_PASSWORD | Secret of 12–256 characters; required only for explicit demo seeding |
+| ALLOW_DEMO_SEED | Defaults false; explicit opt-in for production UAT seed jobs |
+| DB_POOL_MAX | PostgreSQL connections per instance, 1–100; defaults to 10 |
+| POSTGRES_PASSWORD | Local Compose only; URL-safe password, defaults to the synthetic local example |
 | PORT | Application port; defaults to 3000 |
 | NODE_ENV | Development locally; production for deployed builds |
 
 Local sample credentials are synthetic. Never commit `.env` or real credentials. Migration names/checksums are stored in PostgreSQL; add new numbered migrations rather than changing applied files. Relationships and constraints are defined in [001_initial.sql](server/migrations/001_initial.sql).
+
+## Cloud Run preparation
+
+See the [Cloud Run audit and deployment checklist](docs/cloud-run-readiness.md) for the six lab checks, extra GCP gates, migration/seed commands and smoke test. `GET /api/ready` returns `{ "status": "ready", "db": "connected" }` only when PostgreSQL responds, otherwise HTTP 503. Login throttling is stored in PostgreSQL across instances and restarts. Run `npm run smoke -- https://YOUR-SERVICE-URL` after deployment. Cloud resources and deployment evidence remain pending.
 
 ## Verification for this snapshot
 
@@ -82,11 +89,23 @@ npm run test:e2e
 node scripts/evidence.mjs
 ```
 
-The cumulative suite contains **43 unit/API/database/client tests**. The **12 browser cases** comprise UI-REVIEW-01–04 at desktop 1440×1000/mobile 390×844 (eight cases) plus INT-UI-01/02 at both sizes (four cases), with zero configured retries. They run the built UI against the real API/disposable PostgreSQL database. Only UI-REVIEW-04 explicitly injects list responses for loading/empty/503 states; its session-expiry/re-login scenario uses a real stored session and the in-app link without reload. See the [UI contract and mapping](docs/sprint-1.md#ui-review-contract--issue-12--pr-19) and [verification contract](docs/sprint-1.md#verification-review-contract--issue-13--pr-20).
+The current branch suite contains **47 unit/API/database/client tests**: the 43 inherited v0.1.0 cases plus CLOUD-01–04. The accepted v0.1.0 release retains its original 43-test evidence. The **12 browser cases** comprise UI-REVIEW-01–04 at desktop 1440×1000/mobile 390×844 (eight cases) plus INT-UI-01/02 at both sizes (four cases), with zero configured retries. They run the built UI against the real API/disposable PostgreSQL database. Only UI-REVIEW-04 explicitly injects list responses for loading/empty/503 states; its session-expiry/re-login scenario uses a real stored session and the in-app link without reload. See the [UI contract and mapping](docs/sprint-1.md#ui-review-contract--issue-12--pr-19) and [verification contract](docs/sprint-1.md#verification-review-contract--issue-13--pr-20).
 
 INT-UI-01 checks two actual Participant sessions competing for the last place: 201/409 API outcomes, the sole saved SQL row, persistent winner view, loser error/disabled state and owner roster must agree. INT-UI-02 uses 201 real owned-event fixtures plus foreign events and observes actual offset 0/200 responses. The old six-case `sprint1.spec.ts` is superseded by the accepted suites; original domain/security assertions and default timeout/retry settings are retained. The [organizer baseline](evidence/sprint-1/organizer-integration-baseline-2026-11-02.json), [CSRF RED](evidence/sprint-1/csrf-red.txt)/[GREEN](evidence/sprint-1/csrf-green.txt) and [expiry RED](evidence/sprint-1/ui-expiry-red-2026-11-04.json) remain source-specific historical evidence.
 
 [Actual staging revalidation](evidence/sprint-1/staging-ui-revalidation-2026-11-06.json) records build/43 tests/eight browser cases at merged UI source `484027e`, before accepting UI Issues #12/#22/#23. The older `tdd-red.txt`, `test-results.txt`, `browser-results.txt` and `source-manifest.json` in evidence/sprint-1 retain their original implementation identities/counts; they are historical evidence, not current-source execution. Current accepted main results and source hashes are linked in the release/evidence index above; PR #20 / Issue #13 retain their earlier verification results.
+
+### Cloud Run preparation — source-specific verification
+
+[PR #39](https://github.com/PhraewaS/event-system/pull/39), source 7ea91c98b7797465cf349aaf083b7b4cb36e8275, adds four tests and PostgreSQL-shared login counters. Its [hosted CI](https://github.com/PhraewaS/event-system/actions/runs/43718365737/job/132824718905) passed build, 47/47 tests, all 12/12 browser cases, Compose validation and Docker image build. Detailed [AC/test/manual-check mapping](docs/cloud-run-pr.md#acceptance-criteria-and-verification-mapping) separates readiness/shared-counter automation from operator-invoked seed/pool/smoke checks and pending cloud gates.
+
+| Runner at 7ea91c9 | Actual result |
+| --- | --- |
+| Assistant local Windows runs | Build/47 tests and full browser 12/12 passed in separate recorded runs. |
+| guluJa local review | Build/47 tests, built-server smoke and seed checks passed; default browser run had 11 passes and Desktop INT-UI-01 timeout at 30 seconds. The [review](https://github.com/PhraewaS/event-system/pull/39#pullrequestreview-5911000444) reports substantial browser/page startup time in the trace; this does not establish an application defect. |
+| Hosted PR CI | Build/47 tests, browser 12/12 (17.4 seconds), Compose configuration and Docker image build passed. |
+
+These are separate executions. The reviewer timeout is retained, not replaced by CI or the assistant's local passes; browser assertions, default timeouts and zero retries are unchanged. This documentation follow-up awaits exact-head CI/re-review in the live PR; the original 43-test v0.1.0 records below remain historical evidence for that release.
 
 ### Execution records by source and runner
 
@@ -127,13 +146,13 @@ Docker Compose uses PostgreSQL 17 with a named event-data volume. A healthy data
 docker compose up --build
 ~~~
 
-Open http://localhost:3000. No accounts are seeded automatically. In another terminal seed only the local Compose database:
+Open http://localhost:3000. No accounts are seeded automatically. In another terminal, set `DEMO_PASSWORD` to your own secret in the terminal environment without printing it, then seed only the local Compose database:
 
 ~~~sh
-docker compose exec -e "DEMO_PASSWORD=Gather-demo-2026!" app node dist/server/seed.js
+docker compose exec -e DEMO_PASSWORD app node dist/server/seed.js
 ~~~
 
-Local Compose uses HTTP/development cookie mode; the runtime image defaults to production for HTTPS deployments. Production rejects demo seeding. docker compose down preserves the named database volume. Hosted CI validates Compose configuration and builds the image. Docker is unavailable on the implementation machine; container startup/restart/persistence execution remains Lab 5 Issue #7, with GCP delivery. Image/config checks do not establish runtime execution.
+Local Compose uses HTTP/development cookie mode; the runtime image defaults to production for HTTPS deployments. Production rejects demo seeding unless the separate UAT seed job explicitly opts in. docker compose down preserves the named database volume. Hosted CI validates Compose configuration and builds the image. Docker is unavailable on the implementation machine; container startup/restart/persistence execution remains Lab 5 Issue #7, with GCP delivery. Image/config checks do not establish runtime execution.
 
 Feature/bug Issue forms and the PR template are present on accepted main and require stable AC/test traceability, full criteria in PR descriptions and same-team review. Actual local Compose startup/restart/persistence, completed GCP delivery and released-version UAT retain their separate Lab 5/6 evidence gates.
 
@@ -144,4 +163,4 @@ Feature/bug Issue forms and the PR template are present on accepted main and req
 - Target: **8 November 2026**. Actual v0.1.0 release publication: **10 November 2026, 14:00:37 UTC**. Repository release/milestone acceptance does not prove an actual submission time or determine how the course assesses that timing. Dates are not backdated.
 - Docker image/config checks passed in hosted CI; actual local Compose startup/restart/persistence and GCP remain [Lab 5 #7](https://github.com/PhraewaS/event-system/issues/7). Released-version cross-team UAT is Lab 6. Cancellation/capacity editing (#8) and check-in/attendance (#9) remain later scope.
 
-See the engineering baseline for original contracts, source-specific review/provenance records and the current acceptance index. This documentation correction adds no product feature, test assertion, timeout/retry change or new evidence for the original tag.
+See the engineering baseline for original contracts, source-specific review/provenance records and the current acceptance index. The Cloud Run preparation changes on this branch add readiness and deployment safeguards; they do not alter the original accepted tag or its historical evidence.

@@ -12,6 +12,8 @@ export const demoIds = {
 };
 
 export async function seed(pool: Pool, password: string) {
+  if (password.length < 12 || password.length > 256)
+    throw new Error("Set DEMO_PASSWORD (12–256 characters).");
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
@@ -84,8 +86,8 @@ if (
   process.argv[1] &&
   import.meta.url === pathToFileURL(process.argv[1]).href
 ) {
-  if (process.env.NODE_ENV === "production")
-    throw new Error("Demo seeding is disabled in production.");
+  if (process.env.NODE_ENV === "production" && process.env.ALLOW_DEMO_SEED !== "true")
+    throw new Error("Production demo seeding requires ALLOW_DEMO_SEED=true for an explicit UAT seed job.");
   if (!process.env.DEMO_PASSWORD || process.env.DEMO_PASSWORD.length < 12)
     throw new Error("Set DEMO_PASSWORD (12+ characters).");
   const pool = createPool();

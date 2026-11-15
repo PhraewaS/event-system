@@ -11,7 +11,7 @@ if (!url || !new URL(url).pathname.endsWith("_test"))
 const pool = new Pool({ connectionString: url });
 beforeAll(async () => {
   await migrate(pool);
-  await pool.query("TRUNCATE registrations,events,users,session CASCADE");
+  await pool.query("TRUNCATE registrations,events,users,session,login_rate_limits CASCADE");
   await seed(pool, "Foundation-synthetic-password!");
 });
 afterAll(async () => {
