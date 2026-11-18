@@ -98,4 +98,3 @@ jobs:
         env:
           RESULT: ${{ needs.test-and-docker.result }}
         run: test "$RESULT" = success
-

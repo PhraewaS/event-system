@@ -56,4 +56,3 @@ database/connection budgets and migration compatibility before any live use.
 Actual first deployment belongs to Issue #45, identity/required-check proof to
 #46 and the main-only release workflow to #47. Episode 4 does not add or run
 `.github/workflows/deploy.yml`. Offline results do not close those work items.
-
