@@ -119,7 +119,7 @@ The release/evidence index above records current accepted results. The following
 
 [First main CI at 0fb7e11](https://github.com/PhraewaS/event-system/actions/runs/42819320782) remains historical RED: build/43 tests passed, browser 11/12, Docker checks skipped. The trace showed Logout interrupted by Login navigation and a stale signed-in UI check. [Issue #27](https://github.com/PhraewaS/event-system/issues/27) / [PR #28](https://github.com/PhraewaS/event-system/pull/28) are accepted/Done after actual guluJa approval, staging merge and integrated checks. [Release #29](https://github.com/PhraewaS/event-system/pull/29) then brought the reviewed fix into accepted main `7532716`; its main CI passed 43/43 tests and 12/12 browser cases. Original assertions, default budgets, failed execution and historical reviewer-timeout results are preserved.
 
-Tests intentionally clear only `TEST_DATABASE_URL`, whose database name must end in `_test`. Use a separate disposable database and run database/browser suites sequentially. Build before running browser tests. Generated local logs/manifests are under ignored `artifacts/`; hosted CI artifacts identify the submitted head. Required CI builds the application, runs the tests available on this branch, builds the Docker image and uploads evidence. Compose configuration is already included through accepted PR #21. Actual container startup/restart/persistence execution and completed GCP delivery remain Lab 5 Issue #7 gates.
+Tests intentionally clear only `TEST_DATABASE_URL`, whose database name must end in `_test`. Use a separate disposable database and run database/browser suites sequentially. Build before running browser tests. Generated local logs/manifests are under ignored `artifacts/`; hosted CI artifacts identify the submitted head. Required CI builds the application, runs the tests available on this branch, builds the Docker image and uploads evidence. Compose configuration is already included through accepted PR #21. [Episode 3 local container startup/recreation/persistence checks](docs/docker-episode3.md) passed on 15 November 2026; independent review/integration and completed GCP delivery remain Lab 5 Issue #7 gates.
 
 ## Repository branches and release archives
 
@@ -143,7 +143,8 @@ The original implementation branch `feat/sprint-1` and superseded PR #10 preserv
 Docker Compose uses PostgreSQL 17 with a named event-data volume. A healthy database precedes migration; app starts only after migration succeeds. Set a random SESSION_SECRET in the ignored .env and optionally a URL-safe POSTGRES_PASSWORD (it is interpolated into the local connection URL). Then run:
 
 ~~~sh
-docker compose up --build
+docker compose up --build -d
+docker compose ps -a
 ~~~
 
 Open http://localhost:3000. No accounts are seeded automatically. In another terminal, set `DEMO_PASSWORD` to your own secret in the terminal environment without printing it, then seed only the local Compose database:
@@ -152,15 +153,17 @@ Open http://localhost:3000. No accounts are seeded automatically. In another ter
 docker compose exec -e DEMO_PASSWORD app node dist/server/seed.js
 ~~~
 
-Local Compose uses HTTP/development cookie mode; the runtime image defaults to production for HTTPS deployments. Production rejects demo seeding unless the separate UAT seed job explicitly opts in. docker compose down preserves the named database volume. Hosted CI validates Compose configuration and builds the image. Docker is unavailable on the implementation machine; container startup/restart/persistence execution remains Lab 5 Issue #7, with GCP delivery. Image/config checks do not establish runtime execution.
+Local Compose uses HTTP/development cookie mode; the runtime image defaults to production for HTTPS deployments. Production rejects demo seeding unless the separate UAT seed job explicitly opts in. `docker compose down` preserves the named database volume; adding `-v` deletes the local database. Hosted CI validates Compose configuration and builds the image.
 
-Feature/bug Issue forms and the PR template are present on accepted main and require stable AC/test traceability, full criteria in PR descriptions and same-team review. Actual local Compose startup/restart/persistence, completed GCP delivery and released-version UAT retain their separate Lab 5/6 evidence gates.
+On 15 November 2026, actual Linux Docker build/start, health/readiness, built UI smoke and organizer publish → participant registration → owner roster checks passed. After `down`/`up -d`, fresh browser logins and direct SQL confirmed the same event and registration, with recreated containers and the retained database volume. See the [Episode 3 procedure and scoped evidence](docs/docker-episode3.md), including Windows PATH/seed setup and source/image/container identities. Local secrets remained in the ignored `.env`; none needed changing. These operator-invoked checks are separate from the existing regression suites and historical CI runs.
+
+Feature/bug Issue forms and the PR template are present on accepted main and require stable AC/test traceability, full criteria in PR descriptions and same-team review. Independent review/integration of this local verification, completed GCP delivery and released-version UAT retain their separate Lab 5/6 gates.
 
 ## Recorded process and assessment limits
 
 - PR #14/#15 retain missing pre-merge same-team reviews and later retrospective checks in [foundation Issue #11](https://github.com/PhraewaS/event-system/issues/11) and [authentication Issue #1](https://github.com/PhraewaS/event-system/issues/1). Retrospective acceptance does not recreate pre-merge review.
 - Git was initialized after the initial red/green cycle; original failing output is retained, but no earlier test commit/Issue/PR history is invented. The reconstructed review series does not create a new historical TDD sequence.
 - Target: **8 November 2026**. Actual v0.1.0 release publication: **10 November 2026, 14:00:37 UTC**. Repository release/milestone acceptance does not prove an actual submission time or determine how the course assesses that timing. Dates are not backdated.
-- Docker image/config checks passed in hosted CI; actual local Compose startup/restart/persistence and GCP remain [Lab 5 #7](https://github.com/PhraewaS/event-system/issues/7). Released-version cross-team UAT is Lab 6. Cancellation/capacity editing (#8) and check-in/attendance (#9) remain later scope.
+- Docker image/config checks passed in hosted CI; [local Compose startup/recreation/persistence](docs/docker-episode3.md) passed on 15 November 2026 and awaits independent review/integration. GCP delivery remains [Lab 5 #7](https://github.com/PhraewaS/event-system/issues/7). Released-version cross-team UAT is Lab 6. Cancellation/capacity editing (#8) and check-in/attendance (#9) remain later scope.
 
 See the engineering baseline for original contracts, source-specific review/provenance records and the current acceptance index. The Cloud Run preparation changes on this branch add readiness and deployment safeguards; they do not alter the original accepted tag or its historical evidence.
