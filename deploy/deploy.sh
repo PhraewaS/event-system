@@ -145,6 +145,36 @@ run_cmd gcloud services enable \
   iam.googleapis.com \
   --project "$PROJECT_ID"
 
+# Inspect the complete secret inventory before changing any credentials. Only a
+# successful list can establish absence; permission/network errors must not be
+# interpreted as a missing secret. This requires secrets.list on the operator,
+# not on the runtime service account, and never reads secret payloads.
+SECRET_NAMES=()
+if [ "$DRY_RUN" = "1" ]; then
+  run_cmd gcloud secrets list --project "$PROJECT_ID" --format="value(name)"
+else
+  if ! SECRET_INVENTORY="$(gcloud secrets list --project "$PROJECT_ID" --format="value(name)")"; then
+    echo 'Error: Cannot determine Secret Manager state; refusing to change credentials.' >&2
+    exit 1
+  fi
+  while IFS= read -r secret; do
+    [ -n "$secret" ] || continue
+    if [[ ! "$secret" =~ ^projects/[^/]+/secrets/[^/]+$ ]]; then
+      echo 'Error: Cannot determine Secret Manager state from the returned inventory.' >&2
+      exit 1
+    fi
+    SECRET_NAMES+=("${secret##*/}")
+  done <<< "$SECRET_INVENTORY"
+fi
+
+secret_missing() {
+  local name
+  for name in "${SECRET_NAMES[@]}"; do
+    if [ "$name" = "$1" ]; then return 1; fi
+  done
+  return 0
+}
+
 # ==============================================================================
 # 2. Create Artifact Registry repository (idempotent)
 #    Stores the container images (deploy.yml pushes one per commit SHA).
@@ -236,7 +266,7 @@ if [ "$DRY_RUN" = "1" ]; then
   run_cmd gcloud secrets create "$SECRET_DB_URL" --replication-policy="automatic" --project "$PROJECT_ID"
   run_cmd gcloud secrets versions add "$SECRET_DB_URL" --data-file=- --project "$PROJECT_ID"
 else
-  if ! gcloud secrets describe "$SECRET_DB_URL" --project "$PROJECT_ID" >/dev/null 2>&1; then
+  if secret_missing "$SECRET_DB_URL"; then
     DB_PASS="$(openssl rand -hex 24)"
     if gcloud sql users list --instance="$SQL_INSTANCE" --project "$PROJECT_ID" --format="value(name)" | grep -qx "$DB_USER"; then
       run_cmd gcloud sql users set-password "$DB_USER" --instance="$SQL_INSTANCE" --password="$DB_PASS" --project "$PROJECT_ID"
@@ -258,7 +288,7 @@ if [ "$DRY_RUN" = "1" ]; then
   run_cmd gcloud secrets create "$SECRET_SESSION" --replication-policy="automatic" --project "$PROJECT_ID"
   run_cmd gcloud secrets versions add "$SECRET_SESSION" --data-file=- --project "$PROJECT_ID"
 else
-  if ! gcloud secrets describe "$SECRET_SESSION" --project "$PROJECT_ID" >/dev/null 2>&1; then
+  if secret_missing "$SECRET_SESSION"; then
     GENERATED_SESSION_SECRET="$(openssl rand -hex 48)"
     run_cmd gcloud secrets create "$SECRET_SESSION" --replication-policy="automatic" --project "$PROJECT_ID"
     printf "%s" "$GENERATED_SESSION_SECRET" | gcloud secrets versions add "$SECRET_SESSION" --data-file=- --project "$PROJECT_ID"
@@ -276,7 +306,7 @@ if [ "$SEED_DEMO_DATA" = "true" ]; then
     run_cmd gcloud secrets create "$SECRET_DEMO_PASS" --replication-policy="automatic" --project "$PROJECT_ID"
     run_cmd gcloud secrets versions add "$SECRET_DEMO_PASS" --data-file=- --project "$PROJECT_ID"
   else
-    if ! gcloud secrets describe "$SECRET_DEMO_PASS" --project "$PROJECT_ID" >/dev/null 2>&1; then
+    if secret_missing "$SECRET_DEMO_PASS"; then
       GENERATED_DEMO_PASSWORD="$(openssl rand -base64 16 | tr -d '/+=' | cut -c1-14)Dd1!"
       run_cmd gcloud secrets create "$SECRET_DEMO_PASS" --replication-policy="automatic" --project "$PROJECT_ID"
       printf "%s" "$GENERATED_DEMO_PASSWORD" | gcloud secrets versions add "$SECRET_DEMO_PASS" --data-file=- --project "$PROJECT_ID"

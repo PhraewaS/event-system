@@ -51,6 +51,7 @@ jobs:
         run: |
           bash -n deploy/deploy.sh deploy/teardown.sh deploy/release.sh
           bash deploy/tests/test_deploy_stub.sh
+          bash deploy/tests/test_teardown_stub.sh
           bash deploy/tests/test_release_stub.sh
           python3 -m unittest discover -s deploy/tests -p 'test_smoke.py' -v
       - name: Install root dependencies

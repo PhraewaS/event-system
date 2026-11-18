@@ -90,16 +90,31 @@ if [ "$DRY_RUN" != "1" ]; then
 fi
 
 # ------------------------------------------------------------------------------
-# Delete resources (each `|| true` so one missing resource does not stop the rest)
+# Attempt every deletion and retain failures for an accurate final result.
 # ------------------------------------------------------------------------------
-run_cmd gcloud run services delete "$SERVICE_NAME" --region "$REGION" --project "$PROJECT_ID" --quiet || true
-run_cmd gcloud run jobs delete "${SERVICE_NAME}-seed" --region "$REGION" --project "$PROJECT_ID" --quiet || true
-run_cmd gcloud run jobs delete "$MIGRATE_JOB_NAME" --region "$REGION" --project "$PROJECT_ID" --quiet || true
-run_cmd gcloud sql instances delete "$SQL_INSTANCE" --project "$PROJECT_ID" --quiet || true
-run_cmd gcloud artifacts repositories delete "$REPO_NAME" --location "$REGION" --project "$PROJECT_ID" --quiet || true
-run_cmd gcloud secrets delete "$SECRET_DB_URL" --project "$PROJECT_ID" --quiet || true
-run_cmd gcloud secrets delete "$SECRET_SESSION" --project "$PROJECT_ID" --quiet || true
-run_cmd gcloud secrets delete "$SECRET_DEMO_PASS" --project "$PROJECT_ID" --quiet || true
-run_cmd gcloud iam service-accounts delete "$SA_EMAIL" --project "$PROJECT_ID" --quiet || true
+FAILED_RESOURCES=()
+delete_resource() {
+  local label="$1"
+  shift
+  if ! run_cmd "$@"; then
+    FAILED_RESOURCES+=("$label")
+  fi
+}
+
+delete_resource "Cloud Run service: $SERVICE_NAME" gcloud run services delete "$SERVICE_NAME" --region "$REGION" --project "$PROJECT_ID" --quiet
+delete_resource "Cloud Run job: ${SERVICE_NAME}-seed" gcloud run jobs delete "${SERVICE_NAME}-seed" --region "$REGION" --project "$PROJECT_ID" --quiet
+delete_resource "Cloud Run job: $MIGRATE_JOB_NAME" gcloud run jobs delete "$MIGRATE_JOB_NAME" --region "$REGION" --project "$PROJECT_ID" --quiet
+delete_resource "Cloud SQL instance: $SQL_INSTANCE" gcloud sql instances delete "$SQL_INSTANCE" --project "$PROJECT_ID" --quiet
+delete_resource "Artifact Registry: $REPO_NAME" gcloud artifacts repositories delete "$REPO_NAME" --location "$REGION" --project "$PROJECT_ID" --quiet
+delete_resource "Secret: $SECRET_DB_URL" gcloud secrets delete "$SECRET_DB_URL" --project "$PROJECT_ID" --quiet
+delete_resource "Secret: $SECRET_SESSION" gcloud secrets delete "$SECRET_SESSION" --project "$PROJECT_ID" --quiet
+delete_resource "Secret: $SECRET_DEMO_PASS" gcloud secrets delete "$SECRET_DEMO_PASS" --project "$PROJECT_ID" --quiet
+delete_resource "Service account: $SA_EMAIL" gcloud iam service-accounts delete "$SA_EMAIL" --project "$PROJECT_ID" --quiet
+
+if [ "${#FAILED_RESOURCES[@]}" -ne 0 ]; then
+  echo 'Teardown incomplete. Failed resources:' >&2
+  printf ' - %s\n' "${FAILED_RESOURCES[@]}" >&2
+  exit 1
+fi
 
 echo "Teardown completed."

@@ -114,6 +114,14 @@ identify the tested source. Keep new-head CI distinct from older successful
 runs. Starter Kit offline checks are extra script checks, not part of the
 47 application tests or 12 existing browser cases.
 
+The PR #50 review follow-up adds fail-closed Secret Manager inventory checks,
+JavaScript response MIME validation and truthful teardown failure summaries.
+Reproduce its offline regression suite using the commands in
+[deploy/README.md](../../../deploy/README.md): 10 deployment/preview scenarios,
+5 teardown scenarios, 5 release scenarios and 12 Python smoke tests. These use
+local stubs/mocked HTTP only. Record the revised submitted head and hosted run
+in #44; the earlier 40490e9 run remains historical evidence for that source.
+
 ## Episode 4 integration and release procedure
 
 1. Branch `ci/4-pr-checks` from accepted `sprint1-staging`; open a labelled PR

@@ -9,6 +9,7 @@
 #     partial   : DB secret missing   -> DB user password reset + secret created
 #     job-fail  : migration fails     -> script exits 1, service NOT deployed
 #     demo      : --demo flag         -> demo secret is created and granted
+#     secret-denied/unavailable/malformed -> unknown state stops credential writes
 #   It also checks: `--edition=enterprise`, no project-wide secretAccessor role,
 #   DB password == password inside DATABASE_URL, and that no password/secret
 #   value leaks into the output. Finally DRY_RUN=1 must make zero gcloud calls.
@@ -57,6 +58,17 @@ if [ "${1:-} ${2:-}" = 'config get-value' ]; then
   echo stub-gcp-project
   exit 0
 fi
+if [ "${1:-} ${2:-}" = 'secrets list' ]; then
+  case "$STUB_MODE" in
+    secret-denied) echo 'PERMISSION_DENIED: cannot list secrets' >&2; exit 1 ;;
+    secret-unavailable) echo 'UNAVAILABLE: cannot inspect secrets' >&2; exit 1 ;;
+    secret-malformed) echo 'unexpected inventory'; exit 0 ;;
+    first_run) exit 0 ;;
+    partial) printf 'projects/stub-gcp-project/secrets/gather-session-secret\n'; exit 0 ;;
+  esac
+  printf 'projects/stub-gcp-project/secrets/%s\n' gather-database-url gather-session-secret gather-demo-password
+  exit 0
+fi
 if [ "${1:-} ${2:-} ${3:-}" = 'run services describe' ]; then
   echo https://gather-stub.example.invalid
   exit 0
@@ -80,6 +92,10 @@ fi
 for word in "$@"; do
   if [ "$word" = describe ]; then
     case "$STUB_MODE" in
+      secret-denied|secret-unavailable|secret-malformed)
+        if [ "${1:-}" = secrets ]; then
+          echo 'PERMISSION_DENIED: cannot describe secret' >&2; exit 1
+        fi ;;
       first_run) exit 1 ;;
       partial)
         if [ "${1:-} ${3:-}" = 'secrets gather-database-url' ]; then
@@ -170,6 +186,22 @@ for MODE in first_run rerun partial job-fail demo; do
   done
   echo "PASS: $MODE (exit, migration gate, credential handling, secret redaction)"
 done
+# --- Unknown secret state must stop before credential changes -------------------
+for MODE in secret-denied secret-unavailable secret-malformed; do
+  export STUB_MODE="$MODE"
+  export GCLOUD_LOG="$TEST_STATE_DIR/gcloud-$MODE.log"
+  result=0
+  bash "$DEPLOY_SCRIPT" --demo > "$TEST_STATE_DIR/output" 2>&1 || result=$?
+  if [ "$result" -eq 0 ]; then
+    echo "FAIL $MODE: deployment succeeded without knowing secret state"; exit 1
+  fi
+  if grep -Eq '^(sql users (create|set-password)|secrets (create|versions add)|builds submit|run deploy) ' "$GCLOUD_LOG"; then
+    echo "FAIL $MODE: deployment changed credentials or continued after failed inspection"; exit 1
+  fi
+  grep -q 'Cannot determine Secret Manager state' "$TEST_STATE_DIR/output"
+  echo "PASS: $MODE (unknown secret state stops before credential changes)"
+done
+
 # --- Dry run must not call gcloud at all ------------------------------------------
 export GCLOUD_LOG="$TEST_STATE_DIR/dry-run-calls"
 DRY_RUN=1 bash "$DEPLOY_SCRIPT" --demo > "$TEST_STATE_DIR/dry-run-output"

@@ -13,7 +13,7 @@ import urllib.request
 
 def request(base, path):
     with urllib.request.urlopen(base + path, timeout=30) as response:
-        return response.read()
+        return response.read(), response.headers.get_content_type()
 
 
 def check(base):
@@ -24,11 +24,11 @@ def check(base):
         raise RuntimeError("Supply an HTTP(S) service origin without credentials.")
     base = base.rstrip("/")
 
-    def verified(path, predicate):
+    def verified(path, predicate, content_types=None):
         for attempt in range(5):
             try:
-                body = request(base, path)
-                if not predicate(body):
+                body, content_type = request(base, path)
+                if (content_types is not None and content_type not in content_types) or not predicate(body):
                     raise ValueError("Unexpected response")
                 print("PASS " + path)
                 return body
@@ -46,7 +46,8 @@ def check(base):
     target = urllib.parse.urlsplit(urllib.parse.urljoin(base + "/", asset))
     if (target.scheme, target.netloc) != (parsed.scheme, parsed.netloc):
         raise RuntimeError("UI script must use the service origin.")
-    verified(target.path, lambda b: len(b) > 0)
+    verified(target.path, lambda b: len(b) > 0,
+             content_types={"text/javascript", "application/javascript"})
     # An empty list is valid; readiness does not require demo seeding.
     verified("/api/events", lambda b: isinstance(json.loads(b).get("data"), list))
 
