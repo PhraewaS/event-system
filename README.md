@@ -140,6 +140,14 @@ The original implementation branch `feat/sprint-1` and superseded PR #10 preserv
 
 ## Local containers and delivery
 
+Lab 5 Episode 4 CI preparation is tracked in [Issue #44](https://github.com/PhraewaS/event-system/issues/44).
+The [deployment/CI procedure](docs/labs/lab-05/deployment.md) describes the reusable
+CI & Docker Build workflow, its test-and-docker job and the dependent build-and-test
+compatibility gate required by the existing protected branches. The imported,
+Gather-adapted [deployment scripts](deploy/README.md) are checked with offline
+stubs and mocked HTTP; this preparation performs no GCP deployment. Review and
+staging-to-main release acceptance remain explicit gates in #44.
+
 Docker Compose uses PostgreSQL 17 with a named event-data volume. A healthy database precedes migration; app starts only after migration succeeds. Set a random SESSION_SECRET in the ignored .env and optionally a URL-safe POSTGRES_PASSWORD (it is interpolated into the local connection URL). Then run:
 
 ~~~sh
