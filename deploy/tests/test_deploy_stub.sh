@@ -6,6 +6,7 @@
 #   these scenarios, asserting on the recorded commands:
 #     first_run : nothing exists      -> everything is created
 #     rerun     : everything exists   -> nothing replaced (credentials kept)
+#     rerun-short / rerun-short-demo : real CLI short names preserve credentials
 #     partial   : DB secret missing   -> DB user password reset + secret created
 #     job-fail  : migration fails     -> script exits 1, service NOT deployed
 #     demo      : --demo flag         -> demo secret is created and granted
@@ -63,6 +64,9 @@ if [ "${1:-} ${2:-}" = 'secrets list' ]; then
     secret-denied) echo 'PERMISSION_DENIED: cannot list secrets' >&2; exit 1 ;;
     secret-unavailable) echo 'UNAVAILABLE: cannot inspect secrets' >&2; exit 1 ;;
     secret-malformed) echo 'unexpected inventory'; exit 0 ;;
+    secret-malformed-path) echo 'projects/stub-gcp-project/secrets/gather-database-url/versions/1'; exit 0 ;;
+    secret-malformed-after-valid) printf 'gather-database-url\nunexpected inventory\n'; exit 0 ;;
+    rerun-short) printf '%s\n' gather-database-url gather-session-secret gather-demo-password; exit 0 ;;
     first_run) exit 0 ;;
     partial) printf 'projects/stub-gcp-project/secrets/gather-session-secret\n'; exit 0 ;;
   esac
@@ -112,13 +116,14 @@ export REGION=asia-southeast1
 export DRY_RUN=0
 
 # --- Run every scenario and assert on what deploy.sh did ------------------------
-for MODE in first_run rerun partial job-fail demo; do
+for MODE in first_run rerun rerun-short partial job-fail demo rerun-short-demo; do
   export STUB_MODE="$MODE"
   [ "$MODE" != demo ] || export STUB_MODE=first_run
+  [ "$MODE" != rerun-short-demo ] || export STUB_MODE=rerun-short
   export GCLOUD_LOG="$TEST_STATE_DIR/gcloud-$MODE.log"
   rm -f "$TEST_STATE_DIR/sql-pass" "$TEST_STATE_DIR"/payload-*
   args=()
-  if [ "$MODE" = demo ]; then args+=(--demo); fi
+  if [[ "$MODE" = demo || "$MODE" = rerun-short-demo ]]; then args+=(--demo); fi
   result=0
   bash "$DEPLOY_SCRIPT" "${args[@]}" > "$TEST_STATE_DIR/output" 2>&1 || result=$?
   expected=0
@@ -139,7 +144,7 @@ for MODE in first_run rerun partial job-fail demo; do
     if grep -q '^run deploy gather .*\(DEMO_PASSWORD\|ALLOW_DEMO_SEED\)' "$GCLOUD_LOG"; then
       echo 'FAIL: web service received seed credentials'; exit 1
     fi
-    if [ "$MODE" = demo ]; then
+    if [[ "$MODE" = demo || "$MODE" = rerun-short-demo ]]; then
       grep -q '^run jobs deploy gather-seed .*DEMO_PASSWORD=gather-demo-password:latest.*ALLOW_DEMO_SEED=true.*--command node --args dist/server/seed.js' "$GCLOUD_LOG"
     elif grep -q '^run jobs deploy gather-seed ' "$GCLOUD_LOG"; then
       echo 'FAIL: normal deployment ran a seed job'; exit 1
@@ -151,7 +156,7 @@ for MODE in first_run rerun partial job-fail demo; do
   for secret in gather-database-url gather-session-secret; do
     grep -q "^secrets add-iam-policy-binding $secret .*roles/secretmanager.secretAccessor" "$GCLOUD_LOG"
   done
-  if [ "$MODE" = demo ]; then
+  if [[ "$MODE" = demo || "$MODE" = rerun-short-demo ]]; then
     grep -q '^secrets add-iam-policy-binding gather-demo-password ' "$GCLOUD_LOG"
   elif grep -q '^secrets add-iam-policy-binding gather-demo-password ' "$GCLOUD_LOG"; then
     echo 'FAIL: granted optional demo secret in non-demo mode'; exit 1
@@ -161,8 +166,8 @@ for MODE in first_run rerun partial job-fail demo; do
       grep -q -- '--edition=enterprise' "$GCLOUD_LOG"
       grep -q '^sql users create ' "$GCLOUD_LOG" ;;
     partial) grep -q '^sql users set-password ' "$GCLOUD_LOG" ;;
-    rerun)
-      if grep -Eq '^(secrets create|sql users (create|set-password)) ' "$GCLOUD_LOG"; then
+    rerun|rerun-short|rerun-short-demo)
+      if grep -Eq '^(secrets (create|versions add)|sql users (create|set-password)) ' "$GCLOUD_LOG"; then
         echo 'FAIL: rerun replaced existing credentials'; exit 1
       fi ;;
   esac
@@ -187,7 +192,7 @@ for MODE in first_run rerun partial job-fail demo; do
   echo "PASS: $MODE (exit, migration gate, credential handling, secret redaction)"
 done
 # --- Unknown secret state must stop before credential changes -------------------
-for MODE in secret-denied secret-unavailable secret-malformed; do
+for MODE in secret-denied secret-unavailable secret-malformed secret-malformed-path secret-malformed-after-valid; do
   export STUB_MODE="$MODE"
   export GCLOUD_LOG="$TEST_STATE_DIR/gcloud-$MODE.log"
   result=0
