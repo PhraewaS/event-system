@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { afterAll, beforeAll, expect, test, vi } from "vitest";
+import { afterAll, beforeAll, expect, test } from "vitest";
 import { Pool } from "pg";
 import request from "supertest";
 import { createApp } from "../server/src/app.js";
@@ -13,7 +13,7 @@ const secret = "security-test-session-secret-at-least-32-chars";
 const password = "Synthetic-security-tests-2026!";
 beforeAll(async () => {
   await migrate(pool);
-  await pool.query("TRUNCATE registrations,events,users,session CASCADE");
+  await pool.query("TRUNCATE registrations,events,users,session,login_rate_limits CASCADE");
   await seed(pool, password);
 });
 afterAll(async () => {
@@ -31,26 +31,21 @@ test("T-13 / AC-01,03 failed-login throttling preserves successful use", async (
       .set("X-CSRF-Token", token)
       .send({ email: "participant@example.test", password: "incorrect" })
       .expect(401);
-  const blocked = await agent
+  const blocked = await request(createApp(pool, secret))
     .post("/api/auth/login")
     .set("X-CSRF-Token", token)
     .send({ email: "participant@example.test", password })
     .expect(429);
   expect(blocked.body.error.code).toBe("LOGIN_RATE_LIMIT");
   await agent.get("/api/auth/me").expect(401);
-  const afterWindow = Date.now() + 16 * 60 * 1000;
-  vi.useFakeTimers({ toFake: ["Date"] });
-  vi.setSystemTime(afterWindow);
-  try {
-    await agent
-      .post("/api/auth/login")
-      .set("X-CSRF-Token", token)
-      .send({ email: "participant@example.test", password })
-      .expect(200);
-    await agent.get("/api/auth/me").expect(200);
-  } finally {
-    vi.useRealTimers();
-  }
+  // Expiration belongs to the database clock, shared by every instance.
+  await pool.query("UPDATE login_rate_limits SET reset_at=now()-interval '1 second'");
+  await agent
+    .post("/api/auth/login")
+    .set("X-CSRF-Token", token)
+    .send({ email: "participant@example.test", password })
+    .expect(200);
+  await agent.get("/api/auth/me").expect(200);
 });
 
 test("T-14 / AC-02,03 production cookies require HTTPS and retain CSRF protections", async () => {

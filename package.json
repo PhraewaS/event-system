@@ -16,7 +16,8 @@
     "db:seed": "tsx server/scripts/seed.ts",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "check": "npm run build && npm test"
+    "check": "npm run build && npm test",
+    "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {
     "argon2": "^0.45.1",

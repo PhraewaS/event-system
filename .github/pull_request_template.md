@@ -28,3 +28,15 @@
 - [ ] The independent teammate is requested under Reviewers when ready; Assignees alone do not request a review.
 - [ ] Reviewed merge and item acceptance evidence are recorded before closing the Issue/moving to Done; linkage and green CI alone are not acceptance.
 - [ ] Release PR only: staging integration/acceptance evidence is linked and the accepted release/tag is recorded after approval.
+
+## Cloud Run readiness (Lab 2.5)
+
+<!-- Complete for deployment-related PRs. Leave unchecked when not verified; see docs/cloud-run-readiness.md for source evidence and GCP gates. -->
+
+- [ ] 1. Uploaded files are not saved in a local folder; use database bytes or Cloud Storage (or state that uploads do not exist).
+- [ ] 2. Seed passwords come from environment variables, are not displayed, and seed reruns preserve existing data; production UAT seeding is explicit.
+- [ ] 3. No development requester/login bypass or displayed default password; admin-created default passwords require first-login change if that feature exists.
+- [ ] 4. Sessions are stored in the database, not server memory.
+- [ ] 5. Server reads PORT and binds to 0.0.0.0.
+- [ ] 6. /api/ready returns ready only after a database query, and 503 on database failure.
+- [ ] Additional GCP gates in docs/cloud-run-readiness.md have evidence, or remaining gates are explicitly listed.

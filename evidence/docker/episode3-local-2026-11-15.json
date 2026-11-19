@@ -1,0 +1,278 @@
+{
+  "description": "Episode 3 local Linux Docker build, browser journey and named-volume persistence verification",
+  "sourceCommit": "a9404bef39dc0f1a1353ed161247d9556840cfd2",
+  "branch": "build/3-docker",
+  "localDate": "2026-11-15",
+  "timezone": "Asia/Bangkok",
+  "runner": "Assistant-operated Windows workstation / Docker Desktop Linux engine / headless Chromium",
+  "engine": {
+    "desktop": "Docker Desktop 4.99.0 (245822)",
+    "version": "29.9.3",
+    "os": "linux",
+    "architecture": "amd64",
+    "compose": "5.7.0"
+  },
+  "buildInputs": {
+    "Dockerfile": "e559b29756dfb12d60360de87f4df46800ec47a38e2d555e129c6e2e2763b1be",
+    "compose.yaml": "334d06598438f90f72e52acb734ca69f623d5584d9ebc0a2914332958aff631a",
+    ".dockerignore": "8ba8a49b353b2290e140c74aa4eaf77cdc6a855aed6a92f9bc23a8a3ae52e023",
+    "package.json": "d417b9da50ed9bea413ef719fe0429d332cd2f150134a430cff83002c763760a",
+    "package-lock.json": "87bfd404f19cd6b2b0cd5a15b15fc72ed1dae14bdce5bad69ffd19ca162590bb"
+  },
+  "commands": [
+    {
+      "command": "docker compose config --quiet",
+      "exitCode": 0
+    },
+    {
+      "command": "docker compose up --build -d",
+      "exitCode": 0
+    },
+    {
+      "command": "docker compose exec -T -e DEMO_PASSWORD app node dist/server/seed.js",
+      "exitCode": 0,
+      "note": "Password inherited privately from local .env; not placed in command arguments or report"
+    },
+    {
+      "command": "npm run smoke -- http://localhost:3000",
+      "exitCode": 0,
+      "when": "before and after container recreation"
+    },
+    {
+      "command": "docker compose down",
+      "exitCode": 0,
+      "volumeDeletion": false
+    },
+    {
+      "command": "docker compose up -d",
+      "exitCode": 0
+    }
+  ],
+  "before": {
+    "observedAt": "2026-11-15T14:26:36.615Z",
+    "services": [
+      {
+        "service": "app",
+        "id": "9ea1356aa91b",
+        "state": "running",
+        "health": "",
+        "exitCode": 0
+      },
+      {
+        "service": "db",
+        "id": "ccaceb307851",
+        "state": "running",
+        "health": "healthy",
+        "exitCode": 0
+      },
+      {
+        "service": "migrate",
+        "id": "557bc7bd96d3",
+        "state": "exited",
+        "health": "",
+        "exitCode": 0
+      }
+    ],
+    "volume": [
+      {
+        "name": "event-system_event-data",
+        "destination": "/var/lib/postgresql/data"
+      }
+    ],
+    "migrations": [
+      "001_initial.sql",
+      "002_login_rate_limits.sql"
+    ],
+    "row": {
+      "eventId": "c234d70a-59a8-4248-ab5e-6be8353fc156",
+      "title": "Docker persistence 2026-11-15T14:26:18.885Z",
+      "capacity": 2,
+      "registrationId": "2b19ea66-6f84-40d4-a167-b3e5b3097e88",
+      "participantId": "10000000-0000-4000-8000-000000000003"
+    }
+  },
+  "after": {
+    "observedAt": "2026-11-15T14:26:49.014Z",
+    "services": [
+      {
+        "service": "app",
+        "id": "e795c54e32a7",
+        "state": "running",
+        "health": "",
+        "exitCode": 0
+      },
+      {
+        "service": "db",
+        "id": "2f7ced40f61d",
+        "state": "running",
+        "health": "healthy",
+        "exitCode": 0
+      },
+      {
+        "service": "migrate",
+        "id": "b9951e06279f",
+        "state": "exited",
+        "health": "",
+        "exitCode": 0
+      }
+    ],
+    "volume": [
+      {
+        "name": "event-system_event-data",
+        "destination": "/var/lib/postgresql/data"
+      }
+    ],
+    "migrations": [
+      "001_initial.sql",
+      "002_login_rate_limits.sql"
+    ],
+    "row": {
+      "eventId": "c234d70a-59a8-4248-ab5e-6be8353fc156",
+      "title": "Docker persistence 2026-11-15T14:26:18.885Z",
+      "capacity": 2,
+      "registrationId": "2b19ea66-6f84-40d4-a167-b3e5b3097e88",
+      "participantId": "10000000-0000-4000-8000-000000000003"
+    }
+  },
+  "localAppImage": {
+    "id": "sha256:faf4fb5551b99d3abf63d2f3de26e034883f45ede16d1fb6807373886fb64a52",
+    "os": "linux",
+    "architecture": "amd64",
+    "user": "node"
+  },
+  "runtimeChecks": {
+    "runtimeFiles": true,
+    "envFileAbsent": true,
+    "uid": 1000,
+    "noDatabaseSessionOrDemoSecretInImageConfig": true
+  },
+  "persistence": {
+    "identicalRow": true,
+    "sameVolume": true,
+    "allContainersRecreated": true,
+    "migrationsUnchanged": true
+  },
+  "browserBefore": {
+    "mode": "create",
+    "startedAt": "2026-11-15T14:26:17.245Z",
+    "baseUrl": "http://localhost:3000",
+    "checks": [
+      {
+        "name": "/api/health",
+        "status": 200,
+        "body": {
+          "data": {
+            "status": "ok"
+          }
+        }
+      },
+      {
+        "name": "/api/ready",
+        "status": 200,
+        "body": {
+          "status": "ready",
+          "db": "connected"
+        }
+      },
+      {
+        "name": "sign-in organizer@example.test",
+        "passed": true
+      },
+      {
+        "name": "publish through browser",
+        "status": 201,
+        "eventId": "c234d70a-59a8-4248-ab5e-6be8353fc156"
+      },
+      {
+        "name": "sign-in participant@example.test",
+        "passed": true
+      },
+      {
+        "name": "register through browser",
+        "status": 201,
+        "registrationId": "2b19ea66-6f84-40d4-a167-b3e5b3097e88"
+      },
+      {
+        "name": "same registration ID and event in participant view",
+        "passed": true,
+        "registrationId": "2b19ea66-6f84-40d4-a167-b3e5b3097e88",
+        "eventId": "c234d70a-59a8-4248-ab5e-6be8353fc156"
+      },
+      {
+        "name": "sign-in organizer@example.test",
+        "passed": true
+      },
+      {
+        "name": "owner roster retains one participant, one remaining place, capacity two",
+        "passed": true
+      }
+    ],
+    "fixture": {
+      "title": "Docker persistence 2026-11-15T14:26:18.885Z",
+      "eventId": "c234d70a-59a8-4248-ab5e-6be8353fc156",
+      "registrationId": "2b19ea66-6f84-40d4-a167-b3e5b3097e88"
+    },
+    "passed": true,
+    "finishedAt": "2026-11-15T14:26:19.906Z"
+  },
+  "browserAfter": {
+    "mode": "verify",
+    "startedAt": "2026-11-15T14:26:50.323Z",
+    "baseUrl": "http://localhost:3000",
+    "checks": [
+      {
+        "name": "/api/health",
+        "status": 200,
+        "body": {
+          "data": {
+            "status": "ok"
+          }
+        }
+      },
+      {
+        "name": "/api/ready",
+        "status": 200,
+        "body": {
+          "status": "ready",
+          "db": "connected"
+        }
+      },
+      {
+        "name": "sign-in participant@example.test",
+        "passed": true
+      },
+      {
+        "name": "same registration ID and event in participant view",
+        "passed": true,
+        "registrationId": "2b19ea66-6f84-40d4-a167-b3e5b3097e88",
+        "eventId": "c234d70a-59a8-4248-ab5e-6be8353fc156"
+      },
+      {
+        "name": "sign-in organizer@example.test",
+        "passed": true
+      },
+      {
+        "name": "owner roster retains one participant, one remaining place, capacity two",
+        "passed": true
+      }
+    ],
+    "fixture": {
+      "title": "Docker persistence 2026-11-15T14:26:18.885Z",
+      "eventId": "c234d70a-59a8-4248-ab5e-6be8353fc156",
+      "registrationId": "2b19ea66-6f84-40d4-a167-b3e5b3097e88"
+    },
+    "passed": true,
+    "finishedAt": "2026-11-15T14:26:51.630Z"
+  },
+  "screenshots": [
+    "episode3-after-participant-2026-11-15.png",
+    "episode3-after-organizer-2026-11-15.png"
+  ],
+  "passed": true,
+  "limitations": [
+    "Operator-invoked checks outside the 47-test/12-browser regression suite; that suite was not rerun locally for this evidence-only change.",
+    "Local HTTP/development cookies; no hosted HTTPS, IAM, Cloud SQL or cloud deployment claim.",
+    "No independent teammate approval or integration acceptance claimed.",
+    "Image ID identifies a local build, not a pushed Artifact Registry image or deployed revision."
+  ]
+}
