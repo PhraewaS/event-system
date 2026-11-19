@@ -21,6 +21,10 @@ The shell tests replace `gcloud` and random generation with local stubs. They
 exercise first setup, idempotent reruns, missing database credentials, failed
 migration, explicit demo seeding and dry-run behavior. Secret inventory permission,
 availability and malformed-response failures must stop before credentials change.
+The 14 deployment/preview scenarios include full-name and real CLI short-name
+inventories, short-name reruns with and without `--demo`, and malformed output
+after a valid name. Existing secrets must not trigger password resets, secret
+creation or new secret versions.
 Teardown tests cover successful cleanup, one/multiple failed deletions, continued
 cleanup of other resources, incorrect confirmation and zero-call previews.
 Release tests cover normal
@@ -64,6 +68,8 @@ database/connection budgets and migration compatibility before any live use.
 The deployment operator needs `secretmanager.secrets.list` on the project.
 After enabling APIs, `deploy.sh` requires a successful, well-formed complete
 secret inventory before creating resources or changing database credentials.
+Validated short secret IDs and full `projects/.../secrets/...` names are both
+normalized to IDs; malformed names are rejected before any credential changes.
 An absent name in that successful inventory permits creation; inspection errors
 abort instead of being treated as absence. Secret values are not read or logged,
 and the runtime account retains only the existing per-secret access grants.

@@ -1,0 +1,135 @@
+{
+  "sourceCommit": "4a7819b7b6107b8ae3ea88284c58dd18e1812136",
+  "sourceStatus": "",
+  "build": {
+    "id": "e1e6835a-7099-46c3-a43e-c861a2ced1e5",
+    "status": "SUCCESS",
+    "createTime": "2026-11-19T12:31:19.556770926Z",
+    "finishTime": "2026-11-19T12:32:23.849101Z"
+  },
+  "images": [
+    {
+      "artifactRegistryPackage": "projects/cpe334-omega-3/locations/asia-southeast1/repositories/gather/packages/gather/versions/sha256:1aa3fc321eb7b581e8f14e41989f6b4b2e6fb7396be28469765a87d9f9bcccec",
+      "digest": "sha256:1aa3fc321eb7b581e8f14e41989f6b4b2e6fb7396be28469765a87d9f9bcccec",
+      "name": "asia-southeast1-docker.pkg.dev/cpe334-omega-3/gather/gather",
+      "pushTiming": {
+        "endTime": "2026-11-19T12:32:23.248934687Z",
+        "startTime": "2026-11-19T12:31:57.836031171Z"
+      }
+    },
+    {
+      "artifactRegistryPackage": "projects/cpe334-omega-3/locations/asia-southeast1/repositories/gather/packages/gather/versions/sha256:1aa3fc321eb7b581e8f14e41989f6b4b2e6fb7396be28469765a87d9f9bcccec",
+      "digest": "sha256:1aa3fc321eb7b581e8f14e41989f6b4b2e6fb7396be28469765a87d9f9bcccec",
+      "name": "asia-southeast1-docker.pkg.dev/cpe334-omega-3/gather/gather:latest",
+      "pushTiming": {
+        "endTime": "2026-11-19T12:32:23.248934687Z",
+        "startTime": "2026-11-19T12:31:57.836031171Z"
+      }
+    }
+  ],
+  "serviceURL": "https://gather-75thi3dqbq-as.a.run.app",
+  "revision": "gather-00001-5s8",
+  "runtimeImage": "asia-southeast1-docker.pkg.dev/cpe334-omega-3/gather/gather@sha256:1aa3fc321eb7b581e8f14e41989f6b4b2e6fb7396be28469765a87d9f9bcccec",
+  "traffic": [
+    {
+      "latestRevision": true,
+      "percent": 100,
+      "revisionName": "gather-00001-5s8"
+    }
+  ],
+  "sql": {
+    "connectionName": "cpe334-omega-3:asia-southeast1:gather-pg",
+    "databaseVersion": "POSTGRES_17",
+    "name": "gather-pg",
+    "region": "asia-southeast1",
+    "settings": {
+      "dataDiskSizeGb": "10",
+      "storageAutoResize": false,
+      "tier": "db-f1-micro"
+    },
+    "state": "RUNNABLE"
+  },
+  "webEnvNames": [
+    "NODE_ENV",
+    "TZ",
+    "DB_POOL_MAX",
+    "DATABASE_URL",
+    "SESSION_SECRET"
+  ],
+  "migration": {
+    "metadata": {
+      "name": "gather-migrate-l6xpv"
+    },
+    "status": {
+      "completionTime": "2026-11-19T12:33:26.034359Z",
+      "conditions": [
+        {
+          "lastTransitionTime": "2026-11-19T12:33:26.034359Z",
+          "message": "Execution completed successfully in 10.14s.",
+          "status": "True",
+          "type": "Completed"
+        },
+        {
+          "lastTransitionTime": "2026-11-19T12:33:12.599479Z",
+          "message": "Provisioned imported containers.",
+          "status": "True",
+          "type": "ResourcesAvailable"
+        },
+        {
+          "lastTransitionTime": "2026-11-19T12:33:20.831355Z",
+          "message": "Started deployed execution in 8.23s.",
+          "status": "True",
+          "type": "Started"
+        },
+        {
+          "lastTransitionTime": "2026-11-19T12:33:12.500820Z",
+          "message": "Imported container image in 4.76s.",
+          "status": "True",
+          "type": "ContainerReady"
+        }
+      ],
+      "logUri": "https://console.cloud.google.com/logs/viewer?project=cpe334-omega-3&advancedFilter=resource.type%3D%22cloud_run_job%22%0Aresource.labels.job_name%3D%22gather-migrate%22%0Aresource.labels.location%3D%22asia-southeast1%22%0Alabels.%22run.googleapis.com/execution_name%22%3D%22gather-migrate-l6xpv%22",
+      "observedGeneration": 1,
+      "startTime": "2026-11-19T12:33:15.887079Z",
+      "succeededCount": 1
+    }
+  },
+  "seed": {
+    "metadata": {
+      "name": "gather-seed-rrlqk"
+    },
+    "status": {
+      "completionTime": "2026-11-19T12:34:26.107281Z",
+      "conditions": [
+        {
+          "lastTransitionTime": "2026-11-19T12:34:26.107281Z",
+          "message": "Execution completed successfully in 16.24s.",
+          "status": "True",
+          "type": "Completed"
+        },
+        {
+          "lastTransitionTime": "2026-11-19T12:34:07.716713Z",
+          "message": "Provisioned imported containers.",
+          "status": "True",
+          "type": "ResourcesAvailable"
+        },
+        {
+          "lastTransitionTime": "2026-11-19T12:34:21.299371Z",
+          "message": "Started deployed execution in 13.58s.",
+          "status": "True",
+          "type": "Started"
+        },
+        {
+          "lastTransitionTime": "2026-11-19T12:34:07.585568Z",
+          "message": "Imported container image in 1.03s.",
+          "status": "True",
+          "type": "ContainerReady"
+        }
+      ],
+      "logUri": "https://console.cloud.google.com/logs/viewer?project=cpe334-omega-3&advancedFilter=resource.type%3D%22cloud_run_job%22%0Aresource.labels.job_name%3D%22gather-seed%22%0Aresource.labels.location%3D%22asia-southeast1%22%0Alabels.%22run.googleapis.com/execution_name%22%3D%22gather-seed-rrlqk%22",
+      "observedGeneration": 1,
+      "startTime": "2026-11-19T12:34:09.863508Z",
+      "succeededCount": 1
+    }
+  }
+}

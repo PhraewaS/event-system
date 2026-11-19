@@ -159,7 +159,10 @@ else
   fi
   while IFS= read -r secret; do
     [ -n "$secret" ] || continue
-    if [[ ! "$secret" =~ ^projects/[^/]+/secrets/[^/]+$ ]]; then
+    # gcloud's value(name) may render a short ID rather than the full resource
+    # name. Validate either form before normalizing; reject malformed output
+    # instead of treating an unreadable inventory as missing credentials.
+    if [[ ! "$secret" =~ ^(projects/[^/]+/secrets/)?[a-zA-Z0-9_-]{1,255}$ ]]; then
       echo 'Error: Cannot determine Secret Manager state from the returned inventory.' >&2
       exit 1
     fi
