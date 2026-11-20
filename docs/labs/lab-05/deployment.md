@@ -438,8 +438,8 @@ release configuration.
    before updating the service and traffic. A failed migration blocks the
    service update. The normal release path does not run the seed job.
 4. Check the deploy log and summary for the SHA, digest, public URL and
-   [read-only smoke results](../../../deploy/smoke_test.py). The first release
-   explicitly skipped the optional login smoke.
+   [read-only smoke results](../../../deploy/smoke_test.py). Both Episode 7
+   releases recorded `SKIP login` for the optional login smoke.
 
 ### First automated release and Console verification
 
@@ -469,13 +469,34 @@ record this comparison for the first release.
 
 ### C-06 — visible homepage change
 
-The [before screenshot in #47](https://github.com/PhraewaS/event-system/issues/47#issuecomment-7047394622)
-shows “Make a little room for what’s next.” on the public homepage before
-the copy change. The expected text after release is “Make room for your next
-campus event.” Complete this record after the reviewed release with the
-after screenshot at the same URL, main merge SHA, Deploy demo run, image
-digest, and serving Cloud Run revision. Keep #47 open while that evidence is
-pending.
+PhraewaS opened [PR #61](https://github.com/PhraewaS/event-system/pull/61)
+from `codex/episode7-deploy-proof` into `sprint1-staging` and opened
+[Release PR #62](https://github.com/PhraewaS/event-system/pull/62) from
+`sprint1-staging` into `main`. Both PRs carried the `lab:5` label, and guluJa
+approved [the staging change](https://github.com/PhraewaS/event-system/pull/61#pullrequestreview-5997657613)
+and [the release](https://github.com/PhraewaS/event-system/pull/62#pullrequestreview-5997911328)
+separately. guluJa merged #62 at 02:01:16 on 21 November 2026 (Asia/Bangkok).
+The resulting push started Deploy demo automatically.
 
-Keep #7 open for the wider lab. C-05 cloud restart/redeploy persistence and
-C-06 main-to-cloud pipeline proof remain separate gates.
+| Evidence | Observed result |
+| --- | --- |
+| Main merge SHA and image tag | [`a1f03028e374ddb86b88e9db0734c6e381a380fe`](https://github.com/PhraewaS/event-system/commit/a1f03028e374ddb86b88e9db0734c6e381a380fe) |
+| [Release CI](https://github.com/PhraewaS/event-system/actions/runs/44797264583) and [Main CI](https://github.com/PhraewaS/event-system/actions/runs/44798222537) | `test-and-docker` and `build-and-test` passed in both runs |
+| [Deploy demo run 44798222919](https://github.com/PhraewaS/event-system/actions/runs/44798222919) | Push to `main` at the merge SHA above. Reusable CI and deploy jobs succeeded |
+| Immutable image digest | `sha256:6739745d730d534bd0aa890f9943c0c78b30233f030f1db59e447c7d7dd03557` |
+| Migration and serving revision | `gather-migrate-6p2jz` succeeded at 02:04:50 before `gather-00003-q22` began serving 100% of traffic at 02:05:06 (Asia/Bangkok) |
+| [Public smoke log](https://github.com/PhraewaS/event-system/actions/runs/44798222919/job/136504377869) | `/api/health`, `/api/ready`, `/`, `/assets/index-CaNBcHcx.js` and `/api/events` passed. The log records `SKIP login` |
+
+The [before screenshot](https://github.com/PhraewaS/event-system/issues/47#issuecomment-7047394622)
+shows “Make a little room for what’s next.” on revision `gather-00002-jb7`.
+At 02:09 (Asia/Bangkok), the [after screenshot](https://github.com/user-attachments/assets/71de7ca6-6b86-40ed-92a0-8c6c0b561dc1)
+shows “Make room for your next campus event.” and the same
+[public Gather URL](https://gather-75thi3dqbq-as.a.run.app/).
+The [release and image record in #47](https://github.com/PhraewaS/event-system/issues/47#issuecomment-7048316695)
+connects the screenshot to the deploy run.
+[guluJa’s C-06 verification](https://github.com/PhraewaS/event-system/issues/47#issuecomment-7048464667)
+confirms that the before and after captures, migration, serving revision and
+smoke results match the reviewed release.
+
+Keep #7 open for the wider lab. C-05 cloud restart/redeploy persistence remains
+tracked in #48.
