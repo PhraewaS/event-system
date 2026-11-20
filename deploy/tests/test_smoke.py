@@ -69,7 +69,7 @@ class SmokeTests(unittest.TestCase):
         with patch.object(smoke, "request", side_effect=urllib.error.URLError("offline")) as req, patch.object(smoke.time, "sleep"):
             with self.assertRaisesRegex(RuntimeError, "/api/health"):
                 smoke.check("https://demo.test")
-        self.assertEqual(req.call_count, 5)
+        self.assertEqual(req.call_count, 6, "C-02 merge gate: intentional failure")
 
     def http_check(self, script_type, script_body):
         def open_response(url, timeout):
