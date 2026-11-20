@@ -3,6 +3,16 @@ name: Deploy demo
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: Full commit SHA of the approved image
+        required: true
+        type: string
+      image_digest:
+        description: Expected Artifact Registry digest (sha256 followed by 64 hex characters)
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -13,11 +23,15 @@ concurrency:
 
 jobs:
   test:
+    if: github.event_name == 'push'
     uses: ./.github/workflows/ci-docker.yml
 
   deploy:
     needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: >-
+      ${{ !cancelled() && github.ref == 'refs/heads/main' &&
+          ((github.event_name == 'push' && needs.test.result == 'success') ||
+           (github.event_name == 'workflow_dispatch' && needs.test.result == 'skipped')) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     environment: demo
@@ -29,7 +43,9 @@ jobs:
       REGION: ${{ vars.GCP_REGION }}
       SERVICE_NAME: gather
       MIGRATE_JOB_NAME: gather-migrate
-      IMAGE_TAG: ${{ github.sha }}
+      IMAGE_TAG: ${{ github.event_name == 'push' && github.sha || inputs.image_tag }}
+      EXPECTED_IMAGE_DIGEST: ${{ inputs.image_digest }}
+      ROLLBACK: ${{ github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -43,8 +59,11 @@ jobs:
         run: |
           : "${PROJECT_ID:?Missing GCP_PROJECT_ID}" "${REGION:?Missing GCP_REGION}"
           : "${WIF_PROVIDER:?Missing WIF_PROVIDER}" "${WIF_SERVICE_ACCOUNT:?Missing WIF_SERVICE_ACCOUNT}"
-          [[ "$IMAGE_TAG" =~ ^[0-9a-f]{40}$ ]]
-          test "$(git rev-parse HEAD)" = "$IMAGE_TAG"
+          [[ "$IMAGE_TAG" =~ ^[0-9a-f]{40}$ ]] || { echo 'Image tag must be a full commit SHA.' >&2; exit 1; }
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          if [[ "$ROLLBACK" == true ]]; then
+            [[ "$EXPECTED_IMAGE_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo 'Manual deploy requires the approved SHA-256 image digest.' >&2; exit 1; }
+          fi
 
       - name: Authenticate to Google Cloud with WIF
         uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
@@ -55,6 +74,7 @@ jobs:
       - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
 
       - name: Build and push image
+        if: github.event_name == 'push'
         run: |
           registry="$REGION-docker.pkg.dev"
           image="$registry/$PROJECT_ID/gather/gather:$IMAGE_TAG"
@@ -79,6 +99,11 @@ jobs:
         run: |
           {
             printf '### Gather demo deployment\n\n'
+            if [[ "$ROLLBACK" == true ]]; then
+              printf -- '- Mode: manual image reuse (CI, build, push, migration and seed skipped)\n'
+            else
+              printf -- '- Mode: release from main\n'
+            fi
             printf -- '- Commit image tag: `%s`\n' "$IMAGE_TAG"
             printf -- '- Deployed image digest: `%s`\n' "$DEPLOYED_IMAGE"
             printf -- '- URL: %s\n' "$SERVICE_URL"
