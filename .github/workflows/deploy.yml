@@ -1,0 +1,87 @@
+name: Deploy demo
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-demo
+  cancel-in-progress: false
+
+jobs:
+  test:
+    uses: ./.github/workflows/ci-docker.yml
+
+  deploy:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment: demo
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      REGION: ${{ vars.GCP_REGION }}
+      SERVICE_NAME: gather
+      MIGRATE_JOB_NAME: gather-migrate
+      IMAGE_TAG: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Verify deployment settings and checked-out source
+        env:
+          WIF_PROVIDER: ${{ vars.WIF_PROVIDER }}
+          WIF_SERVICE_ACCOUNT: ${{ vars.WIF_SERVICE_ACCOUNT }}
+        run: |
+          : "${PROJECT_ID:?Missing GCP_PROJECT_ID}" "${REGION:?Missing GCP_REGION}"
+          : "${WIF_PROVIDER:?Missing WIF_PROVIDER}" "${WIF_SERVICE_ACCOUNT:?Missing WIF_SERVICE_ACCOUNT}"
+          [[ "$IMAGE_TAG" =~ ^[0-9a-f]{40}$ ]]
+          test "$(git rev-parse HEAD)" = "$IMAGE_TAG"
+
+      - name: Authenticate to Google Cloud with WIF
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: ${{ vars.WIF_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
+
+      - name: Build and push image
+        run: |
+          registry="$REGION-docker.pkg.dev"
+          image="$registry/$PROJECT_ID/gather/gather:$IMAGE_TAG"
+          gcloud auth configure-docker "$registry" --quiet
+          docker build --tag "$image" .
+          docker push "$image"
+
+      - name: Verify image, migrate and deploy
+        run: bash deploy/release.sh
+
+      - name: Set up Python for smoke checks
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: "3.14"
+
+      - name: Smoke test public URL
+        run: |
+          echo 'SKIP login: optional login smoke is disabled for this release.'
+          python3 deploy/smoke_test.py "$SERVICE_URL"
+
+      - name: Record deployment
+        run: |
+          {
+            printf '### Gather demo deployment\n\n'
+            printf -- '- Commit image tag: `%s`\n' "$IMAGE_TAG"
+            printf -- '- Deployed image digest: `%s`\n' "$DEPLOYED_IMAGE"
+            printf -- '- URL: %s\n' "$SERVICE_URL"
+            printf -- '- Smoke test: passed (health, readiness, homepage, JavaScript, events)\n'
+            printf -- '- SKIP login: optional login smoke is disabled for this release\n'
+          } >> "$GITHUB_STEP_SUMMARY"
