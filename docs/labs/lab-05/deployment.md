@@ -1,10 +1,10 @@
 # Lab 5 deployment and CI procedure
 
 Status: Episode 4 is integrated on main. The first manual Episode 5 deployment
-was verified on 19 November 2026; its execution and remaining acceptance work
-are tracked in [Issue #45](https://github.com/PhraewaS/event-system/issues/45).
-The public C-04 workflow, teammate evidence verification, and later identity,
-main-only deployment pipeline and persistence gates remain separate work.
+was verified on 19 November 2026. Deployment and remaining acceptance work are
+tracked in [Issue #45](https://github.com/PhraewaS/event-system/issues/45).
+The live C-04 browser workflow passed on 20 November 2026. Teammate verification
+of the deployment evidence is pending.
 
 ## Stack and accepted starting point
 
@@ -285,7 +285,7 @@ out (HTTP 204) for `organizer@example.test`, `organizer2@example.test`,
 `participant@example.test` and `participant2@example.test`; all four passed.
 It fetched the existing demo password into process memory and printed only
 synthetic account identifiers/results, never credentials or response tokens.
-These are API session checks, not a claim of a completed browser C-04 workflow.
+These API session checks were performed during the first deployment.
 
 ### Shared capture and remaining acceptance
 
@@ -300,12 +300,23 @@ was copied with source SHA-256
 Original logs, including failed attempts, remain in Cloud Shell under
 `~/event-system/artifacts/episode5-deployment/`. No secret payloads are shared.
 
-Keep **#45 and #7 open**. C-04 still needs live Organizer sign-in/publish,
-Participant sign-in/registration, owner roster and at least one rule/access
-rejection, with URL-visible screenshots and source/revision context. Do not
-substitute the API login checks, seeded event list or local tests for that
-evidence. This documentation/parser change requires teammate review before
-acceptance; later CI/CD and cloud persistence gates remain pending separately.
+### Live C-04 verification
+
+C-04 passed on 20 November 2026 at 14:31 (Asia/Bangkok) on the public Gather
+deployment. Cloud Run revision `gather-00001-5s8` served 100% of traffic and
+was built from source `4a7819b7b6107b8ae3ea88284c58dd18e1812136`.
+
+- The Organizer signed in and published a synthetic event with capacity 1.
+- The Participant signed in and registered. The reservation remained visible
+  after reloading, and the owner saw one confirmed registration in the roster.
+- A second Participant saw `Fully booked`. The registration API returned
+  `409 EVENT_FULL`, and the roster still showed one registration.
+
+The [C-04 evidence in #45](https://github.com/PhraewaS/event-system/issues/45#issuecomment-7033445944)
+links four screenshots with their observed browser URLs and the run record.
+Keep **#45 and #7 open** while guluJa reviews the evidence. The
+[Episode 5.7 Console results](https://github.com/PhraewaS/event-system/issues/45#issuecomment-7033157237)
+are recorded in #45. The Console screenshots still need to be shared for review.
 
 ## Episode 4 integration and release procedure
 
@@ -325,5 +336,5 @@ acceptance; later CI/CD and cloud persistence gates remain pending separately.
    procedure to query the currently running commit. No deployed identity exists
    in this Episode 4 evidence alone.
 
-Keep #7 open for the wider lab. C-04 public workflow, C-05 cloud restart/redeploy
-persistence and C-06 main-to-cloud pipeline proof remain separate gates.
+Keep #7 open for the wider lab. C-05 cloud restart/redeploy persistence and
+C-06 main-to-cloud pipeline proof remain separate gates.
