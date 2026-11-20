@@ -1,0 +1,77 @@
+{
+  "case": "C-04",
+  "origin": "https://gather-75thi3dqbq-as.a.run.app",
+  "title": "Lab 5 C-04 synthetic event - 20 Nov 2026",
+  "project": "cpe334-omega-3",
+  "region": "asia-southeast1",
+  "results": {
+    "readiness": {
+      "status": 200,
+      "database": "connected"
+    },
+    "organizer@example.test": {
+      "login": 200,
+      "role": "ORGANIZER"
+    },
+    "publish": {
+      "status": 201,
+      "capacity": 1
+    },
+    "participant@example.test": {
+      "login": 200,
+      "role": "PARTICIPANT"
+    },
+    "register": {
+      "status": 201,
+      "persistedAfterReload": true
+    },
+    "roster": {
+      "registered": 1,
+      "available": 0,
+      "capacity": 1,
+      "participant": "participant@example.test"
+    },
+    "participant2@example.test": {
+      "login": 200,
+      "role": "PARTICIPANT"
+    },
+    "rejection": {
+      "ui": "Fully booked; Registration unavailable",
+      "status": 409,
+      "code": "EVENT_FULL",
+      "rosterUnchanged": true
+    }
+  },
+  "screenshots": [
+    {
+      "file": "01-organizer-published.jpg",
+      "url": "https://gather-75thi3dqbq-as.a.run.app/organizer/events/de6bc9f8-7c7f-4358-8759-9d0ce25de02f?published=1",
+      "capturedAt": "2026-11-20T07:31:10.119Z",
+      "sha256": "c3018a217f202f73a028b42d400f9e6ffcbc8723bbd35f378a599a8854072f7b"
+    },
+    {
+      "file": "02-participant-confirmed.jpg",
+      "url": "https://gather-75thi3dqbq-as.a.run.app/my-registrations?confirmed=de6bc9f8-7c7f-4358-8759-9d0ce25de02f",
+      "capturedAt": "2026-11-20T07:31:11.079Z",
+      "sha256": "78e86c35400d657391688781afe8ed89064db63df2a34b050635299d385d2f26"
+    },
+    {
+      "file": "03-owner-roster.jpg",
+      "url": "https://gather-75thi3dqbq-as.a.run.app/organizer/events/de6bc9f8-7c7f-4358-8759-9d0ce25de02f?published=1",
+      "capturedAt": "2026-11-20T07:31:11.675Z",
+      "sha256": "f930efea6bd841f25ba9f305eb5cae2cc53fb8655abc23768d4d8f3f42d5784a"
+    },
+    {
+      "file": "04-capacity-rejection.jpg",
+      "url": "https://gather-75thi3dqbq-as.a.run.app/events/de6bc9f8-7c7f-4358-8759-9d0ce25de02f",
+      "capturedAt": "2026-11-20T07:31:12.782Z",
+      "sha256": "c0e80dc0e3936c8f557a9111d7e3da9746cfb541cb28ff658695a62102f71042"
+    }
+  ],
+  "revision": "gather-00001-5s8",
+  "image": "asia-southeast1-docker.pkg.dev/cpe334-omega-3/gather/gather@sha256:1aa3fc321eb7b581e8f14e41989f6b4b2e6fb7396be28469765a87d9f9bcccec",
+  "deployedSource": "4a7819b7b6107b8ae3ea88284c58dd18e1812136",
+  "eventId": "de6bc9f8-7c7f-4358-8759-9d0ce25de02f",
+  "eventUrl": "https://gather-75thi3dqbq-as.a.run.app/events/de6bc9f8-7c7f-4358-8759-9d0ce25de02f",
+  "completedAt": "2026-11-20T07:31:13.099Z"
+}
