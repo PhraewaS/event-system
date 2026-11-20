@@ -3,6 +3,7 @@ import { hash, argon2id } from "argon2";
 import { pathToFileURL } from "node:url";
 import type { Pool } from "pg";
 import { createPool } from "./db.js";
+import { seedCredentialsFromEnv, type DemoAccountKey, type SeedCredentials } from "./demo-credentials.js";
 
 export const demoIds = {
   organizer: "10000000-0000-4000-8000-000000000001",
@@ -11,23 +12,26 @@ export const demoIds = {
   participant2: "10000000-0000-4000-8000-000000000004",
 };
 
-export async function seed(pool: Pool, password: string) {
-  if (password.length < 12 || password.length > 256)
-    throw new Error("Set DEMO_PASSWORD (12–256 characters).");
+export const demoAccounts = [
+  { key: "organizer", name: "Alex Morgan", email: "organizer@example.test", role: "ORGANIZER" },
+  { key: "organizer2", name: "Jamie Rivera", email: "organizer2@example.test", role: "ORGANIZER" },
+  { key: "participant", name: "Sam Taylor", email: "participant@example.test", role: "PARTICIPANT" },
+  { key: "participant2", name: "Riley Chen", email: "participant2@example.test", role: "PARTICIPANT" },
+] as const;
+
+export async function seed(pool: Pool, credentials: SeedCredentials) {
+  if (typeof credentials === "string" && (credentials.length < 12 || credentials.length > 256))
+    throw new Error("Set a 12–256 character synthetic DEMO_PASSWORD for local seed operations.");
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    for (const [key, name, email, role] of [
-      ["organizer", "Alex Morgan", "organizer@example.test", "ORGANIZER"],
-      ["organizer2", "Jamie Rivera", "organizer2@example.test", "ORGANIZER"],
-      ["participant", "Sam Taylor", "participant@example.test", "PARTICIPANT"],
-      [
-        "participant2",
-        "Riley Chen",
-        "participant2@example.test",
-        "PARTICIPANT",
-      ],
-    ]) {
+    // Production UAT requires a unique passphrase for every seeded identity.
+    const accounts = demoAccounts;
+    for (const account of accounts) {
+      const password =
+        typeof credentials === "string"
+          ? credentials
+          : credentials[account.key as DemoAccountKey];
       const passwordHash = await hash(password, {
         type: argon2id,
         memoryCost: 19456,
@@ -36,7 +40,7 @@ export async function seed(pool: Pool, password: string) {
       });
       await client.query(
         "INSERT INTO users(id,name,email,role,password_hash) VALUES($1,$2,$3,$4,$5) ON CONFLICT (id) DO NOTHING",
-        [demoIds[key as keyof typeof demoIds], name, email, role, passwordHash],
+        [demoIds[account.key], account.name, account.email, account.role, passwordHash],
       );
     }
     const examples = [
@@ -88,11 +92,9 @@ if (
 ) {
   if (process.env.NODE_ENV === "production" && process.env.ALLOW_DEMO_SEED !== "true")
     throw new Error("Production demo seeding requires ALLOW_DEMO_SEED=true for an explicit UAT seed job.");
-  if (!process.env.DEMO_PASSWORD || process.env.DEMO_PASSWORD.length < 12)
-    throw new Error("Set DEMO_PASSWORD (12+ characters).");
   const pool = createPool();
   try {
-    await seed(pool, process.env.DEMO_PASSWORD);
+    await seed(pool, seedCredentialsFromEnv());
     console.log("Demo seed complete. Existing accounts/events were preserved.");
   } finally {
     await pool.end();
