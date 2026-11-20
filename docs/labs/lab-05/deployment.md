@@ -1,10 +1,10 @@
 # Lab 5 deployment and CI procedure
 
-Status: Episode 4 is integrated on main. The first manual Episode 5 deployment
-was verified on 19 November 2026. Deployment and remaining acceptance work are
-tracked in [Issue #45](https://github.com/PhraewaS/event-system/issues/45).
-The live C-04 browser workflow passed on 20 November 2026. Teammate verification
-of the deployment evidence is pending.
+Status: Episode 4 is integrated on `main`. The first manual Episode 5 deployment
+and live C-04 workflow were verified and reviewed in
+[Issue #45](https://github.com/PhraewaS/event-system/issues/45). Episode 6
+configuration and the C-02 merge-gate demonstration are recorded in
+[Issue #46](https://github.com/PhraewaS/event-system/issues/46) for teammate review.
 
 ## Stack and accepted starting point
 
@@ -94,10 +94,10 @@ checkout does not persist credentials. It performs no Google Cloud login,
 resource changes, registry push or deployment. Concurrency cancels superseded
 runs for the same workflow/ref. A cancelled run is not a passing check.
 
-The existing branch protections require **build-and-test**. They are not changed
-by this PR. Episode 6 can additionally select **test-and-docker** after the
-reviewed workflow is available, with proof that a deliberately failing temporary
-PR cannot merge (C-02). Preserve all current protections and history.
+The existing branch protection requires **build-and-test** on both `main` and
+`sprint1-staging`. The Episode 6 `protect-main` ruleset also requires
+**test-and-docker** on `main`. The C-02 demonstration below records what
+GitHub showed when both checks failed.
 
 ## Evidence index — version-specific results
 
@@ -314,9 +314,9 @@ was built from source `4a7819b7b6107b8ae3ea88284c58dd18e1812136`.
 
 The [C-04 evidence in #45](https://github.com/PhraewaS/event-system/issues/45#issuecomment-7033445944)
 links four screenshots with their observed browser URLs and the run record.
-Keep **#45 and #7 open** while guluJa reviews the evidence. The
-[Episode 5.7 Console results](https://github.com/PhraewaS/event-system/issues/45#issuecomment-7033157237)
-are recorded in #45. The Console screenshots still need to be shared for review.
+guluJa verified the [C-04 screenshots and run record](https://github.com/PhraewaS/event-system/issues/45#issuecomment-7033949463)
+and the [12 Episode 5.7 Console captures](https://github.com/PhraewaS/event-system/issues/45#issuecomment-7035820963).
+Issue #45 was closed as completed on 20 November 2026.
 
 ## Episode 4 integration and release procedure
 
@@ -335,6 +335,85 @@ are recorded in #45. The Console screenshots still need to be shared for review.
    immutable image ↔ pipeline run ↔ Cloud Run revision/public URL, and the
    procedure to query the currently running commit. No deployed identity exists
    in this Episode 4 evidence alone.
+
+## Episode 6 — keyless deployment identity and the C-02 merge gate
+
+The team reviewed the [configuration and C-02 plan](https://github.com/PhraewaS/event-system/issues/46#issuecomment-7040498428)
+before applying the settings. [guluJa approved the plan](https://github.com/PhraewaS/event-system/issues/46#issuecomment-7040634579).
+
+### 6.2–6.3 GCP identity and Workload Identity Federation
+
+On 20 November 2026, Cloud Shell readback confirmed that STS and IAM Service
+Account Credentials were enabled in `cpe334-omega-3`. The `gather-deployer`
+service account had zero user-managed keys and zero roles granted directly at
+project level. The service and migration job still used `gather-runner`, and
+the ready revision remained `gather-00001-5s8`.
+
+| Resource | Principal | IAM role |
+| --- | --- | --- |
+| Cloud Run service `gather` | `gather-deployer` | `roles/run.developer` |
+| Cloud Run job `gather-migrate` | `gather-deployer` | `roles/run.developer` |
+| Artifact Registry repository `gather` in `asia-southeast1` | `gather-deployer` | `roles/artifactregistry.writer` |
+| Runtime service account `gather-runner` | `gather-deployer` | `roles/iam.serviceAccountUser` |
+| Deployment service account `gather-deployer` | WIF principal set for `attribute.repository_id/1438471476` | `roles/iam.workloadIdentityUser` |
+
+Global pool `github-actions` and provider `github-main` were both `ACTIVE`.
+The provider uses issuer `https://token.actions.githubusercontent.com/`, the
+default audience, and attribute mappings `google.subject=assertion.sub` and
+`attribute.repository_id=assertion.repository_id`. Its condition matched the
+approved repository and owner IDs, branch, workflow, immutable subject, and
+event:
+
+```cel
+assertion.repository_id == '1438471476' &&
+assertion.repository_owner_id == '265047184' &&
+assertion.ref == 'refs/heads/main' &&
+assertion.workflow_ref == 'PhraewaS/event-system/.github/workflows/deploy.yml@refs/heads/main' &&
+assertion.sub == 'repo:PhraewaS@265047184/event-system@1438471476:environment:demo' &&
+assertion.event_name == 'push'
+```
+
+The [WIF and IAM readback in #46](https://github.com/PhraewaS/event-system/issues/46#issuecomment-7040920895)
+records the actual configuration and scope of each binding. Episode 7 will
+verify the token exchange from GitHub Actions and the automated deployment.
+
+### 6.4–6.5 GitHub environment and branch protections
+
+GitHub API readback showed that environment `demo` accepts only the branch
+`main`. It has four environment variables and zero environment secrets.
+
+| Variable | Verified value |
+| --- | --- |
+| `GCP_PROJECT_ID` | `cpe334-omega-3` |
+| `GCP_REGION` | `asia-southeast1` |
+| `WIF_PROVIDER` | `projects/<PROJECT_NUMBER>/locations/global/workloadIdentityPools/github-actions/providers/github-main` |
+| `WIF_SERVICE_ACCOUNT` | `gather-deployer@cpe334-omega-3.iam.gserviceaccount.com` |
+
+The provider path uses the actual project number in GitHub settings. The
+[before/after readback in #46](https://github.com/PhraewaS/event-system/issues/46#issuecomment-7041011222)
+confirms the existing protections on `main` and `sprint1-staging` stayed in
+place, including strict `build-and-test`, one approval, stale review dismissal,
+and resolved conversations. The active [protect-main ruleset](https://github.com/PhraewaS/event-system/rules/27728662)
+applies only to `main` and has no bypass actors. It requires an up-to-date
+approved PR and the GitHub Actions `test-and-docker` check.
+
+### 6.6 C-02 — failing required check blocks merge
+
+[PR #56](https://github.com/PhraewaS/event-system/pull/56) targeted `main` from
+the temporary branch `codex/lab5-c02-prove-gate` at head
+`c9769f761675c5b196474fd6a9658a65a16ab87e`. The only change was to expect six
+mocked attempts instead of five in `test_network_failure_has_bounded_attempts`.
+The 12 offline smoke tests passed locally before the change. The changed suite
+reported exactly one failure, `5 != 6`, both locally and in CI.
+
+[PR CI run 44746887772](https://github.com/PhraewaS/event-system/actions/runs/44746887772)
+failed at the offline deployment checks in
+[`test-and-docker`](https://github.com/PhraewaS/event-system/actions/runs/44746887772/job/136324399433).
+The dependent [`build-and-test`](https://github.com/PhraewaS/event-system/actions/runs/44746887772/job/136324685347)
+failed as well. The [screenshot and run record in #46](https://github.com/PhraewaS/event-system/issues/46#issuecomment-7041133475)
+show both checks as `Required` and failing, and `Merging is blocked`. One
+approving review was also outstanding. GitHub reported `mergeable_state=blocked`
+before the PR was closed without merging on 20 November 2026.
 
 Keep #7 open for the wider lab. C-05 cloud restart/redeploy persistence and
 C-06 main-to-cloud pipeline proof remain separate gates.
