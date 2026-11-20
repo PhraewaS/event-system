@@ -374,8 +374,8 @@ assertion.event_name == 'push'
 ```
 
 The [WIF and IAM readback in #46](https://github.com/PhraewaS/event-system/issues/46#issuecomment-7040920895)
-records the actual configuration and scope of each binding. Episode 7 will
-verify the token exchange from GitHub Actions and the automated deployment.
+records the configuration and scope of each binding. The Episode 7 release
+below verified token exchange from GitHub Actions and automated deployment.
 
 ### 6.4–6.5 GitHub environment and branch protections
 
@@ -414,6 +414,68 @@ failed as well. The [screenshot and run record in #46](https://github.com/Phraew
 show both checks as `Required` and failing, and `Merging is blocked`. One
 approving review was also outstanding. GitHub reported `mergeable_state=blocked`
 before the PR was closed without merging on 20 November 2026.
+
+## Episode 7 — automatic deployment to Cloud Run
+
+[Deploy demo](../../../.github/workflows/deploy.yml) runs on push to `main`.
+The reusable [CI workflow](../../../.github/workflows/ci-docker.yml) must
+succeed first. The deploy job uses the `demo` environment and WIF as
+`gather-deployer`, with the existing Cloud Run service `gather`, migration
+job `gather-migrate`, and Artifact Registry repository `gather` in
+`asia-southeast1`. Review the four `demo` variables and scoped bindings in
+[#46](https://github.com/PhraewaS/event-system/issues/46) before changing the
+release configuration.
+
+1. Open a `lab:5` PR into `sprint1-staging` with the related issue reference.
+   Have the non-author teammate approve it and verify both CI checks before
+   merging. Verify staging push CI for the integrated commit.
+2. Open a separate release PR from `sprint1-staging` into `main`. Verify the
+   release diff, review and both checks before merging. The merge triggers
+   deployment automatically.
+3. The deploy job tags the image with the full main commit SHA.
+   [`deploy/release.sh`](../../../deploy/release.sh) resolves the tag to a
+   digest, updates the migration job, and waits for the execution to succeed
+   before updating the service and traffic. A failed migration blocks the
+   service update. The normal release path does not run the seed job.
+4. Check the deploy log and summary for the SHA, digest, public URL and
+   [read-only smoke results](../../../deploy/smoke_test.py). The first release
+   explicitly skipped the optional login smoke.
+
+### First automated release and Console verification
+
+The workflow was approved in [PR #59](https://github.com/PhraewaS/event-system/pull/59)
+and released in [PR #60](https://github.com/PhraewaS/event-system/pull/60).
+guluJa merged PR #60 after [release CI](https://github.com/PhraewaS/event-system/actions/runs/44765133640)
+passed. The [Main CI run](https://github.com/PhraewaS/event-system/actions/runs/44772446053)
+and [Deploy demo run](https://github.com/PhraewaS/event-system/actions/runs/44772445764)
+passed on `54082e8e667e75188a26a0f58fad6c20bd80e176`.
+
+| Evidence | Verified result |
+| --- | --- |
+| Artifact Registry tag | `54082e8e667e75188a26a0f58fad6c20bd80e176` |
+| Immutable image digest | `sha256:1659c93319cb97c2b9da8e8211bf41f622a3d03ca278dcf05138f9160611e48b` |
+| Migration | `gather-migrate-pcxp6` succeeded with exit code 0 before the new service revision was created |
+| Cloud Run | `gather-00002-jb7` had `Ready=True`, 100% traffic and the same digest |
+| Public URL and smoke | [Gather](https://gather-75thi3dqbq-as.a.run.app/) passed health, database readiness, homepage, JavaScript and events checks, with `SKIP login` |
+
+To identify the running commit, find the revision receiving traffic in
+Cloud Run **Revision History**, open its **YAML** tab, and read
+`imageDigest`. Match it to the digest and full SHA tag in Artifact Registry
+and to the same SHA in the Deploy demo summary. Check the matching Cloud Run
+migration execution and its result. The
+[Console captures](https://github.com/PhraewaS/event-system/issues/47#issuecomment-7046928898)
+and [teammate verification](https://github.com/PhraewaS/event-system/issues/47#issuecomment-7047271504)
+record this comparison for the first release.
+
+### C-06 — visible homepage change
+
+The [before screenshot in #47](https://github.com/PhraewaS/event-system/issues/47#issuecomment-7047394622)
+shows “Make a little room for what’s next.” on the public homepage before
+the copy change. The expected text after release is “Make room for your next
+campus event.” Complete this record after the reviewed release with the
+after screenshot at the same URL, main merge SHA, Deploy demo run, image
+digest, and serving Cloud Run revision. Keep #47 open while that evidence is
+pending.
 
 Keep #7 open for the wider lab. C-05 cloud restart/redeploy persistence and
 C-06 main-to-cloud pipeline proof remain separate gates.
