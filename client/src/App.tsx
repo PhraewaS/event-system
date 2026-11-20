@@ -267,7 +267,7 @@ function Discover({ navigate }: { navigate: Navigate }) {
           <p>
             Find your people. Learn something new.
             <br />
-            Make a little room for what’s next.
+            Make room for your next campus event.
           </p>
         </div>
         <div className="hero-art" aria-hidden="true">
