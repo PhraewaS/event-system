@@ -123,7 +123,20 @@ SECRET_SESSION="gather-session-secret"
 SECRET_DEMO_PASS="gather-demo-password"
 
 GENERATED_SESSION_SECRET=""
-GENERATED_DEMO_PASSWORD=""
+GENERATED_DEMO_PASSWORDS_JSON=""
+
+# The production seed job receives one Secret Manager value containing a
+# distinct passphrase for each seeded demo account. Hex strings keep the generated
+# JSON unambiguous; values are sent to Secret Manager and never printed.
+generate_demo_passwords_json() {
+  local organizer organizer2 participant participant2
+  organizer="$(openssl rand -hex 24)"
+  organizer2="$(openssl rand -hex 24)"
+  participant="$(openssl rand -hex 24)"
+  participant2="$(openssl rand -hex 24)"
+  printf '{"organizer":"%s","organizer2":"%s","participant":"%s","participant2":"%s"}' \
+    "$organizer" "$organizer2" "$participant" "$participant2"
+}
 
 echo "=================================================================="
 echo "Gather Cloud Run Deployment"
@@ -310,9 +323,9 @@ if [ "$SEED_DEMO_DATA" = "true" ]; then
     run_cmd gcloud secrets versions add "$SECRET_DEMO_PASS" --data-file=- --project "$PROJECT_ID"
   else
     if secret_missing "$SECRET_DEMO_PASS"; then
-      GENERATED_DEMO_PASSWORD="$(openssl rand -base64 16 | tr -d '/+=' | cut -c1-14)Dd1!"
+      GENERATED_DEMO_PASSWORDS_JSON="$(generate_demo_passwords_json)"
       run_cmd gcloud secrets create "$SECRET_DEMO_PASS" --replication-policy="automatic" --project "$PROJECT_ID"
-      printf "%s" "$GENERATED_DEMO_PASSWORD" | gcloud secrets versions add "$SECRET_DEMO_PASS" --data-file=- --project "$PROJECT_ID"
+      printf "%s" "$GENERATED_DEMO_PASSWORDS_JSON" | gcloud secrets versions add "$SECRET_DEMO_PASS" --data-file=- --project "$PROJECT_ID"
     fi
   fi
 
@@ -379,7 +392,7 @@ if [ "$SEED_DEMO_DATA" = "true" ]; then
   run_cmd gcloud run jobs deploy "${SERVICE_NAME}-seed" \
     --image "$IMAGE_URI" --region "$REGION" --service-account "$SA_EMAIL" \
     --set-cloudsql-instances "$SQL_CONN_NAME" \
-    --set-secrets "DATABASE_URL=${SECRET_DB_URL}:latest,DEMO_PASSWORD=${SECRET_DEMO_PASS}:latest" \
+    --set-secrets "DATABASE_URL=${SECRET_DB_URL}:latest,DEMO_PASSWORD=${SECRET_DEMO_PASS}:latest,DEMO_PASSWORDS_JSON=${SECRET_DEMO_PASS}:latest" \
     --set-env-vars "NODE_ENV=production,ALLOW_DEMO_SEED=true,DB_POOL_MAX=3" \
     --command node --args dist/server/seed.js --max-retries 0 \
     --task-timeout 300s --project "$PROJECT_ID"
