@@ -521,5 +521,54 @@ connects the screenshot to the deploy run.
 confirms that the before and after captures, migration, serving revision and
 smoke results match the reviewed release.
 
-Keep #7 open for the wider lab. C-05 cloud restart/redeploy persistence remains
-tracked in #48.
+Keep #7 open for the wider lab.
+
+## Episode 8 — C-05 cloud persistence
+
+The main release from [PR #66](https://github.com/PhraewaS/event-system/pull/66)
+provided the reviewed reset image and deployed revision `gather-00005-f4x`.
+The operator ran the dedicated Cloud Run reset job with the same configuration
+as [the reset script](../../../deploy/reset-demo-passwords.sh). Execution
+`gather-demo-password-reset-sbk4n` used `gather-demo-password` version `3`,
+completed successfully at 17:08 ICT on 21 November 2026, and logged that all
+four demo passwords rotated and their old sessions were invalidated. The
+Participant sign-in was observed during the baseline. The operator separately
+confirmed fresh sign-ins for both Organizer accounts and the second
+Participant account. [Reset job history](https://console.cloud.google.com/run/jobs/details/asia-southeast1/gather-demo-password-reset/executions?project=cpe334-omega-3)
+
+The baseline used the existing synthetic
+[`C05-PERSIST-2026-11-21` event](https://gather-75thi3dqbq-as.a.run.app/events/c75e5db0-9695-40b8-9815-94a6b75ecf36).
+After signing in with the new password, the Participant registered through
+Gather. The event ID is `c75e5db0-9695-40b8-9815-94a6b75ecf36`. The
+registration ID is `644cd4df-b3db-4f7b-b1ad-e50e1aa2d0f3`, created at
+`2026-11-21T10:10:53.304Z`. The same registration stayed Confirmed at every
+check. [Screenshots and Cloud Logging links in #48](https://github.com/PhraewaS/event-system/issues/48#issuecomment-7061092768)
+
+| Check (21 November 2026, ICT) | Cloud Run evidence | Gather result |
+| --- | --- | --- |
+| Baseline at 17:10:53 | Revision `gather-00005-f4x`, instance ending `6818b133dce7`, request log `6b016e2d0004cda33087cbbb` | Registration POST returned HTTP 201 and My registrations showed Confirmed |
+| Same-revision restart at 17:32:06 | Monitoring showed zero active and idle instances at 17:30. `Starting new instance. Reason: AUTOSCALING` (log `6b01732600019ab670b00e51`) and the follow-up request (log `6b0173270008ca1324afa3f4`) both used the new instance ending `63fd6f7cdc69` on `gather-00005-f4x` | The same signed-in session returned HTTP 200 with the original event ID, registration ID, and creation time |
+| After pipeline redeploy at 17:38:18 | Revision `gather-00006-rts` served 100% of traffic, and request log `6b01749a0007bd762c76c17e` confirms it handled the check | The same signed-in session again returned HTTP 200 with the original IDs and creation time |
+
+Both deploy attempts used main SHA
+`6b677c5964fee3044c9ab36f3ec22474f153d90c`.
+[Attempt 1](https://github.com/PhraewaS/event-system/actions/runs/44883775495/attempts/1)
+served digest `sha256:ba7e30c96739aa086d7547852261ed8790aa639038581d4202bcea8fbdd95756`.
+[Attempt 2](https://github.com/PhraewaS/event-system/actions/runs/44883775495/attempts/2)
+rebuilt the same source and served digest
+`sha256:b9e33b641f6c4d5e99516895a67fce5ad1c22b896562c1dd7ecfc56eadc0d254`.
+Both CI jobs, migration `gather-migrate-8cxtq`, and the public smoke checks
+passed on attempt 2. The workflow skipped optional login smoke. Gather’s
+authenticated requests verified the session separately.
+[Attempt 2 CI artifact](https://github.com/PhraewaS/event-system/actions/runs/44883775495/artifacts/14703393505)
+
+Cloud SQL PostgreSQL stores events, registrations, and the server-side session
+records. Gather checks the signed session cookie with the stable session signing
+secret and loads its session from PostgreSQL. The restart and redeploy checks
+reused the same login session and read the existing registration without
+reseeding or recreating it in Cloud SQL.
+
+Teammate acceptance is tracked in
+[#48](https://github.com/PhraewaS/event-system/issues/48). Rollback and
+roll-forward are tracked separately in the
+[Episode 8 test plan](https://github.com/PhraewaS/event-system/issues/48#issuecomment-7049511610).
