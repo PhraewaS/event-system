@@ -33,15 +33,38 @@ CI uses synthetic values only in its disposable `event_system_test` database.
 | PORT | Listener; app binds 0.0.0.0 | No | Local setting or Cloud Run-provided port |
 | NODE_ENV | Development/test/production behavior | No | Execution environment; production for deployed web |
 | DB_POOL_MAX | Connections per process, integer 1–100; default 10 | No | Set against actual database/instance budget before cloud use |
-| DEMO_PASSWORD | Explicit demo seed only, 12–256 characters | Yes | Private local environment or separate seed-job secret |
+| DEMO_PASSWORD | Local-only synthetic seed shortcut | Yes | Private ignored `.env`; not for production UAT |
+| DEMO_PASSWORDS_JSON | Explicit production seed/reset only; four distinct account passphrases, 15–256 characters each | Yes | `gather-demo-password` Secret Manager version, JSON keys `organizer`, `organizer2`, `participant`, `participant2` |
 | ALLOW_DEMO_SEED | Explicit production seed opt-in; otherwise false | No | Separate seed job only; absent on web service |
+| ALLOW_DEMO_PASSWORD_RESET | Explicit production password reset opt-in; otherwise false | No | `true` on the dedicated reset job only; keep unset on the web service |
 | TEST_DATABASE_URL | Dedicated disposable database ending in _test | Yes | Private test environment or synthetic CI service URL |
 | POSTGRES_PASSWORD | Local Compose database password | Yes | Private ignored environment; URL-safe for interpolation |
 
 The client reads no environment variables and calls the API on the same origin.
-Never copy server settings into VITE variables. Seed reruns preserve existing
-accounts/passwords and records; changing a seed variable does not rotate an
-existing account password.
+Never copy server settings into VITE variables. Local tests may use one
+synthetic `DEMO_PASSWORD`. Production UAT seed/reset jobs require separate
+passphrases in `DEMO_PASSWORDS_JSON` for all four seeded identities:
+`organizer@example.test`, `organizer2@example.test`, `participant@example.test`
+and `participant2@example.test`. Seed reruns preserve existing accounts/passwords
+and records; changing the Secret does not rotate an existing account hash.
+
+### Reset the four C-05 demo accounts
+
+The production `gather-demo-password` secret must contain a JSON object with
+exactly four distinct values (`organizer`, `organizer2`, `participant`,
+`participant2`), each at least 15
+characters. For an existing deployment, add this as a new Secret Manager
+version; do not overwrite or print the previous value. After the reviewed image
+containing `reset-demo-passwords.js` is available, run
+`deploy/reset-demo-passwords.sh` with the verified project, region, image digest
+and numeric Secret version. The script sets `ALLOW_DEMO_PASSWORD_RESET=true`
+only on the dedicated reset job. The job ensures the four fixed demo identities
+exist, updates only their password hashes in one database transaction and
+invalidates their sessions. It does not seed sample events or alter existing
+profile fields.
+Ordinary `seed.js` runs remain non-destructive. Disable the old shared-password
+Secret version after the reset and verify all four accounts can sign in. Never put
+the passphrases in Git, issue comments, workflow logs or deployment docs.
 
 Deployment scripts also read `PROJECT_ID`, `REGION`, `DRY_RUN`, and release
 `IMAGE_TAG` (full 40-character SHA), `ROLLBACK`, optional service/job names and
@@ -57,7 +80,7 @@ tests. Tests clear only the guarded *_test database.
 ```sh
 npm ci
 npm run db:migrate
-# Set DEMO_PASSWORD privately before explicit seeding.
+# For local-only seed operations, set DEMO_PASSWORD privately in `.env`.
 npm run db:seed
 npm run build
 npm test -- --reporter=verbose
@@ -221,7 +244,7 @@ gcloud run jobs execute gather-migrate --region "$REGION" --wait --project "$PRO
 gcloud run jobs deploy gather-seed \
   --image "$IMAGE_URI" --region "$REGION" --service-account "$SA_EMAIL" \
   --set-cloudsql-instances "$SQL_CONN_NAME" \
-  --set-secrets DATABASE_URL=gather-database-url:latest,DEMO_PASSWORD=gather-demo-password:latest \
+  --set-secrets DATABASE_URL=gather-database-url:latest,DEMO_PASSWORDS_JSON=gather-demo-password:latest \
   --set-env-vars NODE_ENV=production,ALLOW_DEMO_SEED=true,DB_POOL_MAX=3 \
   --command node --args dist/server/seed.js \
   --max-retries 0 --task-timeout 300s --project "$PROJECT_ID"

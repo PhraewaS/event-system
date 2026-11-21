@@ -12,6 +12,7 @@
 #   PROJECT_ID, REGION, IMAGE_TAG   required (IMAGE_TAG = full 40-char commit SHA)
 #   SERVICE_NAME, MIGRATE_JOB_NAME  optional (default: gather, gather-migrate)
 #   ROLLBACK                        true | false (default false)
+#   EXPECTED_IMAGE_DIGEST           optional sha256 digest to verify before deploy
 #   GITHUB_ENV                      when set, SERVICE_URL / DEPLOYED_IMAGE are
 #                                   appended so later workflow steps can use them
 #
@@ -51,10 +52,15 @@ ROLLBACK="${ROLLBACK:-false}"
 # 2. Find the image and pin it by digest
 #    CHANGE ME: `gather/gather` = <Artifact Registry repo>/<image name>.
 # ------------------------------------------------------------------------------
-IMAGE="$REGION-docker.pkg.dev/$PROJECT_ID/gather/gather:$IMAGE_TAG"
+IMAGE_REPO="$REGION-docker.pkg.dev/$PROJECT_ID/gather/gather"
+IMAGE="$IMAGE_REPO:$IMAGE_TAG"
 # Resolve to a digest so the job and service run the exact same immutable image.
 DIGEST_IMAGE="$(gcloud artifacts docker images describe "$IMAGE" --project="$PROJECT_ID" --format='value(image_summary.fully_qualified_digest)')"
-[[ "$DIGEST_IMAGE" == "$REGION-docker.pkg.dev/$PROJECT_ID/gather/gather@sha256:"* ]] || { echo 'Image digest not found.' >&2; exit 1; }
+[[ "$DIGEST_IMAGE" == "$IMAGE_REPO@sha256:"* ]] || { echo 'Image digest not found.' >&2; exit 1; }
+if [[ -n "${EXPECTED_IMAGE_DIGEST:-}" && "$DIGEST_IMAGE" != "$IMAGE_REPO@$EXPECTED_IMAGE_DIGEST" ]]; then
+  echo 'Resolved image digest does not match the approved image digest.' >&2
+  exit 1
+fi
 
 # ------------------------------------------------------------------------------
 # 3. Database migration (normal release only; `--wait` blocks until it finishes)

@@ -5,7 +5,8 @@
 # WHAT THIS TEST CHECKS
 #   1. normal release : image resolved to @sha256 digest, migration awaited
 #                       (`--wait`), service updated, SERVICE_URL exported
-#   2. rollback       : service updated, migration job NOT touched
+#   2. rollback       : service updated only if the expected digest matches;
+#                       migration job is not touched
 #   3. image missing / migration fails : service is NOT updated
 #   4. invalid tag    : rejected before any gcloud call
 # HOW TO RUN (repo root, needs bash):  bash deploy/tests/test_release_stub.sh
@@ -19,6 +20,7 @@ TASK_TMP="$(mktemp -d)"
 trap 'rm -rf "$TASK_TMP"' EXIT
 export PROJECT_ID=release-test REGION=asia-southeast1
 export IMAGE_TAG=1111111111111111111111111111111111111111
+export FIXTURE_DIGEST=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 export CALL_LOG="$TASK_TMP/calls" GITHUB_ENV="$TASK_TMP/env"
 export PATH="$TASK_TMP:$PATH"
 cat > "$TASK_TMP/gcloud" <<'STUB'
@@ -27,7 +29,7 @@ echo "$*" >> "$CALL_LOG"
 case "$*" in
   'artifacts docker images describe '*)
     [[ "${FAIL_AT:-}" != image ]] || exit 1
-    echo 'asia-southeast1-docker.pkg.dev/release-test/gather/gather@sha256:abcdef' ;;
+    echo "asia-southeast1-docker.pkg.dev/release-test/gather/gather@$FIXTURE_DIGEST" ;;
   'run jobs execute '*) [[ "${FAIL_AT:-}" != migration ]] || exit 1 ;;
   'run services describe '*) echo 'https://demo.example.test' ;;
 esac
@@ -36,16 +38,25 @@ chmod +x "$TASK_TMP/gcloud"
 export ROLLBACK=false
 bash "$ROOT/deploy/release.sh"
 grep -q 'run jobs execute .*--wait' "$CALL_LOG"
-grep -q 'run services update .*@sha256:abcdef' "$CALL_LOG"
+grep -q "run services update .*@$FIXTURE_DIGEST" "$CALL_LOG"
 grep -q 'SERVICE_URL=https://demo.example.test' "$GITHUB_ENV"
 echo 'PASS normal release uses digest and waits for migration'
 
 : > "$CALL_LOG"
 export ROLLBACK=true
-bash "$ROOT/deploy/release.sh"
+EXPECTED_IMAGE_DIGEST="$FIXTURE_DIGEST" bash "$ROOT/deploy/release.sh"
 if grep -q 'run jobs' "$CALL_LOG"; then echo 'Rollback ran migration' >&2; exit 1; fi
-grep -q 'run services update ' "$CALL_LOG"
+grep -q "run services update .*@$FIXTURE_DIGEST" "$CALL_LOG"
 echo 'PASS rollback reuses image without touching migration job'
+
+: > "$CALL_LOG"
+if EXPECTED_IMAGE_DIGEST=sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb bash "$ROOT/deploy/release.sh"; then
+  echo 'Expected rollback digest mismatch failure' >&2
+  exit 1
+fi
+test "$(wc -l < "$CALL_LOG")" -eq 1
+grep -q '^artifacts docker images describe ' "$CALL_LOG"
+echo 'PASS rollback digest mismatch blocks all Cloud Run calls'
 
 for failure in image migration; do
   : > "$CALL_LOG"

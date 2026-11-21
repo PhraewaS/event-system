@@ -48,8 +48,15 @@ permissions, connectivity, pricing or an actual deployment.
 - The migration job executes `node dist/server/migrate.js` and is awaited before
   service deployment. It does not seed or receive demo credentials.
 - `--demo` creates a separate explicit `gather-seed` job running
-  `node dist/server/seed.js` with `ALLOW_DEMO_SEED=true` and `DEMO_PASSWORD`.
-  These settings are never attached to the web service.
+  `node dist/server/seed.js` with `ALLOW_DEMO_SEED=true` and distinct
+  `DEMO_PASSWORDS_JSON` passphrases for all four seeded Organizer/Participant
+  accounts. These settings are never attached to the web service. Local tests
+  retain the synthetic `DEMO_PASSWORD` shortcut.
+- `reset-demo-passwords.sh` is a separate, project-confirmed one-time job. It
+  pins the reviewed image digest and Secret version, ensures only the four fixed
+  demo identities exist, updates their password hashes, and invalidates their
+  sessions. It does not add sample events. Ordinary seed reruns never reset
+  existing passwords.
 - The PostgreSQL URL uses node-pg's Cloud SQL socket form, with no Prisma query
   parameters. `SESSION_SECRET` replaces TokTickIT's administrator-password flow;
   Gather has no administrator/first-password-change feature.
