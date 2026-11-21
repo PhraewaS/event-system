@@ -36,6 +36,7 @@ CI uses synthetic values only in its disposable `event_system_test` database.
 | DEMO_PASSWORD | Local-only synthetic seed shortcut | Yes | Private ignored `.env`; not for production UAT |
 | DEMO_PASSWORDS_JSON | Explicit production seed/reset only; four distinct account passphrases, 15–256 characters each | Yes | `gather-demo-password` Secret Manager version, JSON keys `organizer`, `organizer2`, `participant`, `participant2` |
 | ALLOW_DEMO_SEED | Explicit production seed opt-in; otherwise false | No | Separate seed job only; absent on web service |
+| ALLOW_DEMO_PASSWORD_RESET | Explicit production password reset opt-in; otherwise false | No | `true` on the dedicated reset job only; keep unset on the web service |
 | TEST_DATABASE_URL | Dedicated disposable database ending in _test | Yes | Private test environment or synthetic CI service URL |
 | POSTGRES_PASSWORD | Local Compose database password | Yes | Private ignored environment; URL-safe for interpolation |
 
@@ -56,7 +57,8 @@ characters. For an existing deployment, add this as a new Secret Manager
 version; do not overwrite or print the previous value. After the reviewed image
 containing `reset-demo-passwords.js` is available, run
 `deploy/reset-demo-passwords.sh` with the verified project, region, image digest
-and numeric Secret version. The job ensures the four fixed demo identities
+and numeric Secret version. The script sets `ALLOW_DEMO_PASSWORD_RESET=true`
+only on the dedicated reset job. The job ensures the four fixed demo identities
 exist, updates only their password hashes in one database transaction and
 invalidates their sessions. It does not seed sample events or alter existing
 profile fields.
