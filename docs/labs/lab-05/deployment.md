@@ -568,7 +568,46 @@ secret and loads its session from PostgreSQL. The restart and redeploy checks
 reused the same login session and read the existing registration without
 reseeding or recreating it in Cloud SQL.
 
-Teammate acceptance is tracked in
-[#48](https://github.com/PhraewaS/event-system/issues/48). Rollback and
-roll-forward are tracked separately in the
-[Episode 8 test plan](https://github.com/PhraewaS/event-system/issues/48#issuecomment-7049511610).
+Teammate acceptance of C-05 is recorded in
+[#48](https://github.com/PhraewaS/event-system/issues/48).
+
+### Digest-verified rollback and roll-forward
+
+Both manual deployments succeeded on 21 November 2026. The workflow
+ran from `main` at `44049f53f18ed2ddf2dcc2c1789be14e16a68f41`. Each run
+used the specified image tag and digest.
+
+| Check | Deploy demo run | Image tag | Image digest | Cloud Run serving revision |
+| --- | --- | --- | --- | --- |
+| Rollback to release A | [44916482315](https://github.com/PhraewaS/event-system/actions/runs/44916482315) | `54082e8e667e75188a26a0f58fad6c20bd80e176` | `sha256:1659c93319cb97c2b9da8e8211bf41f622a3d03ca278dcf05138f9160611e48b` | `gather-00008-k4s`, 100% traffic |
+| Roll-forward to [release #69](https://github.com/PhraewaS/event-system/pull/69) | [44916630560](https://github.com/PhraewaS/event-system/actions/runs/44916630560) | `44049f53f18ed2ddf2dcc2c1789be14e16a68f41` | `sha256:bc7fa58df55c0044d96ce10a79f4c329520238af548c55705695bc2baf3b126c` | `gather-00009-hxz`, 100% traffic |
+
+The `test` job and **Build and push image** step were skipped in both runs.
+The deploy log confirms that the manual image path also skipped migration and
+seed. Health, database readiness, homepage, JavaScript, and events smoke
+checks passed in both runs. Optional login smoke was skipped. The browser
+checks used the original signed-in Participant session.
+
+After rollback, the homepage showed “Make a little room for what’s next.”
+Roll-forward restored “Make room for your next campus event.” The same event
+and registration IDs and registration creation time from the C-05 baseline
+were returned by the authenticated registration API in both rounds. The
+registration showed **Confirmed** before rollback, after rollback, and after
+roll-forward. File checksum verification is N/A because Gather does not
+support event attachments.
+[Six comparison screenshots and run logs](https://github.com/PhraewaS/event-system/issues/48#issuecomment-7064545748)
+· [Teammate verification](https://github.com/PhraewaS/event-system/issues/48#issuecomment-7064674944)
+
+To repeat the drill, verify the approved older image and the recovery image
+in Artifact Registry, then capture the starting revision, visible homepage
+copy, and an existing registration from a signed-in session. Run
+**Actions → Deploy demo → Run workflow** on `main`, supplying the full
+40-character `image_tag` and matching `image_digest`. Verify the digest,
+traffic, smoke results, homepage copy, and original registration after each
+switch. Use the same workflow with the recovery image to restore service.
+
+The WIF provider accepts both `push` and `workflow_dispatch` with the same
+repository, owner, branch, workflow, and `demo` subject restrictions. The
+issuer, mapping, and deployer binding match the earlier configuration.
+[WIF readback](https://github.com/PhraewaS/event-system/issues/48#issuecomment-7064284452)
+· [WIF review](https://github.com/PhraewaS/event-system/issues/48#issuecomment-7064434265)
