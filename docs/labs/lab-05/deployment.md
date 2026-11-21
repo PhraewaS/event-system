@@ -1,10 +1,16 @@
 # Lab 5 deployment and CI procedure
 
-Status: Episode 4 is integrated on `main`. The first manual Episode 5 deployment
-and live C-04 workflow were verified and reviewed in
-[Issue #45](https://github.com/PhraewaS/event-system/issues/45). Episode 6
-configuration and the C-02 merge-gate demonstration are recorded in
-[Issue #46](https://github.com/PhraewaS/event-system/issues/46) for teammate review.
+This guide covers local reproduction, the first GCP deployment, and the reviewed
+release and persistence checks. The team verified C-01 through C-06 in
+[#43](https://github.com/PhraewaS/event-system/issues/43),
+[#44](https://github.com/PhraewaS/event-system/issues/44),
+[#45](https://github.com/PhraewaS/event-system/issues/45),
+[#46](https://github.com/PhraewaS/event-system/issues/46),
+[#47](https://github.com/PhraewaS/event-system/issues/47), and
+[#48](https://github.com/PhraewaS/event-system/issues/48). The last release
+verified for the Lab 5 submission is recorded below. Track review of the final
+documents and the LEB2 submission receipt in
+[#49](https://github.com/PhraewaS/event-system/issues/49).
 
 ## Stack and accepted starting point
 
@@ -66,11 +72,23 @@ Ordinary `seed.js` runs remain non-destructive. Disable the old shared-password
 Secret version after the reset and verify all four accounts can sign in. Never put
 the passphrases in Git, issue comments, workflow logs or deployment docs.
 
-Deployment scripts also read `PROJECT_ID`, `REGION`, `DRY_RUN`, and release
-`IMAGE_TAG` (full 40-character SHA), `ROLLBACK`, optional service/job names and
-`GITHUB_ENV`. These are non-secret identifiers/controls. Actual project, region
-and resource identifiers must be confirmed from team setup and the approved #45
-deployment; they are not inferred from the template defaults.
+### Deployment workflow and job settings
+
+These inputs are non-secret. The application variables above apply to the web
+service, local environment, or the indicated jobs. GitHub environment settings
+apply only to `Deploy demo`.
+
+| Variable | Purpose / scope | Value source |
+| --- | --- | --- |
+| `GCP_PROJECT_ID` / `PROJECT_ID` | GCP project for build and deployment | `cpe334-omega-3` in GitHub `demo` or `PROJECT_ID` in Cloud Shell. Setup defaults to the active `gcloud` project |
+| `GCP_REGION` / `REGION` | GCP resource location | `asia-southeast1` in GitHub `demo` or `REGION` in Cloud Shell. Same default in the setup scripts |
+| `WIF_PROVIDER`, `WIF_SERVICE_ACCOUNT` | Keyless Actions authentication | GitHub `demo` variables described in Episode 6 |
+| `SERVICE_NAME`, `MIGRATE_JOB_NAME` | Cloud Run release targets | Workflow and script defaults `gather` and `gather-migrate` |
+| `DRY_RUN` | Print the setup or teardown plan | Set to `1` in the shell environment for preview |
+| `IMAGE_TAG` | Full 40-character SHA identifying an image | Main push SHA or approved `image_tag` workflow input |
+| `ROLLBACK`, `EXPECTED_IMAGE_DIGEST` | Reuse an existing image and require the approved digest | Manual workflow dispatch and its `image_digest` input |
+| `IMAGE_DIGEST`, `DEMO_SECRET_VERSION` | Pin the image and Secret Manager version for the dedicated reset job | The reviewed image digest and numeric secret version, entered by the operator |
+| `GITHUB_ENV`, `GITHUB_STEP_SUMMARY` | Pass outputs between steps and write the release summary | GitHub Actions runner. The script exports `SERVICE_URL` and `DEPLOYED_IMAGE` for smoke checks and release identity |
 
 ## Build, test and local runtime commands
 
@@ -86,17 +104,40 @@ npm run build
 npm test -- --reporter=verbose
 npx playwright install chromium
 npm run test:e2e
-docker compose --env-file .env.example config --quiet
-docker compose up --build -d
-docker compose ps -a
+```
+
+Run the built app with `npm start` and the configured `PORT` (3000 by default).
+For the container path, run these commands from a separate shell after creating
+the ignored `.env` from `.env.example`:
+
+```sh
+docker compose --env-file .env config --quiet
+docker compose --env-file .env up --build -d
+docker compose --env-file .env ps -a
 node scripts/smoke.mjs http://localhost:3000
 ```
 
 For Docker, migration runs in the separate `migrate` service; demo seeding is an
 explicit command described in the existing Docker procedure. Use `docker compose
 down` to retain its named database volume; do not add `-v` when proving data
-survival. The fresh-clone evidence in #43 used its own project/volume and a
-localhost-only port override, without reusing existing environment secrets.
+survival.
+
+### C-03 on the submitted commit
+
+On 22 November 2026, the team tested fresh clone `c7e5a27` with a new `.env`
+created from `.env.example` and an empty Compose volume. The isolated project
+`lab5-submit-c7e5a27` bound the app to `127.0.0.1:33049` through a port-only
+override. Configuration validation and `docker compose build --no-cache`
+passed. PostgreSQL was healthy, the migration service exited 0, and
+`node scripts/smoke.mjs http://127.0.0.1:33049` verified database readiness,
+the built page, and its JavaScript asset.
+
+The browser test published an event, registered a participant, and verified
+the owner's roster. After Compose recreated the containers with the same
+volume, PostgreSQL returned the original registration and both browser views
+still showed it. The [C-03 execution record](https://github.com/PhraewaS/event-system/issues/49#issuecomment-7068414969)
+lists the commands and the matching event and registration IDs before and
+after recreation.
 
 ## CI triggers, jobs and permissions
 
@@ -129,8 +170,9 @@ GitHub showed when both checks failed.
 | C-01 existing readiness PR | [PR #39 CI](https://github.com/PhraewaS/event-system/actions/runs/43720996070/job/132832737171), submitted head 1261c11 | Build, 47 tests, 12 browser cases, Compose and Docker passed |
 | C-01 existing Docker PR | [PR #40 CI](https://github.com/PhraewaS/event-system/actions/runs/43724811202/job/132844340937), submitted head 14e6a27 | Same regression/config/image checks passed |
 | Integrated staging | [push CI](https://github.com/PhraewaS/event-system/actions/runs/44298279587/job/134780937962), c2fd354 | Build, 47 tests, 12 browser cases, Compose and Docker passed |
-| C-03 fresh clone | [actual execution](https://github.com/PhraewaS/event-system/issues/43#issuecomment-6978931016), c2fd354 | New isolated Docker build/start/DB/browser/recreation checks passed; separate operator run |
-| Episode 4 workflow and offline checks | [Issue #44](https://github.com/PhraewaS/event-system/issues/44) links the actual new PR/head/run and separate release PR | Current execution and review status recorded there; no acceptance claimed in advance |
+| C-03 historical staging run | [Isolated fresh clone at `c2fd354`](https://github.com/PhraewaS/event-system/issues/43#issuecomment-6978931016) | Docker build, database, browser, and recreation checks passed |
+| C-03 fresh clone of the submitted source | [Execution record at `c7e5a27`](https://github.com/PhraewaS/event-system/issues/49#issuecomment-7068414969) | No-cache build, migration, smoke, browser workflow, and registration persistence after container recreation passed |
+| C-01 reusable CI on a normal PR | [PR #50 CI](https://github.com/PhraewaS/event-system/actions/runs/44361853356), head `6610870` | Both CI jobs passed. The suite ran 47 application tests, 12 browser cases, offline regressions, Compose validation and Docker build. [Staging-to-main integration](https://github.com/PhraewaS/event-system/issues/44#issuecomment-7005924561) |
 | Historical main release | [PR #29 CI](https://github.com/PhraewaS/event-system/actions/runs/42826991379/job/129866787385) | Historical 43-test/12-browser result; not a new 47-test run or GCP deployment |
 
 The workflow uploads `lab5-ci-evidence`; its source manifest and browser results
@@ -143,8 +185,8 @@ JavaScript response MIME validation and truthful teardown failure summaries.
 Reproduce its offline regression suite using the commands in
 [deploy/README.md](../../../deploy/README.md): 14 deployment/preview scenarios,
 5 teardown scenarios, 5 release scenarios and 12 Python smoke tests. These use
-local stubs/mocked HTTP only. Record the revised submitted head and hosted run
-in #44; the earlier 40490e9 run remains historical evidence for that source.
+local stubs/mocked HTTP only. The revision and hosted result in the C-01 row
+above supersede the earlier `40490e9` run for release acceptance.
 
 ## Episode 5 — actual first deployment, 19 November 2026
 
@@ -310,7 +352,7 @@ It fetched the existing demo password into process memory and printed only
 synthetic account identifiers/results, never credentials or response tokens.
 These API session checks were performed during the first deployment.
 
-### Shared capture and remaining acceptance
+### Shared Cloud Shell capture
 
 ![Cloud Shell verification capture](evidence/2026-11-19/cloud-shell-verification.jpg)
 
@@ -521,7 +563,27 @@ connects the screenshot to the deploy run.
 confirms that the before and after captures, migration, serving revision and
 smoke results match the reviewed release.
 
-Keep #7 open for the wider lab.
+### Release verified for the Lab 5 submission
+
+[Release PR #71](https://github.com/PhraewaS/event-system/pull/71) promoted the
+documentation from [PR #70](https://github.com/PhraewaS/event-system/pull/70).
+guluJa [approved head `1520f02`](https://github.com/PhraewaS/event-system/pull/71#pullrequestreview-6006415514)
+before the merge. The PR records a direct push to sync staging with `main`
+using the staging bypass. The sync preserved #70's source tree, and staging
+push CI and release PR CI passed. The C-06 change above is the evidence for
+the complete feature-PR review path.
+
+| Evidence | Verified result on 21 November 2026 |
+| --- | --- |
+| Main SHA and image tag | [`c7e5a275e8403406d18ee3f256cc4ff23946d481`](https://github.com/PhraewaS/event-system/commit/c7e5a275e8403406d18ee3f256cc4ff23946d481) |
+| [Main CI](https://github.com/PhraewaS/event-system/actions/runs/44922078661) | `test-and-docker` and `build-and-test` passed. [Source and test artifact](https://github.com/PhraewaS/event-system/actions/runs/44922078661/artifacts/14713314712) |
+| [Deploy demo](https://github.com/PhraewaS/event-system/actions/runs/44922078616) | Triggered by the push to `main` at the SHA above. `gather-migrate-gv64g` succeeded before the service update. Public health, database readiness, homepage, JavaScript and events passed. Optional login recorded `SKIP login` |
+| Image digest | `sha256:5e5960579c7aba7e150296c2c6625423543f4ddea6aa45f5bd2466480b223f5c` |
+| Serving revision | [`gather-00010-69h`](https://console.cloud.google.com/run/detail/asia-southeast1/gather/revisions/gather-00010-69h?project=cpe334-omega-3), matching digest, 100% traffic at verification |
+
+[Release record in #49](https://github.com/PhraewaS/event-system/issues/49#issuecomment-7065369867)
+links the deploy log and public URL. Keep the public service and repository
+accessible until the instructor confirms grading has ended.
 
 ## Episode 8 — C-05 cloud persistence
 
