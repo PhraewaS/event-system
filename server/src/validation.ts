@@ -13,7 +13,7 @@ export const publishInput = z
   .object({
     title: z.string().trim().min(3).max(120),
     description: z.string().trim().min(10).max(4000),
-    location: z.string().trim().min(2).max(200),
+    location: z.string().trim().max(200),
     capacity: z.number().int().min(1).max(1000000),
     startsAt: z.iso.datetime({ offset: true }),
     registrationDeadline: z.iso.datetime({ offset: true }),
