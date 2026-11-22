@@ -1,0 +1,54 @@
+# Isolated Lab 6 exercise only. Never use this file for the assessed Cloud Run service.
+# Run through scripts/lab6-local.ps1, which creates private local credentials.
+services:
+  db:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_USER: event_app
+      POSTGRES_PASSWORD: ${LAB6_DB_PASSWORD:?Run scripts/lab6-local.ps1 first}
+      POSTGRES_DB: gather_lab6_special
+    volumes:
+      - lab6-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U event_app -d gather_lab6_special]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+  migrate:
+    build: .
+    command: [node, dist/server/migrate.js]
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://event_app:${LAB6_DB_PASSWORD}@db:5432/gather_lab6_special
+    depends_on:
+      db:
+        condition: service_healthy
+  seed:
+    build: .
+    command: [node, dist/server/seed.js]
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://event_app:${LAB6_DB_PASSWORD}@db:5432/gather_lab6_special
+      DEMO_PASSWORDS_JSON: ${LAB6_ACCOUNT_PASSWORDS_JSON:?Run scripts/lab6-local.ps1 first}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+  app:
+    build: .
+    ports:
+      - "127.0.0.1:3106:8080"
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://event_app:${LAB6_DB_PASSWORD}@db:5432/gather_lab6_special
+      SESSION_SECRET: ${LAB6_SESSION_SECRET:?Run scripts/lab6-local.ps1 first}
+      PORT: 8080
+    depends_on:
+      seed:
+        condition: service_completed_successfully
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:8080/api/ready').then(async r=>{const b=await r.json();process.exit(r.ok&&b.status==='ready'&&b.db==='connected'?0:1)}).catch(()=>process.exit(1))"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+volumes:
+  lab6-data:
