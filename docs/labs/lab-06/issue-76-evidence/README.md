@@ -16,10 +16,19 @@ Later evidence-only commits do not change the implementation or regression tests
 
 ## Findings and disposition
 
-| Finding | Requirement | Disposition | Impact and priority |
-| --- | --- | --- | --- |
-| #76-D1 blank/whitespace location returns 500 | AC-05: trimmed location 2-200 chars; invalid input returns 400 without inserts | Accepted defect; controlled exercise validation rule restored with field message | UAT proposed Major; fix before exercise acceptance. Valid publication still works and invalid rows are not persisted; 500 alone is not a universal severity rule. |
-| #76-D2 long accepted description overflows | NFR-03 / AC-12-07: readable desktop/mobile layout without horizontal overflow | Accepted additional defect; wrap text without truncating stored/rendered content | Minor; included in the correction and independent retest scope. |
+| Finding / requirement | Classification and severity | Fix owner | Teammate reviewer | Fix status | Independent retest / final disposition |
+| --- | --- | --- | --- | --- | --- |
+| #76-D1 blank/whitespace location returns 500; AC-05 requires trimmed location 2-200 chars and invalid input to return 400 without inserts | Accepted defect; **Major** retained from the UAT report for team confirmation in this documentation review | **guluJa** | **PhraewaS** | Implemented; regression passed; reviewed and merged in #77, integrated into sprint1-staging by #78 | **Pending release/deployment and CrustCraft retest; keep #76 open** |
+| #76-D2 long accepted description overflows; NFR-03 / AC-12-07 require readable desktop/mobile layout without horizontal overflow | Accepted additional defect; **Minor** retained from the UAT report for team confirmation in this documentation review | **guluJa** | **PhraewaS** | Implemented; desktop/mobile regression passed; reviewed and merged in #77, integrated into sprint1-staging by #78 | **Pending release/deployment and CrustCraft retest; keep #76 open** |
+
+Severity rationale and priority are separate. D1 breaks the validation/error contract on the core publication form using ordinary whitespace input; the correction is required before accepting the exercise release. Valid inputs still publish successfully and database constraints prevent invalid rows; these facts limit its impact. D2 affects readability/layout for valid descriptions while stored data and access control remain intact; it is included in the same corrected release. Teammate review of this documentation follow-up will confirm the retained Major/Minor classifications.
+
+## Integration record and current status
+
+- [Fix PR #77](https://github.com/PhraewaS/event-system/pull/77): PhraewaS approved `a5721157d63bfa83f0a8970fb94f200849527fd0`; merged into the isolated exercise staging at `5b506e00bfbf84d052d3843d599612a1534c9b05`.
+- [Integration PR #78](https://github.com/PhraewaS/event-system/pull/78): PhraewaS reviewed/approved the integration and requested explicit severity/owner/status records; merged into sprint1-staging at `34971cfaa62ebb4edf1c7daa02514bd674d84e30`. This documentation follow-up addresses that request without rewriting either merged PR.
+- [Post-merge staging CI](https://github.com/PhraewaS/event-system/actions/runs/45123562628) passed at `34971cfaa62ebb4edf1c7daa02514bd674d84e30`. A later documentation commit/PR has its own CI identity and must not be represented as this already-tested SHA.
+- **Pending evidence:** corrected main release SHA, corrected Cloud Run revision, post-deployment smoke result, and independent retest/acceptance. Fill these fields from actual release/deployment and UAT evidence later.
 
 The second finding was not intentionally introduced: the stylesheet was unchanged between healthy main and the exercise snapshot. The normal-round report #75 remains a record of the cases that were actually tested. Its separate pluralization UI note (`1 places left`) is outside this correction and must remain recorded rather than claimed fixed.
 
@@ -50,4 +59,6 @@ See [browser-summary.json](browser-summary.json) for measured widths and test ou
 
 ## Remaining gates
 
-Teammate review, integration/release, successful deployment and independent retest of the deployed correction remain required. This fix PR must use `Refs #76`, not auto-close the UAT report before that retest. For this isolated staging target, the current CI workflow does not run on pull_request automatically; dispatch `ci-docker.yml` at the exact fix-branch SHA and inspect its completed result. Do not dispatch `deploy.yml` here.
+The fix review and staging integration in #77/#78 are complete. Obtain review of this triage-record follow-up and passing CI, then a reviewed release from sprint1-staging to main, successful deployment, post-deployment smoke checks, and CrustCraft's independent retest/acceptance of the exact deployed revision. Use `Refs #76`, not an auto-closing keyword, until that independent retest is recorded.
+
+Historical CI detail: the isolated fix PR #77 targeted an exercise branch outside the repository's pull_request trigger, so its CI was dispatched manually at its exact SHA. PRs targeting sprint1-staging/main use the normal automatic CI trigger. Do not dispatch a production deployment from an exercise or documentation branch.
