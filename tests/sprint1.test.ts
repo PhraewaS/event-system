@@ -245,6 +245,27 @@ describe("F-02 Publication", () => {
       .expect(404);
   });
 
+  test.each(["", " ", "   ", "\t\n", "x"])(
+    "LAB6-76-D1 / AC-05 invalid location %j returns a field error without writes",
+    async (location) => {
+      const owner = await actor("organizer@example.test");
+      const before = (await pool.query("SELECT count(*)::int AS n FROM events")).rows[0].n;
+      const response = await owner.agent
+        .post("/api/events")
+        .set("X-CSRF-Token", owner.token)
+        .send(eventBody({ location }));
+      // Check persistence even when the response assertion is RED.
+      expect((await pool.query("SELECT count(*)::int AS n FROM events")).rows[0].n).toBe(before);
+      expect(response.status).toBe(400);
+      expect(response.body.error).toMatchObject({
+        code: "VALIDATION_ERROR",
+        fields: expect.arrayContaining([
+          expect.objectContaining({ field: "location", message: expect.any(String) }),
+        ]),
+      });
+    },
+  );
+
   test("T-05 / AC-05 publication boundaries leave storage unchanged", async () => {
     const owner = await actor("organizer@example.test");
     const before = (await pool.query("SELECT count(*)::int AS n FROM events"))

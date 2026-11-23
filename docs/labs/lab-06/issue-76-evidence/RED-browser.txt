@@ -1,0 +1,158 @@
+
+Running 4 tests using 1 worker
+
+(node:10992) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  1 [desktop] › tests\e2e\ui-review.spec.ts:48:1 › LAB6-76-D1 / AC-05 blank location reports its field and a corrected form can publish (1.7s)
+(node:36112) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  2 [desktop] › tests\e2e\ui-review.spec.ts:72:1 › LAB6-76-D2 / NFR-03 long accepted descriptions stay readable without horizontal overflow (2.4s)
+(node:39736) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  3 [mobile] › tests\e2e\ui-review.spec.ts:48:1 › LAB6-76-D1 / AC-05 blank location reports its field and a corrected form can publish (1.7s)
+(node:36764) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  4 [mobile] › tests\e2e\ui-review.spec.ts:72:1 › LAB6-76-D2 / NFR-03 long accepted descriptions stay readable without horizontal overflow (2.4s)
+
+
+  1) [desktop] › tests\e2e\ui-review.spec.ts:48:1 › LAB6-76-D1 / AC-05 blank location reports its field and a corrected form can publish 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 400
+    Received: 500
+
+      60 |   const response = await rejected;
+      61 |   expect((await pool.query("SELECT id FROM events WHERE title=$1", [title])).rowCount).toBe(0);
+    > 62 |   expect(response.status()).toBe(400);
+         |                             ^
+      63 |   await expect(page.getByRole("alert")).toContainText("location:");
+      64 |   await expect(page.getByRole("alert")).toContainText("Location must contain at least 2 non-whitespace characters.");
+      65 |   await page.screenshot({ path: `artifacts/screenshots/lab6-76-location-${info.project.name}.png`, fullPage: true });
+        at <workspace>\tests\e2e\ui-review.spec.ts:62:29
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    artifacts\playwright-results\ui-review-LAB6-76-D1-AC-05-ef53a--corrected-form-can-publish-desktop\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: artifacts\playwright-results\ui-review-LAB6-76-D1-AC-05-ef53a--corrected-form-can-publish-desktop\error-context.md
+
+    Error Context: artifacts\playwright-results\ui-review-LAB6-76-D1-AC-05-ef53a--corrected-form-can-publish-desktop\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    artifacts\playwright-results\ui-review-LAB6-76-D1-AC-05-ef53a--corrected-form-can-publish-desktop\trace.zip
+    Usage:
+
+        npx playwright show-trace artifacts\playwright-results\ui-review-LAB6-76-D1-AC-05-ef53a--corrected-form-can-publish-desktop\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [desktop] › tests\e2e\ui-review.spec.ts:72:1 › LAB6-76-D2 / NFR-03 long accepted descriptions stay readable without horizontal overflow 
+
+    Error: expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 1440
+    Received:    29726
+
+      108 |     });
+      109 |     await info.attach("long-description-metrics", { body: JSON.stringify(metrics, null, 2), contentType: "application/json" });
+    > 110 |     expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.clientWidth);
+          |                                 ^
+      111 |     expect(metrics.textScrollWidth).toBeLessThanOrEqual(metrics.textClientWidth);
+      112 |     expect(metrics.renderedLines).toBeGreaterThan(1);
+      113 |     expect(metrics.textScrollHeight).toBeLessThanOrEqual(metrics.textClientHeight + 1);
+        at <workspace>\tests\e2e\ui-review.spec.ts:110:33
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    artifacts\playwright-results\ui-review-LAB6-76-D2-NFR-0-a2501-without-horizontal-overflow-desktop\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
+    artifacts\playwright-results\ui-review-LAB6-76-D2-NFR-0-a2501-without-horizontal-overflow-desktop\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: artifacts\playwright-results\ui-review-LAB6-76-D2-NFR-0-a2501-without-horizontal-overflow-desktop\error-context.md
+
+    Error Context: artifacts\playwright-results\ui-review-LAB6-76-D2-NFR-0-a2501-without-horizontal-overflow-desktop\error-context.md
+
+    attachment #6: trace (application/zip) ─────────────────────────────────────────────────────────
+    artifacts\playwright-results\ui-review-LAB6-76-D2-NFR-0-a2501-without-horizontal-overflow-desktop\trace.zip
+    Usage:
+
+        npx playwright show-trace artifacts\playwright-results\ui-review-LAB6-76-D2-NFR-0-a2501-without-horizontal-overflow-desktop\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [mobile] › tests\e2e\ui-review.spec.ts:48:1 › LAB6-76-D1 / AC-05 blank location reports its field and a corrected form can publish 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 400
+    Received: 500
+
+      60 |   const response = await rejected;
+      61 |   expect((await pool.query("SELECT id FROM events WHERE title=$1", [title])).rowCount).toBe(0);
+    > 62 |   expect(response.status()).toBe(400);
+         |                             ^
+      63 |   await expect(page.getByRole("alert")).toContainText("location:");
+      64 |   await expect(page.getByRole("alert")).toContainText("Location must contain at least 2 non-whitespace characters.");
+      65 |   await page.screenshot({ path: `artifacts/screenshots/lab6-76-location-${info.project.name}.png`, fullPage: true });
+        at <workspace>\tests\e2e\ui-review.spec.ts:62:29
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    artifacts\playwright-results\ui-review-LAB6-76-D1-AC-05-ef53a--corrected-form-can-publish-mobile\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: artifacts\playwright-results\ui-review-LAB6-76-D1-AC-05-ef53a--corrected-form-can-publish-mobile\error-context.md
+
+    Error Context: artifacts\playwright-results\ui-review-LAB6-76-D1-AC-05-ef53a--corrected-form-can-publish-mobile\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    artifacts\playwright-results\ui-review-LAB6-76-D1-AC-05-ef53a--corrected-form-can-publish-mobile\trace.zip
+    Usage:
+
+        npx playwright show-trace artifacts\playwright-results\ui-review-LAB6-76-D1-AC-05-ef53a--corrected-form-can-publish-mobile\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) [mobile] › tests\e2e\ui-review.spec.ts:72:1 › LAB6-76-D2 / NFR-03 long accepted descriptions stay readable without horizontal overflow 
+
+    Error: expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 390
+    Received:    29469
+
+      108 |     });
+      109 |     await info.attach("long-description-metrics", { body: JSON.stringify(metrics, null, 2), contentType: "application/json" });
+    > 110 |     expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.clientWidth);
+          |                                 ^
+      111 |     expect(metrics.textScrollWidth).toBeLessThanOrEqual(metrics.textClientWidth);
+      112 |     expect(metrics.renderedLines).toBeGreaterThan(1);
+      113 |     expect(metrics.textScrollHeight).toBeLessThanOrEqual(metrics.textClientHeight + 1);
+        at <workspace>\tests\e2e\ui-review.spec.ts:110:33
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    artifacts\playwright-results\ui-review-LAB6-76-D2-NFR-0-a2501-without-horizontal-overflow-mobile\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
+    artifacts\playwright-results\ui-review-LAB6-76-D2-NFR-0-a2501-without-horizontal-overflow-mobile\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: artifacts\playwright-results\ui-review-LAB6-76-D2-NFR-0-a2501-without-horizontal-overflow-mobile\error-context.md
+
+    Error Context: artifacts\playwright-results\ui-review-LAB6-76-D2-NFR-0-a2501-without-horizontal-overflow-mobile\error-context.md
+
+    attachment #6: trace (application/zip) ─────────────────────────────────────────────────────────
+    artifacts\playwright-results\ui-review-LAB6-76-D2-NFR-0-a2501-without-horizontal-overflow-mobile\trace.zip
+    Usage:
+
+        npx playwright show-trace artifacts\playwright-results\ui-review-LAB6-76-D2-NFR-0-a2501-without-horizontal-overflow-mobile\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4 failed
+    [desktop] › tests\e2e\ui-review.spec.ts:48:1 › LAB6-76-D1 / AC-05 blank location reports its field and a corrected form can publish 
+    [desktop] › tests\e2e\ui-review.spec.ts:72:1 › LAB6-76-D2 / NFR-03 long accepted descriptions stay readable without horizontal overflow 
+    [mobile] › tests\e2e\ui-review.spec.ts:48:1 › LAB6-76-D1 / AC-05 blank location reports its field and a corrected form can publish 
+    [mobile] › tests\e2e\ui-review.spec.ts:72:1 › LAB6-76-D2 / NFR-03 long accepted descriptions stay readable without horizontal overflow 
