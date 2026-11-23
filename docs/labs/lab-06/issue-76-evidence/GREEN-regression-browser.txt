@@ -1,0 +1,25 @@
+
+Running 16 tests using 1 worker
+
+(node:14304) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  1 [desktop] › tests\e2e\integration.spec.ts:46:1 › INT-UI-01 / AC-VER-02 competing reservations reconcile winner, loser and owner screens (4.2s)
+  ok  2 [desktop] › tests\e2e\integration.spec.ts:98:1 › INT-UI-02 / AC-VER-03 discovery and owned screens consume actual second pages without foreign data (1.6s)
+  ok  3 [desktop] › tests\e2e\ui-review.spec.ts:48:1 › LAB6-76-D1 / AC-05 blank location reports its field and a corrected form can publish (1.4s)
+  ok  4 [desktop] › tests\e2e\ui-review.spec.ts:72:1 › LAB6-76-D2 / NFR-03 long accepted descriptions stay readable without horizontal overflow (1.7s)
+  ok  5 [desktop] › tests\e2e\ui-review.spec.ts:121:1 › UI-REVIEW-01 / AC-12-01,04,05,07,08 publish → register → persisted personal view → owner roster (3.8s)
+  ok  6 [desktop] › tests\e2e\ui-review.spec.ts:220:1 › UI-REVIEW-02 / AC-12-01,02,08 invalid login, role restrictions and ownership (1.8s)
+  ok  7 [desktop] › tests\e2e\ui-review.spec.ts:266:1 › UI-REVIEW-03 / AC-12-03,04,07 discovery, validation and closed event states (1.9s)
+  ok  8 [desktop] › tests\e2e\ui-review.spec.ts:321:1 › UI-REVIEW-04 / AC-12-06,07 loading, empty, API failure and expired private identity (1.7s)
+(node:35472) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  9 [mobile] › tests\e2e\integration.spec.ts:46:1 › INT-UI-01 / AC-VER-02 competing reservations reconcile winner, loser and owner screens (3.6s)
+  ok 10 [mobile] › tests\e2e\integration.spec.ts:98:1 › INT-UI-02 / AC-VER-03 discovery and owned screens consume actual second pages without foreign data (1.7s)
+  ok 11 [mobile] › tests\e2e\ui-review.spec.ts:48:1 › LAB6-76-D1 / AC-05 blank location reports its field and a corrected form can publish (1.7s)
+  ok 12 [mobile] › tests\e2e\ui-review.spec.ts:72:1 › LAB6-76-D2 / NFR-03 long accepted descriptions stay readable without horizontal overflow (2.0s)
+  ok 13 [mobile] › tests\e2e\ui-review.spec.ts:121:1 › UI-REVIEW-01 / AC-12-01,04,05,07,08 publish → register → persisted personal view → owner roster (3.8s)
+  ok 14 [mobile] › tests\e2e\ui-review.spec.ts:220:1 › UI-REVIEW-02 / AC-12-01,02,08 invalid login, role restrictions and ownership (1.6s)
+  ok 15 [mobile] › tests\e2e\ui-review.spec.ts:266:1 › UI-REVIEW-03 / AC-12-03,04,07 discovery, validation and closed event states (2.4s)
+  ok 16 [mobile] › tests\e2e\ui-review.spec.ts:321:1 › UI-REVIEW-04 / AC-12-06,07 loading, empty, API failure and expired private identity (1.7s)
+
+  16 passed (42.1s)

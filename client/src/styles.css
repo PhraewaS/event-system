@@ -793,6 +793,7 @@ main:focus {
 }
 .detail-description {
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
   color: #6b7d6b;
   line-height: 1.9;
   font-size: 14px;

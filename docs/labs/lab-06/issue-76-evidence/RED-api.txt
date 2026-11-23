@@ -1,0 +1,87 @@
+
+> gather-event-system@0.1.0 test
+> vitest run tests/sprint1.test.ts -t LAB6-76 --reporter=verbose
+
+
+ RUN  v5.0.5 <workspace>
+
+ ↓ tests/sprint1.test.ts > F-01 Identity and session security > T-01 / AC-01 valid and invalid login, generic rejection, password hashing
+ ↓ tests/sprint1.test.ts > F-01 Identity and session security > T-02 / AC-02 session rotation, expiry, logout revocation, recreation persistence
+ ↓ tests/sprint1.test.ts > F-01 Identity and session security > T-03 / AC-03 authentication and CSRF enforced, safe errors
+ ↓ tests/sprint1.test.ts > F-02 Publication > PUB-BOUND-01 / AC-03,04 publication rejects anonymous, wrong-role and invalid-CSRF requests without writes
+ ↓ tests/sprint1.test.ts > F-02 Publication > T-04 / AC-04 roles and server-assigned ownership
+stderr | tests/sprint1.test.ts > F-02 Publication > LAB6-76-D1 / AC-05 invalid location "" returns a field error without writes
+API request failed: 23514
+
+stderr | tests/sprint1.test.ts > F-02 Publication > LAB6-76-D1 / AC-05 invalid location " " returns a field error without writes
+API request failed: 23514
+
+ × tests/sprint1.test.ts > F-02 Publication > LAB6-76-D1 / AC-05 invalid location "" returns a field error without writes 208ms
+   → expected 500 to be 400 // Object.is equality
+ × tests/sprint1.test.ts > F-02 Publication > LAB6-76-D1 / AC-05 invalid location " " returns a field error without writes 133ms
+   → expected 500 to be 400 // Object.is equality
+stderr | tests/sprint1.test.ts > F-02 Publication > LAB6-76-D1 / AC-05 invalid location "   " returns a field error without writes
+API request failed: 23514
+
+stderr | tests/sprint1.test.ts > F-02 Publication > LAB6-76-D1 / AC-05 invalid location "\t\n" returns a field error without writes
+API request failed: 23514
+
+ × tests/sprint1.test.ts > F-02 Publication > LAB6-76-D1 / AC-05 invalid location "   " returns a field error without writes 137ms
+   → expected 500 to be 400 // Object.is equality
+ × tests/sprint1.test.ts > F-02 Publication > LAB6-76-D1 / AC-05 invalid location "\t\n" returns a field error without writes 101ms
+   → expected 500 to be 400 // Object.is equality
+stderr | tests/sprint1.test.ts > F-02 Publication > LAB6-76-D1 / AC-05 invalid location "x" returns a field error without writes
+API request failed: 23514
+
+ × tests/sprint1.test.ts > F-02 Publication > LAB6-76-D1 / AC-05 invalid location "x" returns a field error without writes 112ms
+   → expected 500 to be 400 // Object.is equality
+ ↓ tests/sprint1.test.ts > F-02 Publication > T-05 / AC-05 publication boundaries leave storage unchanged
+ ↓ tests/sprint1.test.ts > F-02 Publication > PUB-BOUND-02 / AC-PUB-01 anonymous discovery persists across API instances and paginates without exposing private data
+ ↓ tests/sprint1.test.ts > F-02 Publication > PUB-BOUND-03 / AC-04,05 exact text bounds are trimmed and timezone-offset instants persist
+ ↓ tests/sprint1.test.ts > F-02 Publication > PUB-UNIT-01 / AC-05 publication schema enforces types, bounds, normalization and deadline order
+ ↓ tests/sprint1.test.ts > F-03 Registration and persistence > T-06 / AC-06 full API journey survives independent application/pool recreation
+ ↓ tests/sprint1.test.ts > F-03 Registration and persistence > T-07 / AC-07 duplicate, full, deadline, missing and forged registration
+ ↓ tests/sprint1.test.ts > F-03 Registration and persistence > T-08 / AC-08 two independent API instances compete for final place
+ ↓ tests/sprint1.test.ts > F-03 Registration and persistence > T-09 / AC-09 private registration owner restrictions
+ ↓ tests/sprint1.test.ts > F-03 Registration and persistence > REG-BOUND-01 / AC-03,06,09 registration permissions, CSRF and spoofed identities reject without writes
+ ↓ tests/sprint1.test.ts > F-03 Registration and persistence > REG-BOUND-02 / AC-07 duplicate wins after closure/full and rejected transactions leave a single-connection pool reusable
+ ↓ tests/sprint1.test.ts > F-03 Registration and persistence > REG-CONC-01 / AC-07,08 a request blocked on the real event lock is rejected when the deadline closes before lock release
+ ↓ tests/sprint1.test.ts > F-03 Registration and persistence > REG-BOUND-03 / AC-09 personal pagination returns every own record once and excludes another participant
+ ↓ tests/sprint1.test.ts > F-04 Organizer ownership and data integrity > T-10 / AC-10 role and event ownership enforced independently
+ ↓ tests/sprint1.test.ts > F-04 Organizer ownership and data integrity > T-11 / AC-11 database constraints and migration/seed reproducibility
+ ↓ tests/sprint1.test.ts > F-04 Organizer ownership and data integrity > ORG-BOUND-01 / AC-03,10 roles, ownership, empty rosters and forged owner queries remain independent
+ ↓ tests/sprint1.test.ts > F-04 Organizer ownership and data integrity > ORG-BOUND-02 / AC-10 owned-event pagination is complete and caller-scoped with correct counts
+ ↓ tests/sprint1.test.ts > F-04 Organizer ownership and data integrity > ORG-BOUND-03 / AC-10 roster pagination contains only its event and the permitted participant fields
+ ↓ tests/sprint1.test.ts > F-04 Organizer ownership and data integrity > ORG-BOUND-04 / AC-10 fresh API reads persisted roster and rechecks changed roles and ownership
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/sprint1.test.ts > F-02 Publication > LAB6-76-D1 / AC-05 invalid location "" returns a field error without writes
+ FAIL  tests/sprint1.test.ts > F-02 Publication > LAB6-76-D1 / AC-05 invalid location " " returns a field error without writes
+ FAIL  tests/sprint1.test.ts > F-02 Publication > LAB6-76-D1 / AC-05 invalid location "   " returns a field error without writes
+ FAIL  tests/sprint1.test.ts > F-02 Publication > LAB6-76-D1 / AC-05 invalid location "\t\n" returns a field error without writes
+ FAIL  tests/sprint1.test.ts > F-02 Publication > LAB6-76-D1 / AC-05 invalid location "x" returns a field error without writes
+AssertionError: expected 500 to be 400 // Object.is equality
+
+- Expected
++ Received
+
+- 400
++ 500
+
+ ❯ tests/sprint1.test.ts:259:31
+    257|       // Check persistence even when the response assertion is RED.
+    258|       expect((await pool.query("SELECT count(*)::int AS n FROM events"…
+    259|       expect(response.status).toBe(400);
+       |                               ^
+    260|       expect(response.body.error).toMatchObject({
+    261|         code: "VALIDATION_ERROR",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 23 skipped (28)
+   Start at  12:22:59
+   Duration  2.03s (tests 53%, import 42%, transform 4%, worker 1%)
+
