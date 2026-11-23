@@ -45,6 +45,79 @@ async function noOverflow(page: Page) {
   ).toBe(true);
 }
 
+test("LAB6-76-D1 / AC-05 blank location reports its field and a corrected form can publish", async ({ page }, info) => {
+  const title = `Lab6 issue76 validation ${info.project.name}`;
+  await signIn(page, "organizer@example.test");
+  await page.goto("/publish");
+  await page.getByLabel("Event title", { exact: true }).fill(title);
+  await page.getByLabel("Description", { exact: true }).fill("Synthetic regression for the independently reported location validation defect.");
+  await page.getByLabel("Location", { exact: true }).fill("   ");
+  await page.getByLabel("Event starts", { exact: true }).fill("2030-11-08T14:00");
+  await page.getByLabel("Registration deadline", { exact: true }).fill("2030-11-07T14:00");
+  await page.getByLabel("Capacity", { exact: true }).fill("2");
+  const rejected = page.waitForResponse(r => new URL(r.url()).pathname === "/api/events" && r.request().method() === "POST");
+  await page.getByRole("button", { name: "Publish event" }).click();
+  const response = await rejected;
+  expect((await pool.query("SELECT id FROM events WHERE title=$1", [title])).rowCount).toBe(0);
+  expect(response.status()).toBe(400);
+  await expect(page.getByRole("alert")).toContainText("location:");
+  await expect(page.getByRole("alert")).toContainText("Location must contain at least 2 non-whitespace characters.");
+  await page.screenshot({ path: `artifacts/screenshots/lab6-76-location-${info.project.name}.png`, fullPage: true });
+  await page.getByLabel("Location", { exact: true }).fill("Demo Room A");
+  await page.getByRole("button", { name: "Publish event" }).click();
+  await expect(page.getByText("Your event is published and ready for registrations.", { exact: true })).toBeVisible();
+  expect((await pool.query("SELECT location FROM events WHERE title=$1", [title])).rows).toEqual([{ location: "Demo Room A" }]);
+});
+
+test("LAB6-76-D2 / NFR-03 long accepted descriptions stay readable without horizontal overflow", async ({ page, browser }, info) => {
+  const title = `Lab6 issue76 long description ${info.project.name}`;
+  const description = "D".repeat(3000);
+  await signIn(page, "organizer@example.test");
+  await page.goto("/publish");
+  await page.getByLabel("Event title", { exact: true }).fill(title);
+  await page.getByLabel("Description", { exact: true }).fill(description);
+  await page.getByLabel("Location", { exact: true }).fill("Demo Room A");
+  await page.getByLabel("Event starts", { exact: true }).fill("2030-11-08T14:00");
+  await page.getByLabel("Registration deadline", { exact: true }).fill("2030-11-07T14:00");
+  await page.getByLabel("Capacity", { exact: true }).fill("2");
+  const published = page.waitForResponse(r => new URL(r.url()).pathname === "/api/events" && r.request().method() === "POST");
+  await page.getByRole("button", { name: "Publish event" }).click();
+  const response = await published;
+  expect(response.status()).toBe(201);
+  const event = (await response.json()).data;
+  expect(event.description).toBe(description);
+  const visitor = await browser.newContext({ viewport: info.project.use.viewport });
+  try {
+    const publicPage = await visitor.newPage();
+    await publicPage.goto(new URL(`/events/${event.id}`, page.url()).href);
+    const text = publicPage.locator(".detail-description");
+    await expect(text).toHaveText(description);
+    const metrics = await publicPage.evaluate(() => {
+      const text = document.querySelector<HTMLElement>(".detail-description")!;
+      const range = document.createRange();
+      range.selectNodeContents(text);
+      return {
+        scrollWidth: document.documentElement.scrollWidth,
+        clientWidth: document.documentElement.clientWidth,
+        textScrollWidth: text.scrollWidth,
+        textClientWidth: text.clientWidth,
+        textScrollHeight: text.scrollHeight,
+        textClientHeight: text.clientHeight,
+        renderedLines: range.getClientRects().length,
+      };
+    });
+    await info.attach("long-description-metrics", { body: JSON.stringify(metrics, null, 2), contentType: "application/json" });
+    expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.clientWidth);
+    expect(metrics.textScrollWidth).toBeLessThanOrEqual(metrics.textClientWidth);
+    expect(metrics.renderedLines).toBeGreaterThan(1);
+    expect(metrics.textScrollHeight).toBeLessThanOrEqual(metrics.textClientHeight + 1);
+    expect((await pool.query("SELECT description FROM events WHERE id=$1", [event.id])).rows[0].description).toBe(description);
+    await publicPage.screenshot({ path: `artifacts/screenshots/lab6-76-description-${info.project.name}.png`, fullPage: true });
+  } finally {
+    await visitor.close();
+  }
+});
+
 test("UI-REVIEW-01 / AC-12-01,04,05,07,08 publish → register → persisted personal view → owner roster", async ({
   page,
   browser,
