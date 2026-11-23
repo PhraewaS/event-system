@@ -1,0 +1,120 @@
+{
+  "RED": {
+    "commit": "a3fbb342345e8ba995abf685568b23f2bc95b357",
+    "stats": {
+      "startTime": "2026-11-23T05:24:22.059Z",
+      "duration": 15458.57,
+      "expected": 0,
+      "skipped": 0,
+      "unexpected": 4,
+      "flaky": 0
+    },
+    "regressions": [
+      {
+        "test": "LAB6-76-D1 / AC-05 blank location reports its field and a corrected form can publish",
+        "project": "desktop",
+        "status": "failed",
+        "error": [
+          "Error: expect(received).toBe(expected) // Object.is equality",
+          "Expected: 400\nReceived: 500"
+        ]
+      },
+      {
+        "test": "LAB6-76-D2 / NFR-03 long accepted descriptions stay readable without horizontal overflow",
+        "project": "desktop",
+        "status": "failed",
+        "metrics": {
+          "scrollWidth": 29726,
+          "clientWidth": 1440,
+          "textScrollWidth": 29449,
+          "textClientWidth": 658,
+          "textScrollHeight": 27,
+          "textClientHeight": 27,
+          "renderedLines": 1
+        },
+        "error": [
+          "Error: expect(received).toBeLessThanOrEqual(expected)",
+          "Expected: <= 1440\nReceived:    29726"
+        ]
+      },
+      {
+        "test": "LAB6-76-D1 / AC-05 blank location reports its field and a corrected form can publish",
+        "project": "mobile",
+        "status": "failed",
+        "error": [
+          "Error: expect(received).toBe(expected) // Object.is equality",
+          "Expected: 400\nReceived: 500"
+        ]
+      },
+      {
+        "test": "LAB6-76-D2 / NFR-03 long accepted descriptions stay readable without horizontal overflow",
+        "project": "mobile",
+        "status": "failed",
+        "metrics": {
+          "scrollWidth": 29469,
+          "clientWidth": 390,
+          "textScrollWidth": 29449,
+          "textClientWidth": 29449,
+          "textScrollHeight": 27,
+          "textClientHeight": 27,
+          "renderedLines": 1
+        },
+        "error": [
+          "Error: expect(received).toBeLessThanOrEqual(expected)",
+          "Expected: <= 390\nReceived:    29469"
+        ]
+      }
+    ]
+  },
+  "GREEN": {
+    "commit": "8b9a2c3e1f30181ec772a8d1a7b5cc35ef9e142f",
+    "stats": {
+      "startTime": "2026-11-23T05:26:24.688Z",
+      "duration": 42099.581000000006,
+      "expected": 16,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "regressions": [
+      {
+        "test": "LAB6-76-D1 / AC-05 blank location reports its field and a corrected form can publish",
+        "project": "desktop",
+        "status": "passed"
+      },
+      {
+        "test": "LAB6-76-D2 / NFR-03 long accepted descriptions stay readable without horizontal overflow",
+        "project": "desktop",
+        "status": "passed",
+        "metrics": {
+          "scrollWidth": 1440,
+          "clientWidth": 1440,
+          "textScrollWidth": 658,
+          "textClientWidth": 658,
+          "textScrollHeight": 1197,
+          "textClientHeight": 1197,
+          "renderedLines": 45
+        }
+      },
+      {
+        "test": "LAB6-76-D1 / AC-05 blank location reports its field and a corrected form can publish",
+        "project": "mobile",
+        "status": "passed"
+      },
+      {
+        "test": "LAB6-76-D2 / NFR-03 long accepted descriptions stay readable without horizontal overflow",
+        "project": "mobile",
+        "status": "passed",
+        "metrics": {
+          "scrollWidth": 390,
+          "clientWidth": 390,
+          "textScrollWidth": 350,
+          "textClientWidth": 350,
+          "textScrollHeight": 2287,
+          "textClientHeight": 2287,
+          "renderedLines": 86
+        }
+      }
+    ]
+  }
+}
