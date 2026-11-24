@@ -26,6 +26,12 @@ export const publishInput = z
     path: ["registrationDeadline"],
   });
 export const emptyInput = z.object({}).strict();
+export const quotaQuery = z.object({
+  date: z.string().regex(/^(?!0000)\d{4}-\d{2}-\d{2}$/).refine((value) => {
+    const parsed = new Date(`${value}T00:00:00.000Z`);
+    return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+  }, { message: "Use a valid calendar date in YYYY-MM-DD format." }),
+}).strict();
 export const pageInput = z.object({
   offset: z.coerce.number().int().min(0).max(10000000).default(0),
 });

@@ -1,5 +1,9 @@
 # Lab 7: เปลี่ยนกฎการลงทะเบียนรายวันของ Gather
 
+> **สถานะ review implementation:** เปิด PR #83 แล้ว CI รอบแรกผ่านที่ f868800 จากนั้น PhraewaS ขอแก้รูปแบบวันและ late response ของบัญชีเก่า รับแก้ทั้งหมดพร้อม additional RED/GREEN ดู [review83-evidence.md](review83-evidence.md) สำหรับผลล่าสุด 81 unit/API/client และ 28 browser executions; รอ review และ required checks ของ head ล่าสุดก่อน merge ไม่อ้างว่า release/GCP เสร็จแล้ว
+
+> **สถานะถัดจาก contract review — 24 พฤศจิกายน 2026:** PhraewaS อนุมัติ `d9978c6` และ PR #82 merge เข้า staging `639f67b` แล้ว จึงเริ่ม test-first branch `codex/lab7-daily-quota` เก็บ domain RED ก่อนแก้ และได้ local GREEN/regression แล้ว ดู [implementation-evidence.md](implementation-evidence.md) สำหรับลำดับ commit, ผลจริง และข้อจำกัด ข้อความ proposal ด้านล่างเป็นประวัติก่อน approval; implementation ยังรอ PR review/CI/release/GCP ไม่ใช่ Done
+
 สถานะ ณ 24 พฤศจิกายน 2026: **เปิด [Issue #81](https://github.com/PhraewaS/event-system/issues/81) และ [PR #82](https://github.com/PhraewaS/event-system/pull/82) แล้ว; PhraewaS review รอบแรกเป็น Changes requested; แก้เอกสารแล้วรอตรวจ revision ล่าสุดก่อน approval/implementation**
 
 | เอกสาร | ใช้ตรวจอะไร |

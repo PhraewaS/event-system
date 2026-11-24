@@ -1,0 +1,31 @@
+[WebServer] (node:18800) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:28440) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 8 tests using 1 worker
+
+(node:33992) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  1 [desktop] › tests\e2e\daily-quota.spec.ts:35:1 › L7-Q-UI-01 / Q11,Q13 two real reservations, third disabled, own record and next day (235ms)
+(node:23868) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  2 [desktop] › tests\e2e\daily-quota.spec.ts:61:1 › L7-Q-UI-02 / Q11,Q12 injected read failure/retry, stale POST and identity switch (255ms)
+(node:7944) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  3 [desktop] › tests\e2e\daily-quota.spec.ts:85:1 › L7-Q-UI-03 / Q13 legacy long description and own-record navigation preserved (215ms)
+(node:40316) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  4 [desktop] › tests\e2e\daily-quota.spec.ts:93:1 › L7-Q-UI-04 / Q04,Q11,Q13 UTC browser shows Thai day and requests matching quota around midnight (265ms)
+(node:21400) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  5 [mobile] › tests\e2e\daily-quota.spec.ts:35:1 › L7-Q-UI-01 / Q11,Q13 two real reservations, third disabled, own record and next day (225ms)
+(node:35220) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  6 [mobile] › tests\e2e\daily-quota.spec.ts:61:1 › L7-Q-UI-02 / Q11,Q12 injected read failure/retry, stale POST and identity switch (262ms)
+(node:14912) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  7 [mobile] › tests\e2e\daily-quota.spec.ts:85:1 › L7-Q-UI-03 / Q13 legacy long description and own-record navigation preserved (301ms)
+(node:32812) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  8 [mobile] › tests\e2e\daily-quota.spec.ts:93:1 › L7-Q-UI-04 / Q04,Q11,Q13 UTC browser shows Thai day and requests matching quota around midnight (256ms)

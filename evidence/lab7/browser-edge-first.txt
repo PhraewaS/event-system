@@ -1,0 +1,17 @@
+
+Running 8 tests using 1 worker
+
+(node:22624) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 [desktop] › tests\e2e\daily-quota.spec.ts:35:1 › L7-Q-UI-01 / Q11,Q13 two real reservations, third disabled, own record and next day (3.9s)
+  ok 2 [desktop] › tests\e2e\daily-quota.spec.ts:61:1 › L7-Q-UI-02 / Q11,Q12 injected read failure/retry, stale POST and identity switch (2.4s)
+  ok 3 [desktop] › tests\e2e\daily-quota.spec.ts:85:1 › L7-Q-UI-03 / Q13 legacy long description and own-record navigation preserved (1.3s)
+  ok 4 [desktop] › tests\e2e\daily-quota.spec.ts:93:1 › L7-Q-UI-04 / Q04,Q11,Q13 UTC browser shows Thai day and requests matching quota around midnight (1.3s)
+(node:39064) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 5 [mobile] › tests\e2e\daily-quota.spec.ts:35:1 › L7-Q-UI-01 / Q11,Q13 two real reservations, third disabled, own record and next day (3.9s)
+  ok 6 [mobile] › tests\e2e\daily-quota.spec.ts:61:1 › L7-Q-UI-02 / Q11,Q12 injected read failure/retry, stale POST and identity switch (2.5s)
+  ok 7 [mobile] › tests\e2e\daily-quota.spec.ts:85:1 › L7-Q-UI-03 / Q13 legacy long description and own-record navigation preserved (1.4s)
+  ok 8 [mobile] › tests\e2e\daily-quota.spec.ts:93:1 › L7-Q-UI-04 / Q04,Q11,Q13 UTC browser shows Thai day and requests matching quota around midnight (1.6s)
+
+  8 passed (22.5s)

@@ -1,0 +1,20 @@
+
+ RUN  v5.0.5 C:/Users/natth/OneDrive/Documents/ChatGPT/SE/gather-lab6-special
+
+ ✓ tests/daily-quota-unit.test.ts > L7-Q-UNIT-01 / Q04 exact Thai day independently of UTC date/offset 53ms
+ ✓ tests/daily-quota-unit.test.ts > L7-Q-UNIT-01b / Q04 output is ISO even when locale format is not ISO 1ms
+ ✓ tests/daily-quota-unit.test.ts > L7-Q-UNIT-02 / Q02,Q07,Q09 calendar validation and remaining boundary 254ms
+ ✓ tests/client-csrf.test.ts > CLIENT-CSRF-01 concurrent initialization preserves the current session token for a protected mutation 75ms
+ ✓ tests/client-csrf.test.ts > CLIENT-CSRF-02 a failed initialization can be retried without retaining a rejected request 4ms
+ ✓ tests/client-csrf.test.ts > CLIENT-CSRF-03 expired api read refreshes CSRF before first re-login 6ms
+ ✓ tests/client-csrf.test.ts > CLIENT-CSRF-04 expired collection read refreshes CSRF before first re-login 3ms
+ ✓ tests/client-csrf.test.ts > CLIENT-CSRF-05 invalid credentials do not expire identity or automatically retry login 3ms
+ ✓ tests/client-csrf.test.ts > CLIENT-SESSION-OLD-api-401 / Q12 old account response cannot expire or overwrite the new session 3ms
+ ✓ tests/client-csrf.test.ts > CLIENT-SESSION-OLD-collection-401 / Q12 old account response cannot expire or overwrite the new session 2ms
+ ✓ tests/client-csrf.test.ts > CLIENT-SESSION-OLD-api-403 / Q12 old account response cannot expire or overwrite the new session 2ms
+ ✓ tests/client-csrf.test.ts > CLIENT-SESSION-OLD-api-200 / Q12 old account response cannot expire or overwrite the new session 2ms
+
+ Test Files  2 passed (2)
+      Tests  12 passed (12)
+   Start at  23:54:52
+   Duration  925ms (tests 84%, import 7%, transform 4%, worker 4%)
