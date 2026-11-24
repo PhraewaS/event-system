@@ -1,5 +1,7 @@
 # Sprint 1 engineering baseline and feature contracts
 
+> Lab 7 proposed revision, 24 November 2026: [CR-L7-01](labs/lab-07/CR-L7-01.md) proposes a limit of two registrations per Participant per event-start date in Asia/Bangkok. The [revised SRS/SDS/AC/STS contract](labs/lab-07/daily-quota-contract.md) awaits teammate review before implementation. This proposal is not an implemented or accepted rule; historical release evidence below remains unchanged. The actual accepted post-Lab-6/pre-change source is main `da02edd0258aed2aaf6847f87577a717e8f533e9`, deployed as `gather-00012-7lx`.
+
 > Current accepted product baseline: [v0.1.0](https://github.com/PhraewaS/event-system/releases/tag/v0.1.0) at main `7532716bbe96b8d7d9cea33b3b063ba16bf746d2`, published 10 November 2026. [Issue #6](https://github.com/PhraewaS/event-system/issues/6) is closed/Done after actual main CI and release/tag verification. The active integration branch remains `sprint1-staging`. This documentation correction is tracked in [Issue #30](https://github.com/PhraewaS/event-system/issues/30); its own review/integration state is recorded there and it does not rewrite the original tag/archive. Dated contracts and old pending states below are explicitly historical snapshots, not the current release status.
 
 Baseline: 29 October 2026. Target: 8 November 2026. Whole-product planning supplement: 11 November 2026; 29 November checkpoint plan refined on 14 November after review, [Issue #34](https://github.com/PhraewaS/event-system/issues/34), pending independent review/integration. This single document combines the required SRS, feature inventory/traceability, System SDS, feature SDS, AC and STS to avoid duplicate documents. The supplied course brief is the product authority. Linked official documentation below supplies technical guidance; it does not define business policy.
@@ -29,6 +31,19 @@ Separate actual executions: exact corrected staging 6db75f1 passed local product
 
 **Dates and remaining gates:** target 8 November 2026; actual release 10 November 2026 at 14:00:37 UTC. Actual submission time is not established by repository metadata. Docker image/config checks are hosted; local Compose startup/restart/persistence and GCP remain Lab 5 #7, released-version cross-team UAT Lab 6, and cancellation/capacity editing/check-in/attendance later scope. The original v0.1.0 archive retains its old README/SDS; Issue #30 records this supplementary documentation revision and any subsequent reviewed promotion. No tag, asset or recorded result is rewritten.
 
+
+## Lab 7 versioned contract addendum — proposed, not implemented
+
+The original Sprint 1 excerpts and accepted results below remain historical. CR-L7-01 revises FR-04 / F-03 and AC-06/07, and proposes new BR-11 / DEC-08. Its authoritative proposed definitions, impact table and test design are in [daily-quota-contract.md](labs/lab-07/daily-quota-contract.md).
+
+| Contract item | Proposed revision / preserved scope |
+| --- | --- |
+| FR-04 / BR-11 | Preserve private persistent registration and capacity safety; permit at most two registrations per Participant per event-start date in Asia/Bangkok. Count all existing registrations in the current Sprint 1 schema; reject an additional eligible event with 409 DAILY_REGISTRATION_LIMIT when count is already two or greater. |
+| DEC-08 | Fixed limit two; count by event start date, not booking date; retain all legacy records; preserve duplicate → deadline → capacity rejection precedence before quota; serialize participant then event. |
+| Feature / System SDS | Add private own-quota read, authoritative transaction check, UI states and account-switch isolation. Reuse existing schema; no historical deletion/backfill or migration required for this proposal. |
+| AC / STS | Proposed AC-L7-Q01–14 and L7-Q test cases cover boundaries, invalid input, privacy, concurrent requests, legacy persistence and preserved journeys. They are planned, not executed. |
+| Sprint 2 dependency | #8 cancellation/reactivation will require ACTIVE-only counting and the same lock order; this addendum does not implement cancellation or invent a status column in the current schema. |
+| Review / evidence | Instructor/TA approval is waived by the supplied updated announcement; teammate contract review before code remains required. RED/GREEN, regression, reviewed release and GCP checks remain pending. |
 
 ## SRS: actors, scope and decisions
 
