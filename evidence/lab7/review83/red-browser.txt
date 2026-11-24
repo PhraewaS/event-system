@@ -7,7 +7,7 @@ Running 2 tests using 1 worker
   x  2 [desktop] › tests\e2e\daily-quota.spec.ts:113:3 › L7-Q-UI-02b / Q12 late old-account 401 after SPA account switch cannot replace quota or sign out new user (7.3s)
 
 
-  1) [desktop] › tests\e2e\daily-quota.spec.ts:113:3 › L7-Q-UI-02b / Q12 late old-account 401 after SPA account switch cannot replace quota or sign out new user 
+  1) [desktop] › tests\e2e\daily-quota.spec.ts:113:3 › L7-Q-UI-02b / Q12 late old-account 401 after SPA account switch cannot replace quota or sign out new user
 
     Error: expect(locator).toBeVisible() failed
 
@@ -47,5 +47,5 @@ Running 2 tests using 1 worker
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
   1 failed
-    [desktop] › tests\e2e\daily-quota.spec.ts:113:3 › L7-Q-UI-02b / Q12 late old-account 401 after SPA account switch cannot replace quota or sign out new user 
+    [desktop] › tests\e2e\daily-quota.spec.ts:113:3 › L7-Q-UI-02b / Q12 late old-account 401 after SPA account switch cannot replace quota or sign out new user
   1 passed (12.4s)
