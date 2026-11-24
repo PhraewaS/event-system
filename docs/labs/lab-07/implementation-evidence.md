@@ -1,5 +1,7 @@
 # CR-L7-01: implementation / RED-GREEN evidence
 
+> Subsequent status: [PR #83](https://github.com/PhraewaS/event-system/pull/83) is open, initial hosted [CI 45438700271](https://github.com/PhraewaS/event-system/actions/runs/45438700271) passed at f868800, and PhraewaS requested two UI corrections. See [review83-evidence.md](review83-evidence.md) for accepted requests, additional RED/GREEN, corrected 81/28 local results and current CI/review gates. The initial 76/24 snapshot below remains historical and is not the final corrected revision's result.
+
 Recorded **24 November 2026 (Asia/Bangkok)**. Tracking [Issue #81](https://github.com/PhraewaS/event-system/issues/81). Status: **local implementation and verification complete; awaiting implementation PR / independent teammate review / hosted CI / integration / release / deployment**. No new production deployment is claimed.
 
 ## 1. Sequence and versions
