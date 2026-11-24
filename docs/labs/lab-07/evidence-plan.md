@@ -2,11 +2,13 @@
 
 Prepared 24 November 2026. **Plan only**; numerical results below are not invented or prefilled as passing.
 
+Tracking: [Issue #81](https://github.com/PhraewaS/event-system/issues/81) and documentation [PR #82](https://github.com/PhraewaS/event-system/pull/82) are open. PhraewaS [requested changes on v1 / 758fc35](https://github.com/PhraewaS/event-system/pull/82#pullrequestreview-6042687973) on 24 November 2026 at 22:54:01 +07:00. This revision addresses those requests; final contract review/approval and implementation remain pending. Preserve v1 and this revision, rather than rewriting the initial review as approval.
+
 ## A. Preserve the required sequence (25 points)
 
 | Stage | Record before moving on |
 | --- | --- |
-| Change request | Actual GitHub Issue, old/new rule, reason, scope, baseline/pre-change SHA; instructor approval waived according to supplied announcement |
+| Change request | Actual GitHub Issue #81, old/new rule, reason, scope, baseline/pre-change SHA; instructor approval waived according to [announcement source and original screenshot](approval-waiver-source.md) |
 | Impact/contract | Versioned SRS/SDS/AC/STS excerpts in this documentation commit; teammate review on its exact SHA before implementation |
 | Revisions | If reviewer changes timezone/count/legacy/error policy, revise contract and tests before code and preserve discussion/commit history |
 
@@ -53,4 +55,4 @@ Submit one self-contained Lab 7 PDF through LEB2 by **29 November 2026 23:59 Tha
 
 Deliverable 2 is a **separate assessed PDF** due the same day: complete Sprint 2 plus meaningful tested Sprint 3 progress and integrated GCP candidate. The release may include both, but implementing unchanged backlog #8/#9 alone does not replace Lab 7's rule change. Keep full Sprint 2 acceptance identifiable.
 
-Current status: request/contract prepared; Issue/PR creation, teammate approval, RED/GREEN, CI for this proposal, changed release and Lab 7 PDF are **not yet completed**.
+Current status: Issue #81 / PR #82 creation and v1 teammate review are complete; Changes requested is not approval. CI [run 45427250212](https://github.com/PhraewaS/event-system/actions/runs/45427250212) passed for the previous proposal revision, not the new quota behavior. Renewed review/approval and CI for this revision, RED/GREEN, changed release and Lab 7 PDF remain pending; record their actual results as they occur.

@@ -1,6 +1,6 @@
 # CR-L7-01: revised engineering contract — daily registration quota
 
-Version: **proposal v1 — 24 November 2026**. Status: **pre-implementation / awaiting teammate review**. Change owner guluJa; reviewer PhraewaS. Rule source: team-selected Lab 7 change under the instructor's approval-waiver announcement. Full request: [CR-L7-01](CR-L7-01.md).
+Version: **proposal v2 — 24 November 2026**, revised after [PhraewaS review of v1 / 758fc35](https://github.com/PhraewaS/event-system/pull/82#pullrequestreview-6042687973). Status: **pre-implementation / changes addressed, awaiting renewed review and approval**. Change owner guluJa; reviewer PhraewaS. [Issue #81](https://github.com/PhraewaS/event-system/issues/81), [PR #82](https://github.com/PhraewaS/event-system/pull/82). Rule source: team-selected Lab 7 change under the [documented approval-waiver announcement](approval-waiver-source.md). Full request: [CR-L7-01](CR-L7-01.md).
 
 ## 1. Baseline and old/new SRS excerpts
 
@@ -124,11 +124,11 @@ Purpose: ให้ Participant เห็น quota ของตนสำหรั
 
 | Requirement / responsibility | Contract sections affected | Proposed AC | Planned verification / modules |
 | --- | --- | --- | --- |
-| FR-04 / F-03 / new BR-11 | SRS FR-04; F-03 transaction; System data/lock design §§1–3 | Q01–Q04, Q08–Q10 | L7-Q-API-01/02/05/06/07/08; server/src/registrations.ts |
+| FR-04 / F-03 / new BR-11 | SRS FR-04; F-03 transaction; System data/lock design §§1–3 | Q01–Q04, Q08–Q10 | L7-Q-API-01/02/05/06/07/08/10; server/src/registrations.ts |
 | BR-01/02/03 and DEC-01 | preserve capacity/duplicate/deadline priority; lock/time §2.1/3 | Q05/Q08 | API-03/06/07; tests/rules.test.ts and existing REG-CONC/BOUND |
 | BR-04 / NFR-02 / F-01 | identity/role/CSRF; private read §2 | Q06/Q07/Q12 | API-04/09/10; app.ts/validation.ts, auth/owner regressions |
-| NFR-01 / NFR-05 | historical data/persistence/migration §3 | Q09/Q10 | API-08; fresh app/pool + schema/migration checks |
-| NFR-03 / F-03 UI | quota and auth state §4 | Q11–Q13 | UI-01/02/03; client/src/App.tsx, api.ts, styles only if necessary |
+| NFR-01 / NFR-05 | historical data/persistence/migration §3 | Q09/Q10 | L7-Q-API-08 for legacy/persistence; L7-Q-API-10 for Q10/all-row aggregate beyond 200; fresh app/pool + schema/migration checks |
+| NFR-03 / F-03 UI | quota, displayed Thai date and auth state §4 | Q04/Q11–Q13 | L7-Q-UI-01/02/03/04; client/src/App.tsx, api.ts, styles only if necessary |
 | NFR-04 | aggregate not first-page only; strict date query §2.2 | Q04/Q07/Q10 | UNIT-01/02; API-02/09/10, bounded response inspection |
 | SYS-QUALITY / SYS-DELIVERY | contract/version/tests/review/CI/deploy §§6–8 | Q14 | full regression, CI evidence, post-deploy checks |
 | FR-06 / F-05 / #8 (future dependency) | ACTIVE/CANCELLED count + reactivation and lock ordering | future F-05 AC must reference Q08/Q09 | Plan only in this PR; implementation/evidence belongs to #8 |
@@ -175,6 +175,9 @@ Fixtures: four synthetic demo roles plus isolated test participants where needed
 | L7-Q-UI-01 | Q11/Q13 | Real form creates events; Participant registers two, opens third; observe own count, disabled reserve; visit already registered event and next-day event at desktop/mobile | quota message understandable; already registered link preserved; next-day flow works; no page overflow |
 | L7-Q-UI-02 | Q11/Q12 | quota read delayed/failed then retry; stale request after another session uses last quota slot; P1→logout→P2→Organizer | actual user/role keyed state, safe loading/error handling and correct conflict refresh; explicit network fault injection labelled separately from real-data paths |
 | L7-Q-UI-03 | Q13 | existing publish → register → own record → owner roster; role/ownership; long description/location regression | preserved user paths and errors, stored rows consistent at 390/1440px |
+| L7-Q-UI-04 | Q04/Q11/Q13 | Real API/DB, browser context timezoneId=UTC at 390×844 and 1440×1000; use eligible future events immediately before/at Thai midnight; inspect displayed Thai date, outbound quota query and real response | startsAt at D 16:59:59.999Z displays Thai date D and requests date=D; D 17:00:00.000Z displays Thai date D+1 and requests date=D+1; distinct seeded daily counts and response data.date/count agree with the displayed snapshot; no browser-local UTC day leakage |
+
+For L7-Q-UI-04 choose D relative to the test database clock so both events/deadlines are valid future fixtures. Seed distinct quota counts for the adjacent Thai dates (for example 1 versus 2), observe actual outgoing requests without replacing quota responses, and assert both requested date and returned/displayed count. This catches a client selecting the wrong day even when the server's aggregate is correct; it is not satisfied by a unit helper or API test alone.
 
 ### 7.1 Tests and existing-fixture compatibility
 
@@ -194,7 +197,7 @@ Run root `npm run build`, `npm test -- --reporter=verbose`, browser `npm run tes
 
 ## 8. Definition of Done / release readiness
 
-- [ ] guluJa creates the GitHub Issue and links CR-L7-01 in the documentation PR; scope/IDs/date/baseline are accurate.
+- [x] guluJa created [Issue #81](https://github.com/PhraewaS/event-system/issues/81) and linked it in documentation [PR #82](https://github.com/PhraewaS/event-system/pull/82); baseline/IDs recorded. Issue remains open.
 - [ ] PhraewaS substantively reviews this contract before implementation; record actual reviewed commit, message/time and resolution of any changes.
 - [ ] New-rule RED fails for missing quota behavior on pre-change code with valid fixtures; preserve test source, command, SHA and actual output.
 - [ ] GREEN passes the same changed-rule tests; persistence, concurrency, timezone, roles and legacy behavior meet ACs.
@@ -204,4 +207,4 @@ Run root `npm run build`, `npm test -- --reporter=verbose`, browser `npm run tes
 - [ ] Metrics/readiness/retrospective and self-contained PDF follow [evidence-plan.md](evidence-plan.md); no credentials in Git/PDF.
 - [ ] Record preserved minor limitations and new findings; READY refers only to maintained Sprint 1 scope, not completed Sprint 2/3.
 
-Implementation, test execution, approvals, deployment and all checkboxes remain **pending** in this proposal.
+Issue/PR creation is complete. PhraewaS reviewed v1 with Changes requested; v2 still requires renewed review/approval. Implementation, changed-rule test execution, deployment and the remaining checkboxes are **pending**.
