@@ -101,8 +101,53 @@ test("L7-Q-UI-04 / Q04,Q11,Q13 UTC browser shows Thai day and requests matching 
     await page.goto(`/events/${id}`); const actual=await response; expect(actual.status()).toBe(200);
     expect(new URL(actual.url()).searchParams.get("date")).toBe(date);
     expect((await actual.json()).data).toMatchObject({date,registeredCount:count});
+    await expect(page.locator("dt").filter({hasText:/^When$/}).locator("xpath=following-sibling::dd[1]"))
+      .toContainText(`${date} (Asia/Bangkok)`);
     await expect(page.getByTestId("daily-quota")).toContainText(`${date} (Asia/Bangkok): ${count} / 2`);
     await overflow(page);
   }
   await page.screenshot({path:`artifacts/screenshots/lab7-utc-${info.project.name}.png`,fullPage:true});
 });
+
+for (const oldStatus of [200,401]) {
+  test(`L7-Q-UI-02b / Q12 late old-account ${oldStatus} after SPA account switch cannot replace quota or sign out new user`,async({page},info)=>{
+    const id = await event(); await saved(await event()); await saved(await event());
+    await login(page);
+    await page.evaluate(()=>{Reflect.set(window,"__lab7DocumentMarker","same-document");});
+    let release!:()=>void; const held = new Promise<void>(resolve=>{release=resolve;});
+    let first=true; let oldRequest:import("@playwright/test").Request;
+    const pattern="**/api/registrations/quota?*";
+    await page.route(pattern,async route=>{
+      if(!first) {await route.continue();return;}
+      first=false; oldRequest=route.request(); await held;
+      await route.fulfill({status:oldStatus,json:oldStatus===401 ?
+        {error:{code:"UNAUTHENTICATED",message:"Injected late old-session 401"}} :
+        {data:{date:day,timeZone:"Asia/Bangkok",limit:2,registeredCount:2,remaining:0,canRegister:false}}});
+    });
+    // All navigation after this point is through app links/buttons, not page.goto/reload.
+    await page.locator(`a[href="/events/${id}"]`).first().click();
+    await expect(page.getByRole("button",{name:"Checking daily quota"})).toBeDisabled();
+    await page.getByRole("button",{name:"Sign out"}).click();
+    await page.locator("header").getByRole("link",{name:"Sign in"}).click();
+    await page.getByLabel("Email address",{exact:true}).fill("participant2@example.test");
+    await page.getByLabel("Password",{exact:true}).fill(password);
+    await page.getByRole("button",{name:"Sign in",exact:true}).click();
+    await expect(page).toHaveURL(/\/events$/);
+    await page.locator(`a[href="/events/${id}"]`).first().click();
+    await expect(page.getByTestId("daily-quota")).toContainText("0 / 2");
+    const delivered=page.waitForResponse(r=>r.request()===oldRequest);
+    release(); await (await delivered).finished();
+    // Drain the response handler and React update without a fixed timeout.
+    await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+    expect(await page.evaluate(()=>Reflect.get(window,"__lab7DocumentMarker"))).toBe("same-document");
+    await expect(page.getByRole("button",{name:"Sign out"})).toBeVisible();
+    await expect(page.locator(".identity")).toContainText("Riley Chen");
+    await expect(page.getByTestId("daily-quota")).toContainText("0 / 2");
+    await expect(page.getByRole("alert")).toHaveCount(0);
+    expect((await (await page.request.get("/api/auth/me")).json()).data.id).toBe(demoIds.participant2);
+    await page.getByRole("button",{name:"Reserve my place"}).click();
+    await expect(page.getByText("Your place is confirmed. See you there!",{exact:true})).toBeVisible();
+    await page.screenshot({path:`artifacts/screenshots/lab7-late-${oldStatus}-${info.project.name}.png`,fullPage:true});
+    await page.unroute(pattern);
+  });
+}

@@ -1,4 +1,4 @@
-import { test, expect } from "vitest";
+import { test, expect, vi } from "vitest";
 test("L7-Q-UNIT-01 / Q04 exact Thai day independently of UTC date/offset", async () => {
   const { thaiEventDay } = await import("../client/src/event-day.js");
   for(const [instant,day] of [
@@ -7,6 +7,15 @@ test("L7-Q-UNIT-01 / Q04 exact Thai day independently of UTC date/offset", async
     ["2027-01-03T00:00:00.000+07:00","2027-01-03"],
     ["2027-01-03T00:00:00.000Z","2027-01-03"],
   ]) expect(thaiEventDay(instant)).toBe(day);
+});
+test("L7-Q-UNIT-01b / Q04 output is ISO even when locale format is not ISO", async () => {
+  const format = vi.spyOn(Intl.DateTimeFormat.prototype, "format", "get")
+    .mockReturnValue(() => "01/03/2027");
+  try {
+    const { thaiEventDay } = await import("../client/src/event-day.js");
+    expect(thaiEventDay("2027-01-02T17:00:00.000Z")).toBe("2027-01-03");
+    expect(thaiEventDay("0001-01-01T00:00:00.000Z")).toBe("0001-01-01");
+  } finally { format.mockRestore(); }
 });
 test("L7-Q-UNIT-02 / Q02,Q07,Q09 calendar validation and remaining boundary", async () => {
   const { quotaQuery } = await import("../server/src/validation.js");
