@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { thaiEventDay } from "./event-day";
 import {
   api,
   collection,
@@ -9,6 +10,7 @@ import {
   type User,
   type Event,
   type Registration,
+  type DailyQuota,
   type RosterEntry,
 } from "./api";
 
@@ -30,6 +32,7 @@ const message = (error: unknown) =>
     ? error.message
     : "Something went wrong. Please try again.";
 function useResource<T>(load: () => Promise<T>, key: string) {
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
   const [value, setValue] = useState<T | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -46,13 +49,16 @@ function useResource<T>(load: () => Promise<T>, key: string) {
         if (active) setError(message(err));
       })
       .finally(() => {
-        if (active) setLoading(false);
+        if (active) { setLoadedKey(key); setLoading(false); }
       });
     return () => {
       active = false;
     };
   }, [key]);
-  return { value, error, loading };
+  // A changed identity/resource key must never paint the previous private result,
+  // even in the render before the effect's cleanup/reset runs.
+  return { value: loadedKey === key ? value : null,
+    error: loadedKey === key ? error : "", loading: loadedKey !== key || loading };
 }
 function Link({
   to,
@@ -427,6 +433,26 @@ function SignIn({
     </div>
   );
 }
+function ParticipantReservation({ event, busy, register }: {
+  event: Event; busy: boolean; register: () => Promise<void>;
+}) {
+  const [retry, setRetry] = useState(0);
+  const day = thaiEventDay(event.startsAt);
+  const quota = useResource(() => api<DailyQuota>(`/registrations/quota?date=${day}`), `${day}:${retry}`);
+  const unavailable = !event.registrationOpen;
+  return <>
+    {quota.loading ? <p role="status">Checking daily quota…</p>
+      : quota.error ? <><Notice error>{quota.error}</Notice><button className="button" onClick={() => setRetry(v => v + 1)}>Retry daily quota</button></>
+      : quota.value && <p data-testid="daily-quota" role="status">Registrations on {day} (Asia/Bangkok): {quota.value.registeredCount} / {quota.value.limit}</p>}
+    {!unavailable && quota.value && !quota.loading && !quota.error && !quota.value.canRegister &&
+      <p>You can register for at most 2 events on the same day (Asia/Bangkok).</p>}
+    <button className="button" disabled={unavailable || busy || quota.loading || !!quota.error || !quota.value?.canRegister} onClick={register}>
+      {busy ? "Reserving your place…" : unavailable ? "Registration unavailable"
+        : quota.loading ? "Checking daily quota…" : quota.error ? "Daily quota unavailable"
+        : !quota.value?.canRegister ? "Daily registration limit reached" : "Reserve my place ↗"}
+    </button>
+  </>;
+}
 function EventDetail({
   id,
   user,
@@ -497,9 +523,9 @@ function EventDetail({
           <dl>
             <dt>When</dt>
             <dd>
-              {date(event.startsAt)}
+              {thaiEventDay(event.startsAt)} (Asia/Bangkok)
               <br />
-              <span className="muted-text">{time(event.startsAt)}</span>
+              <span className="muted-text">{new Date(event.startsAt).toLocaleTimeString(undefined, {timeZone:"Asia/Bangkok", hour:"numeric",minute:"2-digit",timeZoneName:"short"})}</span>
             </dd>
             <dt>Where</dt>
             <dd>{event.location}</dd>
@@ -537,17 +563,7 @@ function EventDetail({
               Sign in to register ↗
             </Link>
           ) : user.role === "PARTICIPANT" ? (
-            <button
-              className="button"
-              disabled={!event.registrationOpen || busy}
-              onClick={register}
-            >
-              {busy
-                ? "Reserving your place…"
-                : event.registrationOpen
-                  ? "Reserve my place ↗"
-                  : "Registration unavailable"}
-            </button>
+            <ParticipantReservation key={`${user.id}:${id}:${revision}`} event={event} busy={busy} register={register} />
           ) : user.id === event.organizerId ? (
             <Link
               className="button"

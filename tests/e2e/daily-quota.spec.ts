@@ -88,7 +88,7 @@ test("L7-Q-UI-03 / Q13 legacy long description and own-record navigation preserv
   await expect(page.locator(".detail-description")).toHaveText("D".repeat(3000));
   await expect(page.getByRole("link",{name:"View my registration"})).toBeVisible(); await overflow(page);
   await page.getByRole("link",{name:"View my registration"}).click();
-  await expect(page.locator(".registration-card")).toHaveCount(3);
+  await expect(page.locator(".registration-row")).toHaveCount(3);
 });
 test("L7-Q-UI-04 / Q04,Q11,Q13 UTC browser shows Thai day and requests matching quota around midnight",async({page},info)=>{
   const before=await event(`${day}T16:59:59.999Z`); const after=await event(`${day}T17:00:00.000Z`);

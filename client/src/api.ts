@@ -27,6 +27,14 @@ export type Registration = {
     "id" | "title" | "location" | "startsAt" | "registrationDeadline"
   >;
 };
+export type DailyQuota = {
+  date: string;
+  timeZone: "Asia/Bangkok";
+  limit: number;
+  registeredCount: number;
+  remaining: number;
+  canRegister: boolean;
+};
 export type RosterEntry = {
   id: string;
   createdAt: string;

@@ -18,10 +18,12 @@ import {
   loginInput,
   pageInput,
   publishInput,
+  quotaQuery,
   uuid,
 } from "./validation.js";
 import { AppError } from "./errors.js";
 import { registerParticipant } from "./registrations.js";
+import { readQuota } from "./quota.js";
 import { PostgresRateLimitStore } from "./rate-limit-store.js";
 
 declare module "express-session" {
@@ -301,6 +303,15 @@ export function createApp(pool: Pool, secret: string, production = false) {
         [user(res).id, offset],
       );
       page(res, result.rows, offset);
+    },
+  );
+  app.get(
+    "/api/registrations/quota",
+    requireUser,
+    role("PARTICIPANT"),
+    async (req, res) => {
+      const { date } = quotaQuery.parse(req.query);
+      res.json({ data: await readQuota(pool, user(res).id, date) });
     },
   );
   app.get(
