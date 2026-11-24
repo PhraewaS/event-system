@@ -1,0 +1,51 @@
+
+Running 2 tests using 1 worker
+
+(node:21404) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 [desktop] › tests\e2e\daily-quota.spec.ts:113:3 › L7-Q-UI-02b / Q12 late old-account 200 after SPA account switch cannot replace quota or sign out new user (2.6s)
+  x  2 [desktop] › tests\e2e\daily-quota.spec.ts:113:3 › L7-Q-UI-02b / Q12 late old-account 401 after SPA account switch cannot replace quota or sign out new user (7.3s)
+
+
+  1) [desktop] › tests\e2e\daily-quota.spec.ts:113:3 › L7-Q-UI-02b / Q12 late old-account 401 after SPA account switch cannot replace quota or sign out new user 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('button', { name: 'Sign out' })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('button', { name: 'Sign out' }) with timeout 5000ms
+      - waiting for getByRole('button', { name: 'Sign out' })
+
+
+      141 |     await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+      142 |     expect(await page.evaluate(()=>Reflect.get(window,"__lab7DocumentMarker"))).toBe("same-document");
+    > 143 |     await expect(page.getByRole("button",{name:"Sign out"})).toBeVisible();
+          |                                                              ^
+      144 |     await expect(page.locator(".identity")).toContainText("Riley Chen");
+      145 |     await expect(page.getByTestId("daily-quota")).toContainText("0 / 2");
+      146 |     await expect(page.getByRole("alert")).toHaveCount(0);
+        at C:\Users\natth\OneDrive\Documents\ChatGPT\SE\gather-lab6-special\tests\e2e\daily-quota.spec.ts:143:62
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    artifacts\playwright-results\daily-quota-L7-Q-UI-02b-Q1-b2e6e--quota-or-sign-out-new-user-desktop\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: artifacts\playwright-results\daily-quota-L7-Q-UI-02b-Q1-b2e6e--quota-or-sign-out-new-user-desktop\error-context.md
+
+    Error Context: artifacts\playwright-results\daily-quota-L7-Q-UI-02b-Q1-b2e6e--quota-or-sign-out-new-user-desktop\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    artifacts\playwright-results\daily-quota-L7-Q-UI-02b-Q1-b2e6e--quota-or-sign-out-new-user-desktop\trace.zip
+    Usage:
+
+        npx playwright show-trace artifacts\playwright-results\daily-quota-L7-Q-UI-02b-Q1-b2e6e--quota-or-sign-out-new-user-desktop\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [desktop] › tests\e2e\daily-quota.spec.ts:113:3 › L7-Q-UI-02b / Q12 late old-account 401 after SPA account switch cannot replace quota or sign out new user 
+  1 passed (12.4s)
