@@ -1,0 +1,88 @@
+
+ RUN  v5.0.5 C:/Users/natth/OneDrive/Documents/ChatGPT/SE/gather-lab6-special
+
+ ✓ tests/sprint1.test.ts > F-01 Identity and session security > T-01 / AC-01 valid and invalid login, generic rejection, password hashing 218ms
+ ✓ tests/sprint1.test.ts > F-01 Identity and session security > T-02 / AC-02 session rotation, expiry, logout revocation, recreation persistence 238ms
+ ✓ tests/sprint1.test.ts > F-01 Identity and session security > T-03 / AC-03 authentication and CSRF enforced, safe errors 134ms
+ ✓ tests/sprint1.test.ts > F-02 Publication > PUB-BOUND-01 / AC-03,04 publication rejects anonymous, wrong-role and invalid-CSRF requests without writes 125ms
+ ✓ tests/sprint1.test.ts > F-02 Publication > T-04 / AC-04 roles and server-assigned ownership 131ms
+ ✓ tests/sprint1.test.ts > F-02 Publication > LAB6-76-D1 / AC-05 invalid location "" returns a field error without writes 64ms
+ ✓ tests/sprint1.test.ts > F-02 Publication > LAB6-76-D1 / AC-05 invalid location " " returns a field error without writes 68ms
+ ✓ tests/sprint1.test.ts > F-02 Publication > LAB6-76-D1 / AC-05 invalid location "   " returns a field error without writes 71ms
+ ✓ tests/sprint1.test.ts > F-02 Publication > LAB6-76-D1 / AC-05 invalid location "\t\n" returns a field error without writes 64ms
+ ✓ tests/sprint1.test.ts > F-02 Publication > LAB6-76-D1 / AC-05 invalid location "x" returns a field error without writes 64ms
+ ✓ tests/sprint1.test.ts > F-02 Publication > T-05 / AC-05 publication boundaries leave storage unchanged 197ms
+ ✓ tests/sprint1.test.ts > F-02 Publication > PUB-BOUND-02 / AC-PUB-01 anonymous discovery persists across API instances and paginates without exposing private data 231ms
+ ✓ tests/sprint1.test.ts > F-02 Publication > PUB-BOUND-03 / AC-04,05 exact text bounds are trimmed and timezone-offset instants persist 89ms
+ ✓ tests/sprint1.test.ts > F-02 Publication > PUB-UNIT-01 / AC-05 publication schema enforces types, bounds, normalization and deadline order 12ms
+ ✓ tests/sprint1.test.ts > F-03 Registration and persistence > T-06 / AC-06 full API journey survives independent application/pool recreation 241ms
+ ✓ tests/sprint1.test.ts > F-03 Registration and persistence > T-07 / AC-07 duplicate, full, deadline, missing and forged registration 273ms
+ ✓ tests/sprint1.test.ts > F-03 Registration and persistence > T-08 / AC-08 two independent API instances compete for final place 391ms
+ ✓ tests/sprint1.test.ts > F-03 Registration and persistence > T-09 / AC-09 private registration owner restrictions 215ms
+ ✓ tests/sprint1.test.ts > F-03 Registration and persistence > REG-BOUND-01 / AC-03,06,09 registration permissions, CSRF and spoofed identities reject without writes 211ms
+ ✓ tests/sprint1.test.ts > F-03 Registration and persistence > REG-BOUND-02 / AC-07 duplicate wins after closure/full and rejected transactions leave a single-connection pool reusable 308ms
+ ✓ tests/sprint1.test.ts > F-03 Registration and persistence > REG-CONC-01 / AC-07,08 a request blocked on the real event lock is rejected when the deadline closes before lock release 228ms
+ ✓ tests/sprint1.test.ts > F-03 Registration and persistence > REG-BOUND-03 / AC-09 personal pagination returns every own record once and excludes another participant 171ms
+ ✓ tests/sprint1.test.ts > F-04 Organizer ownership and data integrity > T-10 / AC-10 role and event ownership enforced independently 220ms
+ ✓ tests/sprint1.test.ts > F-04 Organizer ownership and data integrity > T-11 / AC-11 database constraints and migration/seed reproducibility 517ms
+ ✓ tests/sprint1.test.ts > F-04 Organizer ownership and data integrity > ORG-BOUND-01 / AC-03,10 roles, ownership, empty rosters and forged owner queries remain independent 343ms
+ ✓ tests/sprint1.test.ts > F-04 Organizer ownership and data integrity > ORG-BOUND-02 / AC-10 owned-event pagination is complete and caller-scoped with correct counts 289ms
+ ✓ tests/sprint1.test.ts > F-04 Organizer ownership and data integrity > ORG-BOUND-03 / AC-10 roster pagination contains only its event and the permitted participant fields 230ms
+ ✓ tests/sprint1.test.ts > F-04 Organizer ownership and data integrity > ORG-BOUND-04 / AC-10 fresh API reads persisted roster and rechecks changed roles and ownership 286ms
+ ✓ tests/daily-quota.test.ts > L7-Q-API-01 / Q01,Q02 primary domain RED: third same-day registration is rejected without writes 375ms
+ ✓ tests/daily-quota.test.ts > L7-Q-API-02 / Q03,Q04 Thai midnight, UTC-date independence and separate participants 414ms
+ ✓ tests/daily-quota.test.ts > L7-Q-API-03 / Q05 old duplicate/closed/full precedence survives exhausted quota 497ms
+ ✓ tests/daily-quota.test.ts > L7-Q-API-04 / Q06 preserved auth, role, CSRF, body, UUID and missing-event denials 243ms
+ ✓ tests/daily-quota.test.ts > L7-Q-API-05 / Q02,Q07 direct POST cannot bypass quota and snapshot remains unchanged 334ms
+ ✓ tests/daily-quota.test.ts > L7-Q-API-06 / Q08 same participant competing across pools cannot take two remaining slots 528ms
+ ✓ tests/daily-quota.test.ts > L7-Q-API-07 / Q05,Q08 different participants still compete safely for last seat 225ms
+ ✓ tests/daily-quota.test.ts > L7-Q-API-08 / Q09 grandfathered rows survive fresh pool, private reads and owner roster 550ms
+ ✓ tests/daily-quota.test.ts > L7-Q-API-09 / Q07 strict private date query, roles, privacy and no writes 463ms
+ ✓ tests/daily-quota.test.ts > L7-Q-API-10 / Q07,Q10 aggregate includes target rows beyond first 200; static routes coexist 152ms
+ ✓ tests/demo-credentials.test.ts > Production demo credentials > uses four distinct JSON passphrases and rejects the shared password shortcut 4ms
+ ✓ tests/demo-credentials.test.ts > Production demo credentials > rejects invalid JSON 0ms
+ ✓ tests/demo-credentials.test.ts > Production demo credentials > rejects an array 0ms
+ ✓ tests/demo-credentials.test.ts > Production demo credentials > rejects missing keys 0ms
+ ✓ tests/demo-credentials.test.ts > Production demo credentials > rejects an extra key 0ms
+ ✓ tests/demo-credentials.test.ts > Production demo credentials > rejects a non-string passphrase 0ms
+ ✓ tests/demo-credentials.test.ts > Production demo credentials > rejects a short passphrase 0ms
+ ✓ tests/demo-credentials.test.ts > Production demo credentials > rejects duplicate passphrases 0ms
+ ✓ tests/demo-credentials.test.ts > Demo password lifecycle in PostgreSQL > repeated seed preserves stored hashes and data even with new passphrases 563ms
+ ✓ tests/demo-credentials.test.ts > Demo password lifecycle in PostgreSQL > reset rotates only the four demo accounts and removes only their sessions 555ms
+ ✓ tests/demo-credentials.test.ts > Demo password lifecycle in PostgreSQL > rolls back earlier account changes when the last demo email does not match 398ms
+ ✓ tests/demo-credentials.test.ts > Demo password lifecycle in PostgreSQL > rolls back earlier account changes when the last demo role does not match 397ms
+ ✓ tests/security.test.ts > T-13 / AC-01,03 failed-login throttling preserves successful use 1262ms
+ ✓ tests/security.test.ts > T-14 / AC-02,03 production cookies require HTTPS and retain CSRF protections 77ms
+ ✓ tests/security.test.ts > T-15 / AC-03,04,10 current database role is authoritative and bodies/pages are bounded 125ms
+ ✓ tests/auth-boundaries.test.ts > AUTH-BOUND-01 identity and login/logout enforce authentication and CSRF before domain routes exist 201ms
+ ✓ tests/auth-boundaries.test.ts > AUTH-BOUND-02 / AC-01,03 both roles retain server identity and reject malformed or spoofed login fields 271ms
+ ✓ tests/auth-boundaries.test.ts > AUTH-BOUND-03 / AC-03 current identity rechecks the stored role and rejects a deleted account 131ms
+ ✓ tests/auth-boundaries.test.ts > AUTH-BOUND-04 / AC-02 a new login has an eight-hour persisted session lifetime 51ms
+ ✓ tests/auth-boundaries.test.ts > AUTH-BOUND-05 / AC-01 credential length boundaries separate validation from invalid credentials 140ms
+ ✓ tests/auth-boundaries.test.ts > AUTH-BOUND-06 / AC-02 a fresh API instance reads the session without extending its fixed expiry 133ms
+ ✓ tests/foundation.test.ts > FOUND-01 health endpoint verifies the real persistent database 44ms
+ ✓ tests/foundation.test.ts > FOUND-02 migrations and seed are repeatable and survive an independent connection 220ms
+ ✓ tests/cloud-run.test.ts > CLOUD-01 readiness verifies PostgreSQL without creating a session 61ms
+ ✓ tests/cloud-run.test.ts > CLOUD-02 database outage makes readiness return 503 without internal details 20ms
+ ✓ tests/cloud-run.test.ts > CLOUD-03 concurrent login attempts share an atomic counter across pools and recreation 330ms
+ ✓ tests/cloud-run.test.ts > CLOUD-04 expired throttle windows reset and old entries are pruned on requests 6ms
+ ✓ tests/daily-quota-unit.test.ts > L7-Q-UNIT-01 / Q04 exact Thai day independently of UTC date/offset 24ms
+ ✓ tests/daily-quota-unit.test.ts > L7-Q-UNIT-02 / Q02,Q07,Q09 calendar validation and remaining boundary 212ms
+ ✓ tests/client-csrf.test.ts > CLIENT-CSRF-01 concurrent initialization preserves the current session token for a protected mutation 70ms
+ ✓ tests/client-csrf.test.ts > CLIENT-CSRF-02 a failed initialization can be retried without retaining a rejected request 3ms
+ ✓ tests/client-csrf.test.ts > CLIENT-CSRF-03 expired api read refreshes CSRF before first re-login 4ms
+ ✓ tests/client-csrf.test.ts > CLIENT-CSRF-04 expired collection read refreshes CSRF before first re-login 4ms
+ ✓ tests/client-csrf.test.ts > CLIENT-CSRF-05 invalid credentials do not expire identity or automatically retry login 2ms
+ ✓ tests/rules.test.ts > T-07 unit / AC-07 registration rule boundaries > accepts immediately before the deadline 2ms
+ ✓ tests/rules.test.ts > T-07 unit / AC-07 registration rule boundaries > rejects exactly at and after the deadline 0ms
+ ✓ tests/rules.test.ts > T-07 unit / AC-07 registration rule boundaries > duplicate takes precedence when full or closed 0ms
+ ✓ tests/rules.test.ts > T-07 unit / AC-07 registration rule boundaries > capacity boundary rejects only when all places are taken 0ms
+
+ Test Files  10 passed (10)
+      Tests  76 passed (76)
+   Start at  23:23:33
+   Duration  23.84s (tests 77%, import 22%, transform 1%)
+
+    Isolate  10 workers spawned · ~216ms startup each (spawn + environment, per file)
+             at least ~1.95s faster with isolate: false — reuses workers across files instead of one per file
+

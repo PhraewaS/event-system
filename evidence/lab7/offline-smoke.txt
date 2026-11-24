@@ -1,0 +1,51 @@
+test_credentials_are_rejected_before_network (test_smoke.SmokeTests.test_credentials_are_rejected_before_network) ... ok
+test_db_disconnected_fails_even_with_http_success (test_smoke.SmokeTests.test_db_disconnected_fails_even_with_http_success) ... ok
+test_empty_javascript_is_rejected (test_smoke.SmokeTests.test_empty_javascript_is_rejected) ... ok
+test_events_error_shape_fails (test_smoke.SmokeTests.test_events_error_shape_fails) ... ok
+test_external_asset_is_rejected_before_fetch (test_smoke.SmokeTests.test_external_asset_is_rejected_before_fetch) ... ok
+test_gather_shapes_empty_events_and_read_only_paths (test_smoke.SmokeTests.test_gather_shapes_empty_events_and_read_only_paths) ... ok
+test_html_fallback_at_javascript_url_is_rejected (test_smoke.SmokeTests.test_html_fallback_at_javascript_url_is_rejected) ... ok
+test_javascript_mime_types_with_charset_are_accepted (test_smoke.SmokeTests.test_javascript_mime_types_with_charset_are_accepted) ... ok
+test_network_failure_has_bounded_attempts (test_smoke.SmokeTests.test_network_failure_has_bounded_attempts) ... ok
+test_nonempty_javascript_with_wrong_content_type_is_rejected (test_smoke.SmokeTests.test_nonempty_javascript_with_wrong_content_type_is_rejected) ... ok
+test_old_example_health_shape_is_rejected (test_smoke.SmokeTests.test_old_example_health_shape_is_rejected) ... ok
+test_unbuilt_html_is_rejected (test_smoke.SmokeTests.test_unbuilt_html_is_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 0.040s
+
+OK
+PASS /api/health
+PASS /api/health
+PASS /api/ready
+PASS /
+PASS /api/health
+PASS /api/ready
+PASS /
+PASS /assets/app.js
+PASS /api/health
+PASS /api/ready
+PASS /
+PASS /api/health
+PASS /api/ready
+PASS /
+PASS /assets/app.js
+PASS /api/events
+PASS /api/health
+PASS /api/ready
+PASS /
+PASS /api/health
+PASS /api/ready
+PASS /
+PASS /assets/app.js
+PASS /api/events
+PASS /api/health
+PASS /api/ready
+PASS /
+PASS /assets/app.js
+PASS /api/events
+PASS /api/health
+PASS /api/ready
+PASS /
+PASS /api/health
+PASS /api/ready

@@ -1,0 +1,5 @@
+PASS: teardown success (all deletions attempted, accurate exit and summary)
+PASS: teardown single (all deletions attempted, accurate exit and summary)
+PASS: teardown multiple (all deletions attempted, accurate exit and summary)
+PASS: teardown incorrect confirmation makes no gcloud calls
+PASS: teardown dry run makes no gcloud calls

@@ -1,0 +1,14 @@
+PASS: first_run (exit, migration gate, credential handling, secret redaction)
+PASS: rerun (exit, migration gate, credential handling, secret redaction)
+PASS: rerun-short (exit, migration gate, credential handling, secret redaction)
+PASS: partial (exit, migration gate, credential handling, secret redaction)
+PASS: job-fail (exit, migration gate, credential handling, secret redaction)
+PASS: demo (exit, migration gate, credential handling, secret redaction)
+PASS: rerun-short-demo (exit, migration gate, credential handling, secret redaction)
+PASS: secret-denied (unknown secret state stops before credential changes)
+PASS: secret-unavailable (unknown secret state stops before credential changes)
+PASS: secret-malformed (unknown secret state stops before credential changes)
+PASS: secret-malformed-path (unknown secret state stops before credential changes)
+PASS: secret-malformed-after-valid (unknown secret state stops before credential changes)
+PASS: dry run makes no gcloud calls
+PASS: teardown preview makes no gcloud calls
