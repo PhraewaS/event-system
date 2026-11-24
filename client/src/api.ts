@@ -51,12 +51,27 @@ export class ApiError extends Error {
 }
 let csrfToken: string | null = null;
 let csrfInitialization: Promise<void> | null = null;
+// Component cleanup alone cannot guard global expiry/CSRF side effects.
+// Every request belongs to one session generation, including paginated reads.
+let sessionGeneration = 0;
+function assertCurrentSession(generation: number) {
+  if (generation !== sessionGeneration)
+    throw new ApiError(409, "STALE_SESSION_RESPONSE", "The session changed while this request was in progress.");
+}
+function expireSession() {
+  sessionGeneration++;
+  csrfToken = null;
+  csrfInitialization = null;
+  window.dispatchEvent(new window.Event("gather:expired"));
+}
 export async function api<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
+  const generation = sessionGeneration;
   if (options.method && options.method !== "GET" && !csrfToken)
     await bootstrap();
+  assertCurrentSession(generation);
   const response = await fetch(`/api${path}`, {
     ...options,
     credentials: "same-origin",
@@ -66,16 +81,20 @@ export async function api<T>(
       ...options.headers,
     },
   });
-  if (response.status === 204) return undefined as T;
+  if (response.status === 204) {
+    assertCurrentSession(generation);
+    return undefined as T;
+  }
   const body = await response.json();
+  // Check before returning data or clearing tokens/dispatching global events.
+  assertCurrentSession(generation);
   if (!response.ok) {
     if (
       response.status === 401 &&
       path !== "/auth/me" &&
       path !== "/auth/login"
     ) {
-      csrfToken = null;
-      window.dispatchEvent(new window.Event("gather:expired"));
+      expireSession();
     }
     if (body.error?.code === "CSRF_INVALID") csrfToken = null;
     const fields = body.error?.fields
@@ -92,17 +111,19 @@ export async function api<T>(
   return body.data as T;
 }
 export async function collection<T>(path: string): Promise<T[]> {
+  const generation = sessionGeneration;
   const rows: T[] = [];
   let offset: number | null = 0;
   while (offset !== null) {
+    assertCurrentSession(generation);
     const response = await fetch(`/api${path}?offset=${offset}`, {
       credentials: "same-origin",
     });
     const body = await response.json();
+    assertCurrentSession(generation);
     if (!response.ok) {
       if (response.status === 401) {
-        csrfToken = null;
-        window.dispatchEvent(new window.Event("gather:expired"));
+        expireSession();
       }
       throw new ApiError(
         response.status,
@@ -117,24 +138,34 @@ export async function collection<T>(path: string): Promise<T[]> {
 }
 export function bootstrap(): Promise<void> {
   // Repeated startup effects must share one session/token initialization.
-  csrfInitialization ??= api<{ csrfToken: string }>("/auth/csrf")
+  if (csrfInitialization) return csrfInitialization;
+  const generation = sessionGeneration;
+  const pending = api<{ csrfToken: string }>("/auth/csrf")
     .then((result) => {
+      assertCurrentSession(generation);
       csrfToken = result.csrfToken;
     })
     .finally(() => {
-      csrfInitialization = null;
+      if (csrfInitialization === pending) csrfInitialization = null;
     });
-  return csrfInitialization;
+  csrfInitialization = pending;
+  return pending;
 }
 export async function login(email: string, password: string) {
+  const generation = ++sessionGeneration;
+  csrfInitialization = null;
   const result = await api<{ user: User; csrfToken: string }>("/auth/login", {
     method: "POST",
     body: JSON.stringify({ email, password }),
   });
+  assertCurrentSession(generation);
   csrfToken = result.csrfToken;
   return result.user;
 }
 export async function logout() {
+  const generation = ++sessionGeneration;
+  csrfInitialization = null;
   await api("/auth/logout", { method: "POST", body: "{}" });
+  assertCurrentSession(generation);
   csrfToken = null;
 }
