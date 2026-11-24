@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { beforeAll, afterAll, describe, expect, test, vi } from "vitest";
+import { beforeAll, beforeEach, afterAll, describe, expect, test, vi } from "vitest";
 import request from "supertest";
 import { randomUUID } from "node:crypto";
 import { Pool } from "pg";
@@ -76,6 +76,10 @@ beforeAll(async () => {
 afterAll(async () => {
   await Promise.all([pool.end(), secondPool.end()]);
 });
+
+// CR-L7-01: independent cases must not consume each other's daily quota.
+// Preserve all domain assertions; direct pagination fixtures remain legacy data.
+beforeEach(async () => { await pool.query("TRUNCATE registrations"); });
 
 describe("F-01 Identity and session security", () => {
   test("T-01 / AC-01 valid and invalid login, generic rejection, password hashing", async () => {
@@ -481,7 +485,7 @@ describe("F-03 Registration and persistence", () => {
     const a = await actor();
     const b = await actor("participant2@example.test", secondApp);
     for (let attempt = 0; attempt < 5; attempt++) {
-      const event = await publish(owner, { capacity: 1 });
+      const event = await publish(owner, { capacity: 1, startsAt: future(48 + attempt * 24) });
       const results = await Promise.all([
         register(a, event.id),
         register(b, event.id),
@@ -500,7 +504,7 @@ describe("F-03 Registration and persistence", () => {
       ).toBe(1);
     }
     const same = await actor("participant@example.test", secondApp);
-    const event = await publish(owner, { capacity: 2 });
+    const event = await publish(owner, { capacity: 2, startsAt: future(240) });
     const results = await Promise.all([
       register(a, event.id),
       register(same, event.id),

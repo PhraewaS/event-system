@@ -1,0 +1,20 @@
+
+ RUN  v5.0.5 C:/Users/natth/OneDrive/Documents/ChatGPT/SE/gather-lab6-special
+
+ ✓ tests/daily-quota.test.ts > L7-Q-API-01 / Q01,Q02 primary domain RED: third same-day registration is rejected without writes 395ms
+ ✓ tests/daily-quota.test.ts > L7-Q-API-02 / Q03,Q04 Thai midnight, UTC-date independence and separate participants 424ms
+ ✓ tests/daily-quota.test.ts > L7-Q-API-03 / Q05 old duplicate/closed/full precedence survives exhausted quota 454ms
+ ✓ tests/daily-quota.test.ts > L7-Q-API-04 / Q06 preserved auth, role, CSRF, body, UUID and missing-event denials 261ms
+ ✓ tests/daily-quota.test.ts > L7-Q-API-05 / Q02,Q07 direct POST cannot bypass quota and snapshot remains unchanged 320ms
+ ✓ tests/daily-quota.test.ts > L7-Q-API-06 / Q08 same participant competing across pools cannot take two remaining slots 506ms
+ ✓ tests/daily-quota.test.ts > L7-Q-API-07 / Q05,Q08 different participants still compete safely for last seat 247ms
+ ✓ tests/daily-quota.test.ts > L7-Q-API-08 / Q09 grandfathered rows survive fresh pool, private reads and owner roster 519ms
+ ✓ tests/daily-quota.test.ts > L7-Q-API-09 / Q07 strict private date query, roles, privacy and no writes 478ms
+ ✓ tests/daily-quota.test.ts > L7-Q-API-10 / Q07,Q10 aggregate includes target rows beyond first 200; static routes coexist 157ms
+ ✓ tests/daily-quota-unit.test.ts > L7-Q-UNIT-01 / Q04 exact Thai day independently of UTC date/offset 82ms
+ ✓ tests/daily-quota-unit.test.ts > L7-Q-UNIT-02 / Q02,Q07,Q09 calendar validation and remaining boundary 209ms
+
+ Test Files  2 passed (2)
+      Tests  12 passed (12)
+   Start at  23:22:46
+   Duration  5.61s (tests 84%, import 13%, transform 3%)

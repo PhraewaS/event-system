@@ -115,3 +115,40 @@ test("CLIENT-CSRF-05 invalid credentials do not expire identity or automatically
   expect(dispatchEvent).not.toHaveBeenCalled();
   expect(fetcher.mock.calls.filter(([url]) => url === "/api/auth/login")).toHaveLength(1);
 });
+
+for (const [kind, status] of [["api",401],["collection",401],["api",403],["api",200]] as const) {
+  test(`CLIENT-SESSION-OLD-${kind}-${status} / Q12 old account response cannot expire or overwrite the new session`, async () => {
+    const dispatchEvent = vi.fn();
+    vi.stubGlobal("window", {dispatchEvent, Event});
+    let release!: (response:Response)=>void;
+    const held = new Promise<Response>(resolve=>{release=resolve;});
+    let bootstraps = 0;
+    vi.stubGlobal("fetch", vi.fn(async (url:string, init?:RequestInit) => {
+      if(url==="/api/auth/csrf") return Response.json({data:{csrfToken:`bootstrap-${++bootstraps}`}});
+      if(url==="/api/auth/login") {
+        const {email} = JSON.parse(init!.body as string);
+        return Response.json({data:{user:{id:email,role:"PARTICIPANT"},csrfToken:`token-${email}`}});
+      }
+      if(url==="/api/auth/logout") return new Response(null,{status:204});
+      if(url.startsWith("/api/registrations/")) return held;
+      if(url==="/api/events/event/registrations") {
+        expect(new Headers(init?.headers).get("X-CSRF-Token")).toBe("token-new@example.test");
+        return Response.json({data:{id:"confirmed"}},{status:201});
+      }
+      throw new Error(`Unexpected request ${url}`);
+    }));
+    const client = await import("../client/src/api.js");
+    await client.login("old@example.test","synthetic-password");
+    const pending = client[kind]("/registrations/quota?date=2027-01-03").then(
+      value=>({value,error:undefined}), error=>({value:undefined,error}));
+    await client.logout();
+    await client.login("new@example.test","synthetic-password");
+    release(Response.json(status===200 ? {data:{registeredCount:2},page:{nextOffset:null}} :
+      {error:{code:status===401?"UNAUTHENTICATED":"CSRF_INVALID",message:"Old session response"}}, {status}));
+    const result = await pending;
+    expect(dispatchEvent).not.toHaveBeenCalled();
+    expect(result.error).toMatchObject({code:"STALE_SESSION_RESPONSE"});
+    await expect(client.api("/events/event/registrations",{method:"POST",body:"{}"})).resolves.toEqual({id:"confirmed"});
+    expect(bootstraps).toBe(2);
+  });
+}
