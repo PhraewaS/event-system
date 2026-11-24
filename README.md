@@ -1,5 +1,9 @@
 # Gather — Event registration (Sprint 1)
 
+## Sprint 2 planning — 25 November 2026
+
+Current main baseline is `e2b9842` after Lab7 daily-quota release #84. [Sprint 2 plan](docs/sprints/sprint-2.md) separates the existing F-05 scope into [F-05A cancellation/reactivation](docs/features/F-05A-registration-lifecycle.md) and [F-05B owner capacity management](docs/features/F-05B-event-capacity.md). These are **proposed contracts awaiting teammate review, not implemented features**. The plan defines ACTIVE-only counts and the Lab7-compatible lock order, superseding the older future-design event-first proposal. Sprint 2 uses `sprint2-staging`; the dated Sprint 1 release records below remain historical evidence.
+
 Gather is a React → Express → PostgreSQL event registration app. Organizers publish capacity-limited events and inspect owned rosters; Participants reserve places and view private registrations. This branch has 47 unit/API/DB/client tests and 12 desktop/mobile browser cases. Hosted PR #39 CI passed 47/47 and 12/12 at 7ea91c9; the reviewer's separate local browser run passed 11 with one Desktop INT-UI-01 timeout, detailed below.
 
 The [engineering baseline](docs/sprint-1.md) combines the SRS, feature inventory/traceability, System and feature SDS, AC and STS. The accepted application release is [v0.1.0](https://github.com/PhraewaS/event-system/releases/tag/v0.1.0) at main `7532716bbe96b8d7d9cea33b3b063ba16bf746d2`, published on 10 November 2026 after guluJa reviewed, approved and merged [release PR #29](https://github.com/PhraewaS/event-system/pull/29). [Issue #6](https://github.com/PhraewaS/event-system/issues/6) and the original Sprint 1 milestone are closed/Done. The documentation correction tracked in [Issue #30](https://github.com/PhraewaS/event-system/issues/30) supplements that accepted release; it does not change its tag, original source archive or evidence.

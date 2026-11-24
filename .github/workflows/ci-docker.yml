@@ -3,7 +3,7 @@ on:
   workflow_call:
   workflow_dispatch:
   pull_request:
-    branches: [main, sprint1-staging]
+    branches: [main, "sprint*-staging"]
   push:
     branches: [main, "sprint*-staging"]
 permissions:
