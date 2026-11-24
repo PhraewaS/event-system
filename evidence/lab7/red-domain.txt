@@ -1,0 +1,42 @@
+
+ RUN  v5.0.5 C:/Users/natth/OneDrive/Documents/ChatGPT/SE/gather-lab6-special
+
+ × tests/daily-quota.test.ts > L7-Q-API-01 / Q01,Q02 primary domain RED: third same-day registration is rejected without writes 394ms
+   → expected 201 to be 409 // Object.is equality
+ ↓ tests/daily-quota.test.ts > L7-Q-API-02 / Q03,Q04 Thai midnight, UTC-date independence and separate participants
+ ↓ tests/daily-quota.test.ts > L7-Q-API-03 / Q05 old duplicate/closed/full precedence survives exhausted quota
+ ↓ tests/daily-quota.test.ts > L7-Q-API-04 / Q06 preserved auth, role, CSRF, body, UUID and missing-event denials
+ ↓ tests/daily-quota.test.ts > L7-Q-API-05 / Q02,Q07 direct POST cannot bypass quota and snapshot remains unchanged
+ ↓ tests/daily-quota.test.ts > L7-Q-API-06 / Q08 same participant competing across pools cannot take two remaining slots
+ ↓ tests/daily-quota.test.ts > L7-Q-API-07 / Q05,Q08 different participants still compete safely for last seat
+ ↓ tests/daily-quota.test.ts > L7-Q-API-08 / Q09 grandfathered rows survive fresh pool, private reads and owner roster
+ ↓ tests/daily-quota.test.ts > L7-Q-API-09 / Q07 strict private date query, roles, privacy and no writes
+ ↓ tests/daily-quota.test.ts > L7-Q-API-10 / Q07,Q10 aggregate includes target rows beyond first 200; static routes coexist
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/daily-quota.test.ts > L7-Q-API-01 / Q01,Q02 primary domain RED: third same-day registration is rejected without writes
+AssertionError: expected 201 to be 409 // Object.is equality
+
+- Expected
++ Received
+
+- 409
++ 201
+
+ ❯ tests/daily-quota.test.ts:56:27
+     54|   const p = await actor(); await two(p); const c = await event(); cons…
+     55|   const response = await post(p, c.id);
+     56|   expect(response.status).toBe(409);
+       |                           ^
+     57|   expect(response.body.error.code).toBe("DAILY_REGISTRATION_LIMIT");
+     58|   expect(await snapshot()).toEqual(before);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 9 skipped (10)
+   Start at  23:19:58
+   Duration  6.49s (import 82%, tests 13%, transform 6%)
+
