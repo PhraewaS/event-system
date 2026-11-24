@@ -1,6 +1,6 @@
 # F-05B — เจ้าของกิจกรรมปรับความจุ
 
-25 พฤศจิกายน 2026 · **Proposal / รอ teammate review ก่อน code** · Developer `guluJa`; reviewer `PhraewaS`
+25 พฤศจิกายน 2026 · **Proposal v2 / รอ PhraewaS ตรวจซ้ำก่อน code** · Developer `guluJa`; reviewer `PhraewaS`; [Issue #85](https://github.com/PhraewaS/event-system/issues/85)
 
 FR-06; BR-01/03/04/07/10; NFR-01–05. งานย่อยของ F-05 เดิมใน [#8](https://github.com/PhraewaS/event-system/issues/8); เชื่อม Issue F-05B ผ่าน Development ของ PR และรายการงานใน #8 หลังเปิดจริง Dependencies: F-01–04 และ [F-05A state/ACTIVE-count contract](F-05A-registration-lifecycle.md). ดู [Sprint 2 plan](../sprints/sprint-2.md)
 
@@ -56,6 +56,6 @@ Test IDs ทั้งหมด **planned**; เสนอไฟล์ `tests/even
 - [ ] Contract reviewed ก่อน implementation; feature branch จาก sprint2-staging หลังรับ F-05A
 - [ ] Meaningful RED → GREEN ของ owner-capacity rule บนฐานจริง; ไม่ใช้ compile/setup failure เป็น RED
 - [ ] AC ทุกข้อมี actual tests/results/SHA รวม backend restriction และ cross-feature concurrency
-- [ ] แพรรีวิว diff/tests/permissions และ revision ล่าสุด; CI ผ่านก่อน merge
+- [ ] PhraewaS รีวิว diff/tests/permissions และ revision ล่าสุด; CI ผ่านก่อน merge
 - [ ] ทดสอบ integrated F-05A/B/Sprint1/Lab7 จาก staging; reviewed release เข้า main พร้อม immutable Sprint 2 version
 - [ ] actual main CI/deploy และ post-deploy journey/persistence/access ผ่าน; completion/traceability matrix ระบุจริงก่อนปิดงาน

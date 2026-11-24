@@ -1,8 +1,8 @@
 # Sprint 2 — core expansion
 
-วันที่ 25 พฤศจิกายน 2026 · **Proposal: รอ PhraewaS ตรวจ contract ก่อน implementation**
+วันที่ 25 พฤศจิกายน 2026 · **Proposal v2: แก้ตาม review PR #86 รอ PhraewaS ตรวจซ้ำก่อน implementation**
 
-เจ้าของงาน: จ้า (`guluJa`) · ผู้รีวิว: แพร (`PhraewaS`)
+เจ้าของงาน: `guluJa` · ผู้รีวิว: `PhraewaS`
 
 ## 1. Baseline และขอบเขต
 
@@ -24,12 +24,13 @@ FR-06 เดิมคงขอบเขต cancellation/reactivation/capacity; �
 
 | ส่วนที่ต้องปรับ | ข้อกำหนดสำหรับ implementation |
 | --- | --- |
-| registration state | เพิ่ม ACTIVE/CANCELLED, registered_at และ cancelled_at; คง ID/created_at/FKs/pair uniqueness ของข้อมูลเก่า |
+| registration state | status NOT NULL DEFAULT ACTIVE; registered_at NOT NULL DEFAULT clock_timestamp() หลัง backfill created_at; cancelled_at NULL; คง ID/created_at/FKs/pair uniqueness |
 | counts/read models | ที่นั่ง โควต้า registrationOpen และ owner roster นับเฉพาะ ACTIVE; own-list/detail ยังอ่าน CANCELLED ของตนได้ |
 | quota CR-L7-01 | คง limit 2 ต่อวันเริ่มกิจกรรม Asia/Bangkok; เปลี่ยนเป็น ACTIVE-only รวมทุกแถว และตรวจอีกครั้งตอน reactivation |
 | concurrency | writers ของ Participant ใช้ Participant → Event ตาม Lab7; capacity writer lock Event เท่านั้นและห้ามไป lock Participant ภายหลัง |
 | privacy | derive identity จาก session; ไม่รับ participantId/organizerId; คง 401/403/404, CSRF และ strict validation |
 | schema/setup | migration ใหม่ต่อจาก 002; ไม่แก้ 001/002 ไม่ reset shared Cloud SQL; seed คง idempotent |
+| deployment/rollback | rollout แบบปิด lifecycle writes จน state-aware revision รับ traffic ครบและ old requests จบ; หลังเปิดใช้ rollback ได้เฉพาะ compatible target ที่ทดสอบ ACTIVE/CANCELLED แล้ว ไม่ down schema; รายละเอียดและ STS ใน F-05A §2.1–2.2 |
 | preserved behavior | login/logout/session guards, publish validation, deadline/capacity/duplicate, own-only reads, owner-only roster และ Lab6 Location/Description fixes |
 
 **ข้อขัดกันที่แก้โดย addendum นี้:** ส่วน future model ใน `docs/sprint-1.md` เดิมเสนอ event-first lock order ก่อนมี Lab7; Sprint 2 ต้องใช้ลำดับล่าสุดข้างต้น ห้ามนำ event-first proposal เก่ามาผสมใน writer ที่ต้อง lock Participant ด้วย เอกสารเก่าและผล release เดิมคงไว้เป็น history
@@ -39,7 +40,7 @@ FR-06 เดิมคงขอบเขต cancellation/reactivation/capacity; �
 ## 3. Workflow และ integration gates
 
 1. ใช้ Issue #8 ต่อและแยก Issue F-05B; เพิ่มทั้งสองเข้า Project board สถานะ Backlog/Specified ตามที่ทำจริง
-2. สร้าง `sprint2-staging` จาก main e2b9842 ตั้ง protection ให้ต้องมี non-author approval, required CI, up-to-date branch และ resolved conversations เช่นเดียวกับ workflow เดิม ไม่ push feature ตรงเข้า staging/main
+2. สร้าง `sprint2-staging` จาก main e2b9842 ตั้ง protection ให้ต้องมี non-author approval, required CI, up-to-date branch และ resolved conversations เช่นเดียวกับ workflow เดิม ไม่ push feature ตรงเข้า staging/main ผลตรวจ/รายการคงค้างอยู่ใน [DOC-S2-06 gate record](sprint2-gates.md); ห้ามถือว่าการสร้าง branch ทำให้มี protection อัตโนมัติ
 3. PR contract นี้มาจาก `codex/sprint2-contract` เข้า `sprint2-staging` แก้เฉพาะเอกสารและ CI branch filter ให้รับ PR เข้า `sprint*-staging`; deploy ยังคงเฉพาะ main
 4. PhraewaS ตรวจ DEC-02/03, migration/state, API/errors, quota, locking และ AC/STS; แก้/อธิบายข้อไม่รับ แล้วให้ตรวจ revision ล่าสุดก่อน merge ห้ามเริ่ม feature implementation ก่อน contract acceptance
 5. เปิด feature branch F-05A จาก staging ที่รับ contract แล้ว เก็บ meaningful RED → implementation → GREEN/regression → reviewed PR → staging acceptance
@@ -53,7 +54,7 @@ FR-06 เดิมคงขอบเขต cancellation/reactivation/capacity; �
 
 | Requirement / feature | AC | Planned verification | Actual/result/version |
 | --- | --- | --- | --- |
-| FR-06, BR-05/06, NFR-01/05 / F-05A | S2-A-01–06 | migration/lifecycle API + state unit + persistence | pending |
+| FR-06, BR-05/06, NFR-01/05 / F-05A | S2-A-01–06 | migration/defaults + old/new API coexistence + compatible rollback; lifecycle API/unit/persistence | pending |
 | BR-11, FR-03/04/05, BR-01/02 / F-03/F-04/F-05A | S2-A-07/09/11 | quota/count/concurrency API; inherited Lab7/S1 regression | pending |
 | BR-04/10, NFR-02/04 / F-05A | S2-A-08 | auth/CSRF/foreign-record/strict-input API | pending |
 | NFR-03, FR-06 / F-05A | S2-A-10/12 | real UI 390/1440; preserved tests | pending |
@@ -80,3 +81,7 @@ Acceptance ของ PR เอกสารนี้แยกจาก feature ac
 - [ ] CI ของ PR นี้รันจริงกับ base sprint2-staging และผ่าน; ไม่ปล่อย Pending หรือ bypass required checks
 - [ ] sprint2-staging มี protection/review gates ตรวจจริงก่อนรับ feature work
 - [ ] Contract merge SHA และ review date ถูกบันทึก; actual feature tests/results ยัง pending
+
+## 7. Review revision record
+
+Review ของ `PhraewaS` ใน [PR #86](https://github.com/PhraewaS/event-system/pull/86) วันที่ 25/11/2026 04:27:24 น. (UTC+7), บน a74a20f: รับข้อเสนอ defaults/NOT NULL, old-app upgrade test, compatible rollback และ gate evidence ทั้งหมด เนื่องจาก Deliverable 2 §§3.2/3.5/4.2 ต้องคง persistence, setup/migration และ release safety จริง การเพิ่มนี้ยังเป็น contract/test design ก่อน implementation ไม่ใช่ผลรัน feature ใหม่
