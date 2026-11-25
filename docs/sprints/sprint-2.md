@@ -79,9 +79,11 @@ Acceptance ของ PR เอกสารนี้แยกจาก feature ac
 - [ ] PhraewaS ยืนยัน contract F-05A/B และ DEC-02/03 ก่อน implementation
 - [ ] PR linked to Issue #8 และ Issue F-05B ใน Development; Reviewer เป็น PhraewaS
 - [ ] CI ของ PR นี้รันจริงกับ base sprint2-staging และผ่าน; ไม่ปล่อย Pending หรือ bypass required checks
-- [ ] sprint2-staging มี protection/review gates ตรวจจริงก่อนรับ feature work
+- [x] sprint2-staging มี protection/review gates ตรวจจริงก่อนรับ feature work; หลักฐานผู้ดูแล 25/11 14:06:16 และ branch API protected=true อยู่ใน [gate record](sprint2-gates.md)
 - [ ] Contract merge SHA และ review date ถูกบันทึก; actual feature tests/results ยัง pending
 
 ## 7. Review revision record
 
 Review ของ `PhraewaS` ใน [PR #86](https://github.com/PhraewaS/event-system/pull/86) วันที่ 25/11/2026 04:27:24 น. (UTC+7), บน a74a20f: รับข้อเสนอ defaults/NOT NULL, old-app upgrade test, compatible rollback และ gate evidence ทั้งหมด เนื่องจาก Deliverable 2 §§3.2/3.5/4.2 ต้องคง persistence, setup/migration และ release safety จริง การเพิ่มนี้ยังเป็น contract/test design ก่อน implementation ไม่ใช่ผลรัน feature ใหม่
+
+25/11/2026: `PhraewaS` ตรวจ425c630เวลา04:47:36และยืนยันว่า contract migration/rollback ครบ ก่อนแนบผลตั้ง protection เวลา14:06:16; อัปเดตหลักฐานตามจริงใน gate record แล้ว formal approval/contract acceptance ยังรอ review revision ล่าสุดและ CI ของรอบเพิ่มหลักฐาน
