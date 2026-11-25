@@ -1,0 +1,33 @@
+test_activation_without_cutover_confirmation_rejected (__main__.ReleaseGate.test_activation_without_cutover_confirmation_rejected) ... ok
+test_db_fence_confirmation_requires_evidence (__main__.ReleaseGate.test_db_fence_confirmation_requires_evidence) ... FAIL
+test_timeout_drain_without_db_fence_cannot_activate (__main__.ReleaseGate.test_timeout_drain_without_db_fence_cannot_activate) ... FAIL
+test_unverified_rollback_rejected_before_mutation (__main__.ReleaseGate.test_unverified_rollback_rejected_before_mutation) ... ok
+test_verified_explicit_activation_reuses_image (__main__.ReleaseGate.test_verified_explicit_activation_reuses_image) ... ok
+test_verified_rollback_disables_writes_and_never_migrates (__main__.ReleaseGate.test_verified_rollback_disables_writes_and_never_migrates) ... ok
+
+======================================================================
+FAIL: test_db_fence_confirmation_requires_evidence (__main__.ReleaseGate.test_db_fence_confirmation_requires_evidence)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\natth\OneDrive\Documents\ChatGPT\SE\gather-sprint2-lifecycle\deploy\tests\test_lifecycle_release.py", line 44, in test_db_fence_confirmation_requires_evidence
+    self.assertNotEqual(r.returncode,0,r.stdout);self.assertNotIn('run services update',self.calls())
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 == 0 : Rollback: reuse existing image; skip tests, build, migration and seed.
+Service URL: https://synthetic.example.test
+
+
+======================================================================
+FAIL: test_timeout_drain_without_db_fence_cannot_activate (__main__.ReleaseGate.test_timeout_drain_without_db_fence_cannot_activate)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\natth\OneDrive\Documents\ChatGPT\SE\gather-sprint2-lifecycle\deploy\tests\test_lifecycle_release.py", line 41, in test_timeout_drain_without_db_fence_cannot_activate
+    self.assertNotEqual(r.returncode,0,r.stdout);self.assertNotIn('run services update',self.calls())
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 == 0 : Rollback: reuse existing image; skip tests, build, migration and seed.
+Service URL: https://synthetic.example.test
+
+
+----------------------------------------------------------------------
+Ran 6 tests in 6.377s
+
+FAILED (failures=2)

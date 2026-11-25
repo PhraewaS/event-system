@@ -53,6 +53,19 @@ beforeAll(async()=>{await migrate(pool); await pool.query("TRUNCATE registration
 beforeEach(async()=>{await pool.query("TRUNCATE registrations,events,session,login_rate_limits CASCADE");});
 afterAll(async()=>{await Promise.all([pool.end(),other.end()]);});
 
+test('S2-A-API-10 / server cancellation eligibility follows DB clock, state and write gate',async()=>{
+ const p=await actor();const e=await event();const r=(await post(p,e.id).expect(201)).body.data;
+ const own=()=>p.agent.get(`/api/registrations/${r.id}`);
+ expect((await own()).body.data.canCancel).toBe(true);
+ const off=await actor('participant@example.test',disabled);
+ expect((await off.agent.get('/api/registrations/mine')).body.data[0].canCancel).toBe(false);
+ await cancel(p,r.id).expect(200);expect((await own()).body.data.canCancel).toBe(false);
+ await post(p,e.id).expect(200);
+ await pool.query('UPDATE events SET registration_deadline=clock_timestamp() WHERE id=$1',[e.id]);
+ expect((await own()).body.data.canCancel).toBe(false);
+ expect((await p.agent.get('/api/registrations/mine')).body.data[0].canCancel).toBe(false);
+});
+
 test("S2-A-API-01 / primary RED: cancel releases exactly one place and quota and preserves own record",async()=>{
  const p=await actor();const e=await event(1);const original=(await post(p,e.id).expect(201)).body.data;
  expect((await quota(p)).body.data.registeredCount).toBe(1);

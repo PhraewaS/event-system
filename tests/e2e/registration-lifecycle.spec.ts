@@ -51,3 +51,29 @@ test('S2-A-UI-02 / stale cancel crossing deadline shows rejection and leaves per
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  await page.screenshot({path:`artifacts/screenshots/s2-cutoff-rejected-${info.project.name}.png`,fullPage:true});
 });
+
+test('S2-A-UI-03 / server eligibility survives a client clock ahead of the deadline',async({page})=>{
+ const id=await event();await login(page);await page.goto(`/events/${id}`);await page.getByRole('button',{name:/^Reserve my place/}).click();
+ await page.clock.setFixedTime(new Date(Date.now()+400*86400000));
+ await page.reload();
+ await expect(page.getByRole('button',{name:'Cancel registration',exact:true})).toBeVisible();
+ expect((await page.request.get('/api/registrations/mine')).status()).toBe(200);
+});
+
+test('S2-A-UI-04 / late cancel response cannot change the URL after navigation',async({page})=>{
+ const id=await event();await login(page);await page.goto(`/events/${id}`);await page.getByRole('button',{name:/^Reserve my place/}).click();
+ let release!:()=>void;const held=new Promise<void>(r=>{release=r;});
+ let arrived!:()=>void;const received=new Promise<void>(r=>{arrived=r;});
+ let finish!:()=>void;const finished=new Promise<void>(r=>{finish=r;});
+ await page.route('**/api/registrations/*/cancel',async route=>{
+  try{const response=await route.fetch();arrived();await held;await route.fulfill({response});}finally{finish();}
+ });
+ const response=page.waitForResponse(r=>r.url().endsWith('/cancel'));
+ try{
+  await page.getByRole('button',{name:'Cancel registration',exact:true}).click();await received;
+  await page.getByRole('link',{name:'Explore events',exact:false}).click();await expect(page).toHaveURL(/\/events$/);
+  release();await finished;await response;await page.waitForLoadState('networkidle');
+  await expect(page).toHaveURL(/\/events$/);await expect(page.getByRole('heading',{name:'My registrations',exact:true})).toHaveCount(0);
+  expect((await pool.query('SELECT status FROM registrations WHERE event_id=$1',[id])).rows[0].status).toBe('CANCELLED');
+ }finally{release();}
+});

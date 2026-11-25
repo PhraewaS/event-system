@@ -34,6 +34,12 @@ esac
   r=self.run_release(LIFECYCLE_APPROVED_IMAGES_JSON=self.approval(),ACTIVATE_LIFECYCLE='true');self.assertNotEqual(r.returncode,0)
   self.assertNotIn('run services update',self.calls())
  def test_verified_explicit_activation_reuses_image(self):
-  r=self.run_release(LIFECYCLE_APPROVED_IMAGES_JSON=self.approval(),ACTIVATE_LIFECYCLE='true',LIFECYCLE_CUTOVER_CONFIRMED='true',LIFECYCLE_CUTOVER_EVIDENCE='https://github.com/PhraewaS/event-system/issues/8#issuecomment-123')
+  r=self.run_release(LIFECYCLE_APPROVED_IMAGES_JSON=self.approval(),ACTIVATE_LIFECYCLE='true',LIFECYCLE_CUTOVER_CONFIRMED='true',LIFECYCLE_CUTOVER_EVIDENCE='https://github.com/PhraewaS/event-system/issues/8#issuecomment-123',LIFECYCLE_DB_FENCE_CONFIRMED='true',LIFECYCLE_DB_FENCE_EVIDENCE='https://github.com/PhraewaS/event-system/issues/8#issuecomment-124')
   self.assertEqual(r.returncode,0,r.stderr);self.assertIn('REGISTRATION_LIFECYCLE_WRITES_ENABLED=true',self.calls());self.assertNotIn('run jobs',self.calls())
+ def test_timeout_drain_without_db_fence_cannot_activate(self):
+  r=self.run_release(LIFECYCLE_APPROVED_IMAGES_JSON=self.approval(),ACTIVATE_LIFECYCLE='true',LIFECYCLE_CUTOVER_CONFIRMED='true',LIFECYCLE_CUTOVER_EVIDENCE='https://github.com/PhraewaS/event-system/issues/8#issuecomment-123',LIFECYCLE_DB_FENCE_CONFIRMED='false',LIFECYCLE_DB_FENCE_EVIDENCE='')
+  self.assertNotEqual(r.returncode,0,r.stdout);self.assertNotIn('run services update',self.calls())
+ def test_db_fence_confirmation_requires_evidence(self):
+  r=self.run_release(LIFECYCLE_APPROVED_IMAGES_JSON=self.approval(),ACTIVATE_LIFECYCLE='true',LIFECYCLE_CUTOVER_CONFIRMED='true',LIFECYCLE_CUTOVER_EVIDENCE='https://github.com/PhraewaS/event-system/issues/8#issuecomment-123',LIFECYCLE_DB_FENCE_CONFIRMED='true',LIFECYCLE_DB_FENCE_EVIDENCE='')
+  self.assertNotEqual(r.returncode,0,r.stdout);self.assertNotIn('run services update',self.calls())
 if __name__=='__main__':unittest.main(verbosity=2)
