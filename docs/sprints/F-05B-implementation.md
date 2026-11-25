@@ -32,7 +32,7 @@ Developer `guluJa`; independent reviewer `PhraewaS` · Issue #85, parent F-05 #8
 | S2-B-04 | API-04 | below ACTIVE409 CAPACITY_BELOW_ACTIVE_COUNT และ exact no-write snapshot |
 | S2-B-05 | UNIT-02; API-05/05b | exact equality unit; closed/no-op และ DB clock หลัง observed lock wait ได้409 |
 | S2-B-06 | API-06; UI-01 | PATCH/owner GET role/ownership/UUID/CSRF checks และ foreign404ตรง absent; Participant direct PATCH403 |
-| S2-B-07 | API-07 | reduce/register, increase/register, cancel/reduce/reactivate → legal serial statuses, active≤capacity, row uniqueness และ no deadlock |
+| S2-B-07 | API-07 + API-07-order-{RCA,RAC,CRA,CAR,ARC,ACR} | concurrent outcomeต้องตรงทั้งstatusชุดเดียวและDB capacity/active/states; พิสูจน์expectedผลครบ6ลำดับด้วยreal APIs, row uniqueness และ no deadlock |
 | S2-B-08 | tests/e2e/event-capacity.spec.ts UI-01/02/03 | owner form/reload/public/Participant counts, quotaยังเต็มหลังcapacityเพิ่ม, lower-bound/cutoff rejection, server clock, delayed-response protection สองviewports |
 | S2-B-09 | REG-01 + inherited full suites | fresh app/poolอ่าน saved capacity/ACTIVE-only roster โดย cancellation dataคงเดิม; S1/Lab6/Lab7/F-05A regression |
 
@@ -59,3 +59,32 @@ Local: Node24 / PostgreSQL17 test cluster127.0.0.1:55462 / Edge via Playwright39
 หลัง PhraewaS ตรวจ revisionล่าสุดและ CI ผ่าน จึง mergeเข้า sprint2-staging; ตรวจ integrationก่อน reviewed Sprint2 releaseเข้าmain/tag แล้วทำ GCP deployment/cutover/activation ตาม [runbook](../../deploy/lifecycle-release.md) และตรวจ post-deploy journey/persistence/access ก่อนสรุป Done นี่ไม่ใช่ deployment evidence
 
 AI assistance: ใช้ AI ช่วย implementation/tests และรวบรวมหลักฐาน; guluJa รับผิดชอบงาน/Issue/PR ส่วน PhraewaS เป็นผู้รีวิวอิสระ ไม่อ้างว่าสมาชิกทำ pair programming หรือทดสอบด้วยมือครบทั้งคู่
+
+## PR #88 review corrections — 26 November 2026
+
+PhraewaS ขอเพิ่ม verification ของ S2-B-08 และ S2-B-07 ที่3a7fb65 วันที่26/11/2026 00:17:41น. UTC+7; รับทั้งสองข้อเพราะ contractต้องมี actual UI evidence และ legal serial outcome ไม่ใช่แค่แยกตรวจstatusที่ยอมรับได้ทีละคำขอ รอบนี้เปลี่ยน tests/evidence เท่านั้น business rules และ application code คงเดิม; ไม่อ้างว่ารัน RED ใหม่ของ feature ที่ทำงานแล้ว
+
+### Rendered counts ของ event เดียวกัน
+
+UI-01 หลัง ownerลดcapacityเหลือ2และมีACTIVE2: reloadหน้าowner แล้วตรวจค่าที่แสดงจริง registered2/places left0/total2 จาก summary; logoutแล้วreload public detailของevent IDเดิม ตรวจ remaining0/capacity2 และ Places filled value2/max2 จากDOM; loginParticipantแล้วreload detailเดียวกันและตรวจชุดค่าเดิม พร้อมยืนยัน own-registration link และ DBcapacity2/ACTIVE2 คงเดิมก่อน cancelขั้นถัดไป รันจริงที่1440×1000และ390×844
+
+| Viewport | Owner | Public (logged out) | Participant |
+| --- | --- | --- | --- |
+| Desktop | [ภาพ](../../evidence/sprint-2/f05b/review-owner-desktop.png) | [ภาพ](../../evidence/sprint-2/f05b/review-public-desktop.png) | [ภาพ](../../evidence/sprint-2/f05b/review-participant-desktop.png) |
+| Mobile | [ภาพ](../../evidence/sprint-2/f05b/review-owner-mobile.png) | [ภาพ](../../evidence/sprint-2/f05b/review-public-mobile.png) | [ภาพ](../../evidence/sprint-2/f05b/review-participant-mobile.png) |
+
+แต่ละแถวใช้eventเดียวกันทั้งสามภาพ; ข้ามviewportใช้fixtureคนละevent การยืนยันcountsใหม่อิงrendered UIไม่ใช้API snapshotแทนหน้าจอ ส่วน API/DB assertionsเดิมยังเก็บไว้ ผล [targeted UI-01](../../evidence/sprint-2/f05b/review-browser-counts.txt): 2 passed/0 failed สองviewports ไม่ใช่ผล full42browser suite
+
+### Correlated race outcome และ persisted DB
+
+ก่อน race ยืนยัน capacity2, P1=CANCELLED, P2=ACTIVE, active1; ให้ R=ลดcapacity1, A=reactivateP1, C=cancelP2 ผลที่ยอมรับในตารางเรียงstatusเป็น **[R,A,C]** เสมอ ไม่ใช่ลำดับการส่งrequest
+
+| Actual serial order | Status [R,A,C] | Final capacity / ACTIVE | Final P1 / P2 |
+| --- | --- | --- | --- |
+| RCA / CRA / CAR / ACR | [200,200,200] | 1 / 1 | ACTIVE / CANCELLED |
+| RAC | [200,409,200] | 1 / 0 | CANCELLED / CANCELLED |
+| ARC | [409,200,200] | 2 / 1 | ACTIVE / CANCELLED |
+
+API-07 concurrentใช้independent pools+observed lock barrierเดิม แต่เปลี่ยนจากแยกยอมรับ200/409เป็นตรวจstatus tupleร่วมกับ capacity/ACTIVE/P1/P2 ในDBให้ตรงหนึ่งแถวทั้งชุด จึงไม่ยอมรับ[409,409,200]หรือstatusถูกแต่saved stateผิด ขณะเดียวกัน API-07-order-* รันreal APIsทีละคำขอครบ6ลำดับเพื่อยืนยันตารางจริง ตรวจ registration IDs/createdAtไม่เปลี่ยน และ cancelled_atสอดคล้องกับสถานะ ไม่อ้างว่าได้บังคับ concurrent schedulerให้วิ่งครบ6ลำดับ
+
+ผล [targeted capacity API](../../evidence/sprint-2/f05b/review-api-results.txt): 15 passed/0 failed รวม6casesใหม่; full CIของrevisionล่าสุดต้องผ่านก่อน PhraewaSตรวจซ้ำ/merge ข้อมูลmain/GCP releaseยังpendingตามเดิม

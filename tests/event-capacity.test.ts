@@ -124,6 +124,18 @@ async function invariant(id:string){
  const duplicates=await pool.query('SELECT event_id,participant_id FROM registrations GROUP BY event_id,participant_id HAVING count(*)>1');expect(duplicates.rows).toEqual([]);
  return row;
 }
+async function mixedOutcome(id:string,reactivatedId:string,cancelledId:string,responses:request.Response[]){
+ const row=await invariant(id);
+ const saved=(await pool.query('SELECT id,status FROM registrations WHERE event_id=$1 ORDER BY id',[id])).rows;
+ expect(saved.map(r=>r.id).sort()).toEqual([reactivatedId,cancelledId].sort());
+ return {statuses:responses.map(r=>r.status),capacity:row.capacity,active:row.active,
+  p1:saved.find(r=>r.id===reactivatedId)!.status,p2:saved.find(r=>r.id===cancelledId)!.status};
+}
+const legalMixedOutcomes=[
+ {statuses:[200,200,200],capacity:1,active:1,p1:'ACTIVE',p2:'CANCELLED'},
+ {statuses:[200,409,200],capacity:1,active:0,p1:'CANCELLED',p2:'CANCELLED'},
+ {statuses:[409,200,200],capacity:2,active:1,p1:'ACTIVE',p2:'CANCELLED'},
+];
 test('S2-B-API-07 / independent pools serialize reduction/increase with registrations and lifecycle races',async()=>{
  const owner=await actor();const p=await actor('participant@example.test');const p2=await actor('participant2@example.test',rival);
  const e=await event(2);const original=(await register(p,e.id).expect(201)).body.data;
@@ -141,11 +153,39 @@ test('S2-B-API-07 / independent pools serialize reduction/increase with registra
  await cancel(p,original.id).expect(200);
  let second=(await pool.query('SELECT id FROM registrations WHERE event_id=$1 AND participant_id=$2',[e.id,demoIds.participant2])).rows[0];
  if(!second){await change(owner,e.id,2).expect(200);second=(await register(p2,e.id).expect(201)).body.data;}
+ expect(await invariant(e.id)).toEqual({capacity:2,active:1});
  const mix=await compete(e.id,[()=>change(owner,e.id,1),()=>register(p,e.id),()=>cancel(p2,second.id)]);
- expect([200,409]).toContain(mix[0].status);expect([200,409]).toContain(mix[1].status);expect(mix[2].status).toBe(200);await invariant(e.id);
+ // Correlated responses + persisted state must match ONE legal serial outcome.
+ // In particular [409,409,200] is impossible from capacity2 / P1 cancelled / P2 active.
+ expect(legalMixedOutcomes).toContainEqual(await mixedOutcome(e.id,original.id,second.id,mix));
  if(mix[0].status===409)expect(mix[0].body.error.code).toBe('CAPACITY_BELOW_ACTIVE_COUNT');
  if(mix[1].status===409)expect(mix[1].body.error.code).toBe('EVENT_FULL');
  const own=(await pool.query('SELECT id FROM registrations WHERE event_id=$1 AND participant_id=$2',[e.id,demoIds.participant])).rows[0];expect(own.id).toBe(original.id);
+});
+
+const schedules=[
+ {order:['R','C','A'],expected:legalMixedOutcomes[0]},
+ {order:['R','A','C'],expected:legalMixedOutcomes[1]},
+ {order:['C','R','A'],expected:legalMixedOutcomes[0]},
+ {order:['C','A','R'],expected:legalMixedOutcomes[0]},
+ {order:['A','R','C'],expected:legalMixedOutcomes[2]},
+ {order:['A','C','R'],expected:legalMixedOutcomes[0]},
+];
+for(const schedule of schedules)test(`S2-B-API-07-order-${schedule.order.join('')} / actual serial reduction-cancel-reactivate schedule agrees with persisted DB`,async()=>{
+ const owner=await actor();const p=await actor('participant@example.test');const p2=await actor('participant2@example.test',rival);
+ const e=await event(2);const first=(await register(p,e.id).expect(201)).body.data;
+ await cancel(p,first.id).expect(200);const second=(await register(p2,e.id).expect(201)).body.data;
+ expect(await invariant(e.id)).toEqual({capacity:2,active:1});
+ const before=(await pool.query('SELECT id,created_at FROM registrations WHERE event_id=$1 ORDER BY id',[e.id])).rows;
+ const actions:Record<string,()=>PromiseLike<request.Response>>={R:()=>change(owner,e.id,1),A:()=>register(p,e.id),C:()=>cancel(p2,second.id)};
+ const results:Record<string,request.Response>={};
+ for(const action of schedule.order)results[action]=await actions[action]();
+ expect(await mixedOutcome(e.id,first.id,second.id,[results.R,results.A,results.C])).toEqual(schedule.expected);
+ if(results.R.status===409)expect(results.R.body.error.code).toBe('CAPACITY_BELOW_ACTIVE_COUNT');
+ if(results.A.status===409)expect(results.A.body.error.code).toBe('EVENT_FULL');
+ expect((await pool.query('SELECT id,created_at FROM registrations WHERE event_id=$1 ORDER BY id',[e.id])).rows).toEqual(before);
+ const states=(await pool.query('SELECT id,status,cancelled_at FROM registrations WHERE event_id=$1',[e.id])).rows;
+ for(const row of states)expect(row.cancelled_at===null).toBe(row.status==='ACTIVE');
 });
 test('S2-B-API-05b / DB clock is read after an observed event-lock wait across cutoff',async()=>{
  const owner=await actor('organizer@example.test',rival);const e=await event(3);const blocker=await pool.connect();let pending:Promise<request.Response>|undefined;

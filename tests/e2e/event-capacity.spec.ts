@@ -51,10 +51,30 @@ test('S2-B-UI-01 / owner capacity, ACTIVE-only counts and unchanged participant 
  await save(page,'2');await expect(page.getByText('Capacity updated. Registration counts have been refreshed.',{exact:true})).toBeVisible();
  await page.reload();await expect(page.locator('tbody tr')).toHaveCount(2);
  await expect(page.getByRole('spinbutton',{name:'Total capacity',exact:true})).toHaveValue('2');
+ await expect(page.locator('.roster-summary > div').nth(0).locator('strong')).toHaveText('2');
+ await expect(page.locator('.roster-summary > div').nth(1).locator('strong')).toHaveText('0');
+ await expect(page.locator('.roster-summary > div').nth(2).locator('strong')).toHaveText('2');
  const snapshot=(await (await page.request.get(`/api/events/${id}`)).json()).data;expect(snapshot).toMatchObject({capacity:2,registeredCount:2,remainingPlaces:0,registrationOpen:false});
  expect((await pool.query('SELECT * FROM registrations WHERE id=$1',[original.id])).rows[0]).toEqual(original);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  await page.screenshot({path:`artifacts/screenshots/s2-capacity-owner-${info.project.name}.png`,fullPage:true});
+ // Same event and unchanged DB state: verify actual rendered public/Participant
+ // values after reload, not an API response standing in for screen evidence.
+ async function renderedEventCounts(role:string){
+  await page.goto(`/events/${id}`);await page.reload();
+  await expect(page.getByRole('heading',{name:`Capacity ${id}`,exact:true})).toBeVisible();
+  await expect(page.locator('.capacity strong')).toHaveText('0');
+  await expect(page.locator('.capacity > span').nth(1)).toHaveText('of 2');
+  await expect(page.getByRole('progressbar',{name:'Places filled'})).toHaveAttribute('value','2');
+  await expect(page.getByRole('progressbar',{name:'Places filled'})).toHaveAttribute('max','2');
+  await page.screenshot({path:`artifacts/screenshots/s2-capacity-${role}-${info.project.name}.png`,fullPage:true});
+ }
+ await page.getByRole('button',{name:'Sign out',exact:true}).click();await expect(page.getByRole('button',{name:'Sign out',exact:true})).toHaveCount(0);
+ await renderedEventCounts('public');
+ await expect(page.getByRole('link',{name:/^Sign in to register/})).toBeVisible();
+ await login(page,'participant@example.test');await renderedEventCounts('participant');
+ await expect(page.getByRole('link',{name:/^View my registration/})).toBeVisible();
+ expect((await pool.query("SELECT capacity,(SELECT count(*)::int FROM registrations WHERE event_id=$1 AND status='ACTIVE') AS active FROM events WHERE id=$1",[id])).rows[0]).toEqual({capacity:2,active:2});
  await login(page,'participant@example.test');await page.goto('/my-registrations');
  const row=page.locator('.registration-row').filter({hasText:`Capacity ${id}`});await row.getByRole('button',{name:'Cancel registration',exact:true}).click();
  await expect(row.locator('.badge')).toHaveText('Cancelled');
