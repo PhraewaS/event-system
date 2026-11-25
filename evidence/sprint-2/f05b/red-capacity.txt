@@ -1,0 +1,33 @@
+
+ RUN  v5.0.5 C:/Users/natth/OneDrive/Documents/ChatGPT/SE/gather-sprint2-capacity
+
+ × tests/event-capacity.test.ts > S2-B-API-02 / primary RED: owner increases and decreases capacity without changing registrations or quota 482ms
+   → expected 404 to be 200 // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/event-capacity.test.ts > S2-B-API-02 / primary RED: owner increases and decreases capacity without changing registrations or quota
+AssertionError: expected 404 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 404
+
+ ❯ tests/event-capacity.test.ts:42:27
+     40|  const quota=(await p.agent.get(`/api/registrations/quota?date=${day}`…
+     41|  const increased=await change(owner,e.id,4);
+     42|  expect(increased.status).toBe(200);
+       |                           ^
+     43|  expect(increased.body.data).toMatchObject({id:e.id,capacity:4,registe…
+     44|  expect((await change(owner,e.id,1).expect(200)).body.data).toMatchObj…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  23:43:28
+   Duration  4.93s (import 80%, tests 14%, transform 6%)
+
