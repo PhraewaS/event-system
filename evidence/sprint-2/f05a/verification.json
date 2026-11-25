@@ -1,0 +1,88 @@
+{
+  "contractMerge": "bb5aecc1a7a12a8c39e915bb390bb4f61759baed",
+  "primaryRedCommit": "e5cf5c1",
+  "releaseRedCommit": "07de0f3",
+  "localApplicationTestCommit": "a5bed71",
+  "localUnitApiClient": {
+    "passed": 96,
+    "failed": 0,
+    "skipped": 0
+  },
+  "localBrowser": {
+    "passed": 32,
+    "failed": 0,
+    "skipped": 0,
+    "retries": 0,
+    "browser": "Edge157.0.4341.60",
+    "viewports": [
+      [
+        390,
+        844
+      ],
+      [
+        1440,
+        1000
+      ]
+    ]
+  },
+  "offlineReleaseGate": {
+    "passed": 4,
+    "realGcpCalls": 0
+  },
+  "primaryAssertionsUnchanged": true,
+  "applicationFilesSha256": {
+    "client/index.html": "ee36d7b374625771e5904e73ba25e9282dc54f60ec82a425824dae65aa591242",
+    "client/src/App.tsx": "b42523bb98261832659e712482a931381418a973fbfd76963a0c6b704c9cef49",
+    "client/src/api.ts": "4655656ce59870ce0e9184cc34f7fcc034faf97f2b7ddf5d4ed8adb554fb5ffd",
+    "client/src/event-day.ts": "71b4f2bb547c171fcf8133af2b15a9ffe05505c26c1634aae45a873e4472fe17",
+    "client/src/main.tsx": "9199bfba8182fe6921f500d9a9eb35618abb637bd2b6fa2829539a0dc5af554c",
+    "client/src/styles.css": "85397b69b979d47af4a0429ef503588dbd2036fe8cf28d3499a7ec18f7b4ff9c",
+    "client/src/vite-env.d.ts": "65996936fbb042915f7b74a200fcdde7e410f32a669b1ab9597cfaa4b0faddb5",
+    "client/tsconfig.json": "616104aea4a1a306f790b558f7d08893ba4ceddf44b5c3d054802c356788fee7",
+    "package-lock.json": "87bfd404f19cd6b2b0cd5a15b15fc72ed1dae14bdce5bad69ffd19ca162590bb",
+    "package.json": "4d4e6203ec3b4ca78457890973b3e5dd45b34fcb2505d5b10f408c01984cd014",
+    "playwright.config.ts": "d17b9673626cacabd1981ce358bcb30384ba76a7887ec7e58e21b3df364e6614",
+    "scripts/evidence.mjs": "e872575091848121ab981d78db3c65b47e6fcc8462f1526ed39729988a5e6a2a",
+    "scripts/lab6-local.ps1": "f2adbaefab293ac06d632588e4df2cd356562814b5d846bf96c2ebe2ba986ce8",
+    "scripts/prepare-lifecycle-legacy.mjs": "e18b0f5f08e5fcb164efccd643a8f1f7b080b11042bebd3450f51c2cbcead910",
+    "scripts/smoke.mjs": "1812f9bf2140cba9500933e5b9f9b4df5db1bf984e4c8281846033056f9f6fd7",
+    "server/.env.example": "632fb0d09ab09c1fc77df3d455eed18d54614b44acfe4be91e27a91c2270a89c",
+    "server/migrations/001_initial.sql": "ddbbecae46feaeef8d97da2ad32991f7c7e22980f72ab7f1fd2ff1abd6d1efa3",
+    "server/migrations/002_login_rate_limits.sql": "a8f918bd0f95d7c5215954554ef97e4fd135b55081691f46a0d0e4d3c574e314",
+    "server/migrations/003_registration_lifecycle.sql": "f5c8b20b9495cb4f0fb49713d8554e6809a921177c34b3fd51f88cd3169bce6d",
+    "server/scripts/migrate.ts": "3696482810d8e084fcd3ec5402cb3db1846373dd69f7263efd452785057e2716",
+    "server/scripts/seed.ts": "20fe0650a52bc1cac4f21c4f397ac22d835bf7e0a389b0980581e9db5d4dc8d8",
+    "server/src/app.ts": "9ce997d0cd12b625f48f9082c7401c2aee20fa2228eb9df1fa516ac26d360e40",
+    "server/src/db.ts": "4c4201a135b0eba65ca0b604d826baf89b44509cf5006ae6e3688d1662ecdbd9",
+    "server/src/demo-credentials.ts": "3aefd5e298152248674f2fd945db404a6468b30dd22130d0d303ea1bb32233f6",
+    "server/src/errors.ts": "4e1538fa9e78c142803f4262505c82551e5b289248835ba4df7bd0fab03e61a4",
+    "server/src/index.ts": "a56e36807d2dac52170d64494b01e637f9a5e10ff74d09c7fcce04b9448c1e63",
+    "server/src/lifecycle.ts": "789da3337c3d4eb75348893a73e2689b242e85e9ffe70e6cb0fcc225482ffc22",
+    "server/src/migrate.ts": "b8d3abc68e3b8a8518f226f36251937bb94518680377870858dc8a49a2b95c70",
+    "server/src/quota.ts": "0f9f91bb1b17bfd5bc1acb8a072275968bb25552124d8adbd2aa64f5f27c9137",
+    "server/src/rate-limit-store.ts": "e8ba24ab74ad91cb25a0060ccbe95b2baef8e234695fd0efc4f520c2a6f5b082",
+    "server/src/registrations.ts": "b8fcdfedabe1091f6668dda2ef839bd54cc52fe7d5d3f02f3fef042a296fb93c",
+    "server/src/reset-demo-passwords.ts": "b36fedea739d4f5e246cd8fb9760d674b4013dcf0e5f4381a239303682842778",
+    "server/src/seed.ts": "b68d2230efb141446a5275ad4b93b27016b27d4d65bde75d5bc69065bb91089a",
+    "server/src/validation.ts": "fc950db0f0197f607c1b24b0029242401c72b17adf4d4f071cd1eaabfb17ae48",
+    "server/tsconfig.json": "674df5d0db59fa5da6d213e68631c766d1ac153a367890147961276d68873c8c",
+    "tests/auth-boundaries.test.ts": "5c2a871e70582699bf83201c9d5f3144c11ddaf5f14ae0d4b2b25c3470c3ce07",
+    "tests/client-csrf.test.ts": "d0d11fcadfce4fa7cf4464dd885969e4bcd7fd29d5ee9743b0e24bdf5442c0a6",
+    "tests/cloud-run.test.ts": "ac2d38009a1a58fef5e9cc53e9a45d5beb1cd1dba0988130286a0497ab78d123",
+    "tests/daily-quota-unit.test.ts": "7fb2f4d66d5e2cca79a1d82f200096e8509e42189f1a80e1e942ce1d8927c659",
+    "tests/daily-quota.test.ts": "c03555ae76f3b24e080b1e533c2a7094f989058b8f99e55b9a976b1832a8f655",
+    "tests/demo-credentials.test.ts": "f7b2f06cc032d6602eab622e0b55d3a21cfae936a7aea021d1a14bf76cb7ac07",
+    "tests/e2e/daily-quota.spec.ts": "35da685bd0ae381e4f612b08cdb126c26ea796b56faffa6baf0d5e894812057b",
+    "tests/e2e/integration.spec.ts": "c76bcb6727b3c5e1268d16cf9d0b83208c7ac1b674582bfd88d97bbacf96e364",
+    "tests/e2e/registration-lifecycle.spec.ts": "c5d7d0fbaa229670584c2d5aa64980d3bb72090c124ceca7aa5248bbf900522b",
+    "tests/e2e/ui-review.spec.ts": "1b882b4830bb296499a45ccff6fc9758bf837bfc47023c46955183244125265e",
+    "tests/foundation.test.ts": "b13c51d9d3fe8f83898e8ce315efabc1d5168d8494c250119c70441fc47d2766",
+    "tests/registration-lifecycle-unit.test.ts": "728cde575397541c140d74fd44c4f988273ab9b29defc9b5e43903f3ba282e1d",
+    "tests/registration-lifecycle-upgrade.test.ts": "ad3278c48ef0fee410719adfd11fa703377f40882ebb9de2a22f8135e1c7e83f",
+    "tests/registration-lifecycle.test.ts": "4b9bb9f5c1d6265a22ae65e1285df495d38fd2086e50b2fd2c6a6269fa9aad39",
+    "tests/rules.test.ts": "6eccca11815cabec6ba3b4224f8487d5d43654c8bcef267c297f6fbaecd1f199",
+    "tests/security.test.ts": "089c54801f6cde47dc785cec2a803cc9b71f4c40cf4fc7018542727b070105d6",
+    "tests/sprint1.test.ts": "133ee3649e06fef36ff782d6c3296b2e0ed79c684fb364de99d2e2a681c5591a"
+  },
+  "cloudAcceptance": "pending after reviewed main release"
+}

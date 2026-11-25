@@ -1,5 +1,7 @@
 # F-05A — ยกเลิกและกลับมาลงทะเบียน
 
+> Acceptance record: PhraewaS APPROVED contract9477808 ใน PR #86 วันที่25/11/2026 16:13:03น. UTC+7; mergeเข้าsprint2-stagingเป็นbb5aeccเวลา16:14:08 ก่อน test-first e5cf5c1 และ implementation a5bed71 ข้อความ proposal/planned ด้านล่างคง snapshot ก่อนเริ่ม code; ผล implementation แยกใน [evidence/status](../sprints/F-05A-implementation.md)
+
 25 พฤศจิกายน 2026 · **Proposal v2 / แก้ตาม review #86 รอ PhraewaS ตรวจซ้ำก่อน code** · Developer `guluJa`; reviewer `PhraewaS`; งาน F-05 เดิมใน [#8](https://github.com/PhraewaS/event-system/issues/8), capacity แยก [#85](https://github.com/PhraewaS/event-system/issues/85)
 
 FR-06; BR-01–06/10/11; NFR-01–05. ฐานและลำดับงาน: [Sprint 2 plan](../sprints/sprint-2.md). Dependencies: F-01–04 และ Lab7 CR-L7-01 ที่ main e2b9842

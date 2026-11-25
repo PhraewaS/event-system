@@ -15,7 +15,7 @@ case "$*" in
  'run services describe '*) echo 'https://synthetic.example.test';;
 esac
 ''',encoding='utf-8');stub.chmod(0o755)
-  self.env={**os.environ,'PATH':str(self.folder)+os.pathsep+os.environ['PATH'],'CALL_LOG':str(self.log).replace('\\','/'),
+  self.env={**os.environ,'PATH':str(self.folder)+os.pathsep+os.environ['PATH'],'CALL_LOG':str(self.log).replace('\\','/'),'GITHUB_ENV':str(self.folder/'env').replace('\\','/'),
    'PROJECT_ID':'release-test','REGION':'asia-southeast1','IMAGE_TAG':SHA,'EXPECTED_IMAGE_DIGEST':DIGEST,'ROLLBACK':'true',
    'ACTIVATE_LIFECYCLE':'false','LIFECYCLE_CUTOVER_CONFIRMED':'false','LIFECYCLE_APPROVED_IMAGES_JSON':'[]','PYTHON_COMMAND':sys.executable.replace('\\','/')}
  def tearDown(self):self.tmp.cleanup()
