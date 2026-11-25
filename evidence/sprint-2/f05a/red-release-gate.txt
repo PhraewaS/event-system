@@ -1,0 +1,17 @@
+test_unverified_rollback_rejected_before_mutation (__main__.ReleaseGate.test_unverified_rollback_rejected_before_mutation) ... FAIL
+
+======================================================================
+FAIL: test_unverified_rollback_rejected_before_mutation (__main__.ReleaseGate.test_unverified_rollback_rejected_before_mutation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\natth\OneDrive\Documents\ChatGPT\SE\gather-sprint2-lifecycle\deploy\tests\test_lifecycle_release.py", line 28, in test_unverified_rollback_rejected_before_mutation
+    r=self.run_release();self.assertNotEqual(r.returncode,0,r.stdout)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 == 0 : Rollback: reuse existing image; skip tests, build, migration and seed.
+Service URL: https://synthetic.example.test
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.557s
+
+FAILED (failures=1)
