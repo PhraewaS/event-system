@@ -9,6 +9,7 @@ import {
   ApiError,
   type User,
   type Event,
+  type OwnedEvent,
   type Registration,
   type DailyQuota,
   type RosterEntry,
@@ -863,7 +864,7 @@ function Publish({ navigate }: { navigate: Navigate }) {
     </>
   );
 }
-function CapacityForm({event,onResult}:{event:Event;onResult:(error:string)=>void}) {
+function CapacityForm({event,onResult}:{event:OwnedEvent;onResult:(error:string)=>void}) {
   const [capacity,setCapacity]=useState(String(event.capacity));
   const [submitting,setSubmitting]=useState(false);
   const generation=useRef(0);
@@ -894,7 +895,7 @@ function Roster({ id, navigate }: { id: string; navigate: Navigate }) {
   const { value, loading, error } = useResource(async () => {
     // Check private ownership first; public event details alone grant no roster access.
     const roster = await collection<RosterEntry>(`/events/${id}/registrations`);
-    return { event: await api<Event>(`/events/${id}`), roster };
+    return { event: await api<OwnedEvent>(`/organizer/events/${id}`), roster };
   }, `${id}:${revision}`);
   if (loading) return <Loading />;
   if (error || !value)

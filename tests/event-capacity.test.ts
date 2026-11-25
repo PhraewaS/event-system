@@ -80,11 +80,19 @@ test('S2-B-API-04 / below ACTIVE count rejects with exact no-write snapshot',asy
 test('S2-B-API-05 / closed event rejects even no-op and deadline wins over active count',async()=>{
  const owner=await actor();const e=await event(4);await fixtures(e.id,3);
  await pool.query('UPDATE events SET registration_deadline=clock_timestamp() WHERE id=$1',[e.id]);const before=await snapshot();
+ expect((await owner.agent.get(`/api/organizer/events/${e.id}`).expect(200)).body.data.capacityChangeOpen).toBe(false);
  for(const n of [4,2,6])expect((await change(owner,e.id,n).expect(409)).body.error.code).toBe('CAPACITY_CHANGE_CLOSED');
  expect(await snapshot()).toEqual(before);
 });
 test('S2-B-API-06 / role, ownership, CSRF and absent event are denied without private data or writes',async()=>{
  const owner=await actor();const foreign=await actor('organizer2@example.test');const p=await actor('participant@example.test');const e=await event();const before=await snapshot();
+ expect((await owner.agent.get(`/api/organizer/events/${e.id}`).expect(200)).body.data).toMatchObject({id:e.id,capacityChangeOpen:true});
+ expect((await request(app).get(`/api/events/${e.id}`).expect(200)).body.data).not.toHaveProperty('capacityChangeOpen');
+ await request(app).get(`/api/organizer/events/${e.id}`).expect(401);
+ await p.agent.get(`/api/organizer/events/${e.id}`).expect(403);
+ const hiddenRead=(await foreign.agent.get(`/api/organizer/events/${e.id}`).expect(404)).body;
+ expect((await foreign.agent.get(`/api/organizer/events/${randomUUID()}`).expect(404)).body).toEqual(hiddenRead);
+ await owner.agent.get('/api/organizer/events/invalid').expect(400);
  await request(app).patch(`/api/events/${e.id}/capacity`).send({capacity:3}).expect(401);
  await change(p,e.id,3).expect(403);
  const hidden=(await change(foreign,e.id,3).expect(404)).body;

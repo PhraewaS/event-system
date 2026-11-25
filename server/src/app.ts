@@ -26,7 +26,7 @@ import { AppError } from "./errors.js";
 import { registerParticipant, cancelRegistration } from "./registrations.js";
 import { lifecycleWritesEnabled } from "./lifecycle.js";
 import { readQuota } from "./quota.js";
-import {eventSelect} from './events.js';
+import {eventSelect,ownedEventSelect} from './events.js';
 import {changeEventCapacity} from './capacity.js';
 import { PostgresRateLimitStore } from "./rate-limit-store.js";
 
@@ -351,6 +351,12 @@ export function createApp(pool: Pool, secret: string, production = false, lifecy
       page(res, result.rows, offset);
     },
   );
+  app.get('/api/organizer/events/:id',requireUser,role('ORGANIZER'),async(req,res)=>{
+    const id=uuid.parse(req.params.id);
+    const owned=await pool.query(`${ownedEventSelect} WHERE e.id=$1 AND e.organizer_id=$2`,[id,user(res).id]);
+    if(!owned.rowCount)throw new AppError(404,'NOT_FOUND','Event not found.');
+    res.json({data:owned.rows[0]});
+  });
   app.get(
     "/api/events/:id/registrations",
     requireUser,

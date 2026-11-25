@@ -38,7 +38,7 @@ test('S2-B-UI-01 / owner capacity, ACTIVE-only counts and unchanged participant 
  await page.reload();await expect(page.getByRole('spinbutton',{name:'Total capacity',exact:true})).toHaveValue('3');
  expect((await page.request.get(`/api/events/${id}`)).status()).toBe(200);
  await login(page,'participant@example.test');await page.goto(`/events/${third}`);
- await expect(page.getByTestId('daily-quota')).toContainText('2 / 2');await expect(page.getByRole('button',{name:/^Reserve my place/})).toBeDisabled();
+ await expect(page.getByTestId('daily-quota')).toContainText('2 / 2');await expect(page.getByRole('button',{name:'Daily registration limit reached',exact:true})).toBeDisabled();
  await expect(page.getByRole('form',{name:'Change event capacity'})).toHaveCount(0);
  const csrf=(await (await page.request.get('/api/auth/csrf')).json()).data.csrfToken;
  expect((await page.request.patch(`/api/events/${id}/capacity`,{headers:{'X-CSRF-Token':csrf},data:{capacity:9}})).status()).toBe(403);
