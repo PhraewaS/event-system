@@ -54,10 +54,15 @@ test('S2-A-UI-02 / stale cancel crossing deadline shows rejection and leaves per
 
 test('S2-A-UI-03 / server eligibility survives a client clock ahead of the deadline',async({page})=>{
  const id=await event();await login(page);await page.goto(`/events/${id}`);await page.getByRole('button',{name:/^Reserve my place/}).click();
+ // The POST may commit before its client-side navigation finishes. A reload must
+ // not abort that transition and accidentally test the event-detail route.
+ await expect(page).toHaveURL(/\/my-registrations\?confirmed=/);
+ await expect(page.getByRole('button',{name:'Cancel registration',exact:true})).toBeVisible();
  await page.clock.setFixedTime(new Date(Date.now()+400*86400000));
  await page.reload();
  await expect(page.getByRole('button',{name:'Cancel registration',exact:true})).toBeVisible();
- expect((await page.request.get('/api/registrations/mine')).status()).toBe(200);
+ const mine=await page.request.get('/api/registrations/mine');expect(mine.status()).toBe(200);
+ expect((await mine.json()).data.find((r:{event:{id:string}})=>r.event.id===id).canCancel).toBe(true);
 });
 
 test('S2-A-UI-04 / late cancel response cannot change the URL after navigation',async({page})=>{
