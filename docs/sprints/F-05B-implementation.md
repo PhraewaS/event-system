@@ -2,7 +2,7 @@
 
 Developer `guluJa`; independent reviewer `PhraewaS` · Issue #85, parent F-05 #8
 
-**Status: implementation / local verification; feature review, staging acceptance และ main/GCP release ยัง pending.** ไม่ปิด #8/#85 จากผล local หรือ CI เพียงอย่างเดียว
+**Status: feature review และ staging integration accepted ผ่าน PR #88; main/GCP release ยัง pending.** PhraewaS APPROVED8c543cfวันที่26/11/2026 00:32:07น. UTC+7; merge86963e3เวลา00:32:15น. และ [staging CI45665807924](https://github.com/PhraewaS/event-system/actions/runs/45665807924) ผ่าน116 tests/42 browser executionsพร้อม release checks/Compose/Docker ข้อความ awaiting review และผลรอบก่อนใน recordด้านล่างเป็นประวัติก่อน acceptance นี้ ไม่ปิด #8/#85 จน release/cutover/post-deployครบ
 
 ## Contract และ test-first
 

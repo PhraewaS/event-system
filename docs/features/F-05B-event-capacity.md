@@ -1,6 +1,6 @@
 # F-05B — เจ้าของกิจกรรมปรับความจุ
 
-25 พฤศจิกายน 2026 · **Contract v2 accepted in PR #86; implementation รอรีวิว** · Developer `guluJa`; reviewer `PhraewaS`; [Issue #85](https://github.com/PhraewaS/event-system/issues/85)
+26 พฤศจิกายน 2026 · **Contract accepted #86; implementation reviewed/integratedผ่าน #88; main/GCP release pending** · Developer `guluJa`; reviewer `PhraewaS`; [Issue #85](https://github.com/PhraewaS/event-system/issues/85)
 
 ประวัติก่อน code: PhraewaS approved contract9477808 ใน PR #86 เวลา16:13:03น. และ mergeเป็นbb5aeccเวลา16:14:08น. UTC+7; F-05A ได้ PhraewaS APPROVED f3c691a ใน PR #87 เวลา23:37:38น. และ mergeเข้า stagingเป็น921ffdcเวลา23:37:45น. วันที่25/11/2026 พร้อม [staging CI](https://github.com/PhraewaS/event-system/actions/runs/45655949506) ผ่านก่อนแยก branch F-05B ผล implementation/tests/review/release แยกใน [status matrix](../sprints/F-05B-implementation.md); pending/planned ใน STS ด้านล่างเป็น snapshot ก่อน implementation
 
