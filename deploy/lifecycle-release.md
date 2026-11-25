@@ -7,7 +7,7 @@
 1. ผ่าน independent review, staging acceptance และ reviewed release เข้า main ตาม workflow เดิม
 2. main pipeline รัน CI/build/push, verify immutable digest, migrate ก่อนเปลี่ยน service และตั้ง `REGISTRATION_LIFECYCLE_WRITES_ENABLED=false` normal registration/reads ยังทำงาน; cancel/reactivate ถูกปิดตาม contract
 3. เก็บ main SHA, CI run, digest, migration execution และ state-aware revision ตรวจ public/own/owner/quota/persistence บนข้อมูลสังเคราะห์ การเพิ่ม migration ไม่ลบข้อมูลหรือ seed บนระบบร่วม
-4. ตรวจ traffic ไป state-aware revision 100% และไม่มี tag route ไป pre-state-aware revision แต่ **ห้ามใช้ traffic 100% หรือการรอ request timeout เป็นหลักฐานว่า writer เก่าจบแล้ว** Cloud Run อาจประมวลผลต่อหลัง timeout ต้องผ่าน database fence ด้านล่างก่อนเปิด lifecycle
+4. ตรวจ traffic ไป state-aware revision 100% และไม่มี tag route ไป pre-state-aware revision แต่ **ห้ามใช้ traffic 100% หรือการรอ request timeout เป็นหลักฐานว่า writer เก่าจบแล้ว** Cloud Run อาจประมวลผลต่อหลัง timeout ต้องผ่าน database fence และ historical Deploy rerun control ด้านล่างก่อนเปิด lifecycle
 
 ## Database fence ก่อน activation (แก้ตาม PR #87)
 
@@ -69,6 +69,49 @@ SQL นี้ใช้ catalog SELECTs ภายใน `BEGIN READ ONLY` เท�
 
 คง old role เป็น NOLOGIN เพื่อรักษา object ownership/history ไม่ต้อง DROP ROLE หลัง fence เส้นทางนี้ไม่เรียก ordinary-role script ซ้ำ เพราะสคริปต์ตั้งใจต้องเห็น old credential ที่ยัง login ได้ก่อนลงมือ ไม่แอบอ้างผล manual Cloud SQL เป็น local script output
 
+## Historical Deploy rerun control ก่อน activation — review #89
+
+**Current coverage / limitation:** current `verify_lifecycle_release.py` ตรวจ approved state-aware image SHA/digest สำหรับ manual reuse แต่ไม่ retroactivelyแก้workflowเก่า [Deploy demo ที่ e2b9842](https://github.com/PhraewaS/event-system/blob/e2b9842edef525b2e72f040c9f64fa99dbe0f2c2/.github/workflows/deploy.yml) checkout`${github.sha}`และเรียกrelease.shของrevisionนั้น การตรวจdigestเดิมพิสูจน์ว่าimageตรงtag ไม่ได้พิสูจน์ว่าเข้าใจCANCELLED; normal push/rerunเดิมไม่มีACTIVE_V1 gate จึง **ยังไม่มีหลักฐานว่า gateปัจจุบันกันrerunเก่าแล้ว**
+
+[GitHub rerun](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/re-run-workflows-and-jobs?tool=webui) คงGITHUB_SHA/GITHUB_REFเดิม ดังนั้น branchmain, concurrency, required reviewในPR หรือแก้scriptบนmainล่าสุดอย่างเดียวไม่ปิดช่องนี้: old runอาจยังมีrefmainและรอคิวdeployทีหลังได้ Offline6testsของgateปัจจุบันไม่ใช่หลักฐานปฏิเสธhistorical source
+
+### Required operator cutover plan (ยังไม่ได้ทำกับ GCP ใน PR นี้)
+
+1. ก่อนactivation คงwrites=falseและ freeze deploymentชั่วคราว: ตรวจ Actions runs/attemptsที่queued/in-progressของDeploy demoทุกrevisionและcancelให้ครบ รวมoperator/script/credentialช่องทางอื่นที่แก้service/trafficหรือexecutejobsได้ บันทึกinventory run/source SHA/deployer identity ไม่ใช่แค่รายการimage การcancel/disableworkflowอย่างเดียวไม่เพิกถอนcredentialที่ออกแล้ว
+2. ให้ผู้ดูแลจัด **deployment identityที่เชื่อถือเฉพาะreviewed state-aware execution source** ผ่านWIF provider attribute conditionฝั่งGoogle Cloud บังคับrepo/owner numeric IDs, environment demo, refmain, workflow deploy.yml และ **approved execution commit SHA** ตัวอย่างCELด้านล่างต้องแทนfull main SHAที่merge/reviewจริงก่อนใช้ ห้ามใส่stagingSHA86963e3หรือimage_tagแทนโดยอัตโนมัติ:
+
+   ```text
+   assertion.repository_id == '1438471476' &&
+   assertion.repository_owner_id == '265047184' &&
+   assertion.environment == 'demo' &&
+   assertion.ref == 'refs/heads/main' &&
+   assertion.workflow_ref == 'PhraewaS/event-system/.github/workflows/deploy.yml@refs/heads/main' &&
+   assertion.sha in ['FULL_REVIEWED_STATE_AWARE_MAIN_EXECUTION_SHA']
+   ```
+
+   ให้ตรวจsigned claim names/valuesและprovider audienceจริงก่อนapply; Googleกำหนดให้attribute conditionทุกfieldมีmapping จึงต้องตรวจ/เพิ่มmappingต่อไปนี้โดยคงmappingเดิมที่bindingsยังใช้อยู่ ไม่แทนที่ทั้งหมดโดยไม่ตรวจผลกระทบ:
+
+   ```text
+   google.subject=assertion.sub
+   attribute.repository=assertion.repository
+   attribute.repository_id=assertion.repository_id
+   attribute.repository_owner_id=assertion.repository_owner_id
+   attribute.environment=assertion.environment
+   attribute.ref=assertion.ref
+   attribute.workflow_ref=assertion.workflow_ref
+   attribute.execution_sha=assertion.sha
+   ```
+
+   repoIDsด้านบนอ่านจากGitHubAPI ไม่ใช่ค่าCloudpolicyที่ตรวจแล้ว OIDC execution `sha` ผูกกับsourceของrun ขณะที่ `image_tag`/digestอาจเป็นapproved compatible rollback imageคนละSHAได้ ต้องตรวจสองชั้น: cloud identity gateกันunsafe source และ current release gateกันunsafe target
+3. ปิดทางcredentialเก่าที่ข้ามconditionได้ก่อนให้deployment identityใหม่มีmutation authority: จัดdeployer SAใหม่แยกจากบัญชีเดิม, ถอนสิทธิ์เปลี่ยนservice/traffic/executejobsและสิทธิ์impersonationที่เหลือของdeployerเดิมทุกระดับ, ปิดlegacy provider/binding/keyหรือtrust routeที่ยังmint/impersonateidentityใหม่ได้ ตรวจissued tokens/runner jobsที่ค้างด้วย **ไม่ปิด runtime gather-runner หรือ DB operatorโดยเหมารวม** IAMเปลี่ยนแบบeventual consistency จึงต้องตรวจeffective denialหลังpropagation/credential lifetimeจริง ไม่ถือว่ากดsave/cancelแล้วเพียงพอ
+4. ทดสอบidentity gateในช่วงที่old identityถูกเพิกถอนแล้วและnew identityยังไม่มีสิทธิ์mutationต่อทรัพยากรเป้าหมาย: ต้องยืนยันapproved execution source authenticateได้ และhistorical unsafe sourceถูกปฏิเสธที่WIF/impersonation เก็บrun/attempt/source SHAและsanitized audit result โดยไม่เก็บJWT/access token หากใช้controlled historical runเพื่อตรวจต้องอยู่ภายใต้permission fenceนี้เท่านั้น **ห้าม re-run Deployเก่าที่ถือสิทธิ์deployจริงเพื่อทดลอง** ถ้าold sourceยังauthผ่านให้หยุดและแก้policy ไม่คืนmutationauthority ไม่เปิดlifecycle การcheckoutoldcommitจากworkflowใหม่ไม่สร้างOIDCshaเก่า จึงใช้เป็นnegative proofไม่ได้
+5. ตรวจpolicy/provider resource+etag/conditionและeffective IAMซ้ำ ให้newdeployerมีเฉพาะสิทธิ์ที่ต้องใช้เมื่อpositive/negative identity checksครบและไม่มีunsafe token holder/jobค้างแล้ว จากนั้นให้workflowที่sourceSHAอนุมัติใช้newidentity เท่านั้น ยังต้องตรวจapproved target SHA/digestตามrelease.sh ห้ามมีlegacyproviderหรือoperatorcredentialที่ยังรันoldDeployโดยไม่ผ่านกระบวนการนี้
+6. ก่อนactivationเก็บหลักฐานใน#8: operator/date, acceptedmain/workflow SHA, repo/ref/environment binding, activeprovidercondition, retired identity/credential inventory, effective permission denialของoldidentity และผลnegative/positive source auth พร้อมservice image digest/revisionที่ไม่เปลี่ยนในnegative test ถ้าตรวจไม่ครบให้คงwrites=false แม้DBfenceผ่านแล้ว
+
+แต่ละreleaseถัดไปเพิ่ม/เปลี่ยนexecutionSHAallowlistได้เฉพาะหลังreview และเก็บdecision/evidence ไม่อนุมัติpre-state-aware sourceกลับมาเพื่อให้rerunผ่าน Rollbackต้องรันจากapproved current workflow sourceแล้วเลือกapproved compatible imageผ่านSHA/digest gate หากpolicyบล็อกnormaldeployใหม่ ให้ผู้ดูแลอนุมัติmainSHAใหม่แล้วrerun **runของSHAใหม่นั้น** ไม่เลือกlegacyrunเป็นทางลัด
+
+สถานะรอบนี้: เป็นrunbookและgate coverage analysisเท่านั้น ไม่ได้แก้WIF/IAM/GCPและไม่มีactual negative cloud runผลผ่าน ผู้ดูแลต้องยืนยันสิ่งนี้จริงก่อนactivation; pipelineปัจจุบันไม่ได้อ่านremote WIF/IAM policyแทนoperator อ้างอิง [GitHub OIDC claims](https://docs.github.com/en/actions/reference/security/oidc), [Google WIF conditions](https://docs.cloud.google.com/iam/docs/workload-identity-federation-with-deployment-pipelines), [IAM propagation](https://docs.cloud.google.com/iam/docs/access-change-propagation)
+
 ## Explicit activation of the verified image
 
 ผู้ดูแลตั้ง environment `demo` variable `LIFECYCLE_APPROVED_IMAGES_JSON` เป็นรายการ image ที่ผ่าน compatibility tests และ post-deploy checks จริง เช่นรูปแบบต่อไปนี้ (ต้องแทนค่าตามผลจริง ไม่ใช้ตัวอย่างเป็นหลักฐาน):
@@ -77,7 +120,7 @@ SQL นี้ใช้ catalog SELECTs ภายใน `BEGIN READ ONLY` เท�
 [{"sha":"FULL_40_HEX_SHA","digest":"sha256:FULL_64_HEX_DIGEST","compatibility":"ACTIVE_V1","evidence":"https://github.com/PhraewaS/event-system/actions/runs/ACTUAL_RUN_ID"}]
 ```
 
-เปิด Deploy demo → Run workflow บน main เลือก image_tag/image_digest ของ **image เดิมที่ตรวจแล้ว**, `activate_lifecycle=true`, `lifecycle_cutover_confirmed=true` และ `lifecycle_cutover_evidence` เป็น URL ของหลักฐาน cutover ใน repository นี้ พร้อม `lifecycle_db_fence_confirmed=true` และ `lifecycle_db_fence_evidence` เป็น URL ผลจริง/inventory ของ database fence ข้างต้น
+เมื่อhistorical rerun identity controlและDBfenceผ่านพร้อมหลักฐานจริงแล้ว เปิด Deploy demo → Run workflow บน mainที่executionSHAถูกอนุมัติ เลือก image_tag/image_digest ของ **image เดิมที่ตรวจแล้ว**, `activate_lifecycle=true`, `lifecycle_cutover_confirmed=true` และ `lifecycle_cutover_evidence` เป็น URL ของหลักฐาน cutover รวมrerun controlในrepositoryนี้ พร้อม `lifecycle_db_fence_confirmed=true` และ `lifecycle_db_fence_evidence` เป็น URL ผลจริง/inventory ของ database fence ข้างต้น
 
 โหมดนี้ reuse immutable image ไม่ build/migrate/seed ซ้ำ ตรวจ approval SHA/digest/compatibility และ cutover confirmation ก่อนเปลี่ยน service/traffic แล้วเปิด writes ผ่าน revision ใหม่ เก็บ revision/config/traffic binding และตรวจ cancel → saved CANCELLED → reactivate กับ permission/count/quota บนรุ่นจริงอีกครั้ง
 

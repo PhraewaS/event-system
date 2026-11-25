@@ -1,6 +1,6 @@
 # Sprint 2 — core expansion
 
-วันที่ 25 พฤศจิกายน 2026 · **Proposal v2: แก้ตาม review PR #86 รอ PhraewaS ตรวจซ้ำก่อน implementation**
+อัปเดต26 พฤศจิกายน 2026 · **F-05A/B ผ่าน review และ staging integration; release #89 เข้า main/GCP ยัง pending** ส่วน proposal25/11และผลรอบก่อนคงไว้เป็นประวัติ ดูสถานะปัจจุบันใน §10
 
 เจ้าของงาน: `guluJa` · ผู้รีวิว: `PhraewaS`
 
@@ -30,7 +30,7 @@ FR-06 เดิมคงขอบเขต cancellation/reactivation/capacity; �
 | concurrency | writers ของ Participant ใช้ Participant → Event ตาม Lab7; capacity writer lock Event เท่านั้นและห้ามไป lock Participant ภายหลัง |
 | privacy | derive identity จาก session; ไม่รับ participantId/organizerId; คง 401/403/404, CSRF และ strict validation |
 | schema/setup | migration ใหม่ต่อจาก 002; ไม่แก้ 001/002 ไม่ reset shared Cloud SQL; seed คง idempotent |
-| deployment/rollback | rollout แบบปิด lifecycle writes จน state-aware revision รับ traffic ครบและ old requests จบ; หลังเปิดใช้ rollback ได้เฉพาะ compatible target ที่ทดสอบ ACTIVE/CANCELLED แล้ว ไม่ down schema; รายละเอียดและ STS ใน F-05A §2.1–2.2 |
+| deployment/rollback | rollout แบบปิด lifecycle writes จนผ่าน state-aware traffic, actual old-DB-login/session fence และhistorical Deploy rerun identity controlตามrunbook; หลังเปิดใช้ rollback ได้เฉพาะ compatible target ที่ทดสอบ ACTIVE/CANCELLED แล้ว ไม่ down schema; รายละเอียดและ STS ใน F-05A §2.1–2.2 และ deploy/lifecycle-release.md |
 | preserved behavior | login/logout/session guards, publish validation, deadline/capacity/duplicate, own-only reads, owner-only roster และ Lab6 Location/Description fixes |
 
 **ข้อขัดกันที่แก้โดย addendum นี้:** ส่วน future model ใน `docs/sprint-1.md` เดิมเสนอ event-first lock order ก่อนมี Lab7; Sprint 2 ต้องใช้ลำดับล่าสุดข้างต้น ห้ามนำ event-first proposal เก่ามาผสมใน writer ที่ต้อง lock Participant ด้วย เอกสารเก่าและผล release เดิมคงไว้เป็น history
@@ -92,7 +92,7 @@ Review ของ `PhraewaS` ใน [PR #86](https://github.com/PhraewaS/event-sy
 
 PR #86 ได้รับ PhraewaS APPROVED9477808 วันที่25/11/2026 16:13:03น. และ mergeเป็นbb5aeccเวลา16:14:08น. UTC+7 ข้อความ pending ใน proposal/revision records ก่อนหน้านี้คงตามลำดับประวัติ F-05A เริ่มจากฐานที่ยอมรับนี้ ผลปัจจุบันอยู่ใน [implementation/status matrix](F-05A-implementation.md); การรับ feature เข้า staging/main และ F-05B #85 ยัง pending
 
-## 9. Current Sprint 2 integration status after PR #87
+## 9. Historical integration snapshot after PR #87
 
 วันที่25/11/2026 PhraewaS APPROVED f3c691a ก่อน PR #87 mergeเข้าsprint2-stagingเป็น921ffdcเวลา23:37:45น. UTC+7; integration CI45655949506ผ่าน จึงเริ่ม F-05B branchจาก921ffdc ข้อความ planned/pending ใน proposalเดิมเป็น snapshotประวัติ ไม่ใช่สถานะปัจจุบัน
 
@@ -103,3 +103,18 @@ PR #86 ได้รับ PhraewaS APPROVED9477808 วันที่25/11/2026 
 | F-05 parent #8 | ติดตาม A/B และ releaseร่วมกัน | คงเปิดจนขอบเขต F-05 และ acceptanceครบ |
 
 ตามแผนคงเหลือ **2 PR ของ Sprint2**: F-05B feature→sprint2-staging แล้ว reviewed release sprint2-staging→main (หลังintegrationและเอกสารreleaseพร้อม) ใช้ Issuesเดิม #85/#8 ไม่เปิดเพิ่มเพียงเพื่อแยกขั้นตอน tests/เอกสารในfeaturePRเดียวกัน การแก้ตามreviewใช้PRเดิม; หากพบdefectใหม่ที่ต้องแยกจริงจึงประเมินเพิ่ม ไม่รวม F-06/Sprint3 และรายงาน Deliverable2ในจำนวนนี้ การ release/activation/retestอาจมีหลายขั้นแต่ไม่จำเป็นต้องเป็นPRใหม่ทุกขั้น
+
+## 10. Current status after PR #88 / release review #89
+
+26/11/2026 00:32:07น. UTC+7: PhraewaS APPROVED8c543cf ก่อน PR #88 mergeเข้าsprint2-stagingเป็น86963e3เวลา00:32:15น. [Staging integration CI45665807924](https://github.com/PhraewaS/event-system/actions/runs/45665807924) ผ่าน116 unit/API/DB/client tests,42 browser executions,6 offline lifecycle release testsและ Compose/Docker จากแหล่งรวมจริง มิใช่ใช้ผลfeature branchแทนintegration
+
+| Feature / release | Current accepted source / evidence | Remaining gates |
+| --- | --- | --- |
+| F-05A #8 | PhraewaS approved f3c691aใน#87; accepted921ffdcและรวมใน86963e3; AC→testsในimplementation record | main/GCP release, actual DB fence/activationและpost-deploy |
+| F-05B #85 | PhraewaS approved8c543cfใน#88; accepted86963e3; รวม rendered countsสามมุมมองและ correlated race/6 serial schedules | main/GCP releaseและpost-deploy |
+| Release PR #89 | เปิดจากsprint2-stagingเข้าmain; [PR CI45666938844](https://github.com/PhraewaS/event-system/actions/runs/45666938844) ของ86963e3ผ่าน; มีreviewขอแก้ก่อนApprove | review fixes→stagingผ่านPRย่อย→fresh staging/release CI→independent release approval→merge/main CI/deploy |
+| F-05 parent #8 / child #85 | ทั้งสองยังเปิดติดตามrelease acceptance | ห้ามใช้merge/CIอย่างเดียวแทนactual cloud result |
+
+Review #89 วันที่26/11/2026 00:44:47น. ขอเพิ่ม historical Deploy rerun control และอัปเดตสถานะเอกสาร รับทั้งสองข้อ: gateปัจจุบันไม่ครอบคลุมworkflowsourceเก่าที่ rerun และต้องระบุaccepted sourceให้ตรงหลักฐาน การแก้ใน `codex/sprint2-release-review-89` เป็นdocs-only ไม่มีapplication/schema/GCP mutation ต้องผ่านPRเข้าสตagingตามworkflowก่อน #89 จะอัปเดตตาม ไม่เปิดrelease PRใหม่หรือIssueใหม่ ใช้ #8/#85 ต่อ
+
+ผล116/42ของ86963e3เป็นhistorical integration baselineของรอบนี้ ไม่ใช้รับรองdocs correction commitโดยอัตโนมัติ เมื่อรวมcorrectionแล้วให้เก็บfresh stagingและrelease-PR CIอีกรอบ mainยังe2b9842และ GCP Sprint2/cutover/activationยังpending อย่าอ้างว่า featureเปิดใช้งานบนเว็บจริงครบแล้ว
