@@ -1,0 +1,101 @@
+
+Running 6 tests using 1 worker
+
+(node:44544) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  1 [desktop] › tests\e2e\event-capacity.spec.ts:31:1 › S2-B-UI-01 / owner capacity, ACTIVE-only counts and unchanged participant quota persist across reloads (9.1s)
+(node:24244) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 2 [desktop] › tests\e2e\event-capacity.spec.ts:66:1 › S2-B-UI-02 / server eligibility and stale deadline rejection preserve saved capacity (2.2s)
+  ok 3 [desktop] › tests\e2e\event-capacity.spec.ts:77:1 › S2-B-UI-03 / delayed capacity response cannot navigate back or show success on another page (2.0s)
+(node:45980) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  4 [mobile] › tests\e2e\event-capacity.spec.ts:31:1 › S2-B-UI-01 / owner capacity, ACTIVE-only counts and unchanged participant quota persist across reloads (8.8s)
+(node:784) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 5 [mobile] › tests\e2e\event-capacity.spec.ts:66:1 › S2-B-UI-02 / server eligibility and stale deadline rejection preserve saved capacity (2.3s)
+  ok 6 [mobile] › tests\e2e\event-capacity.spec.ts:77:1 › S2-B-UI-03 / delayed capacity response cannot navigate back or show success on another page (2.0s)
+
+
+  1) [desktop] › tests\e2e\event-capacity.spec.ts:31:1 › S2-B-UI-01 / owner capacity, ACTIVE-only counts and unchanged participant quota persist across reloads 
+
+    Error: expect(locator).toBeDisabled() failed
+
+    Locator: getByRole('button', { name: /^Reserve my place/ })
+    Expected: disabled
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeDisabled" getByRole('button', { name: /^Reserve my place/ }) with timeout 5000ms
+      - waiting for getByRole('button', { name: /^Reserve my place/ })
+
+
+      39 |  expect((await page.request.get(`/api/events/${id}`)).status()).toBe(200);
+      40 |  await login(page,'participant@example.test');await page.goto(`/events/${third}`);
+    > 41 |  await expect(page.getByTestId('daily-quota')).toContainText('2 / 2');await expect(page.getByRole('button',{name:/^Reserve my place/})).toBeDisabled();
+         |                                                                                                                                         ^
+      42 |  await expect(page.getByRole('form',{name:'Change event capacity'})).toHaveCount(0);
+      43 |  const csrf=(await (await page.request.get('/api/auth/csrf')).json()).data.csrfToken;
+      44 |  expect((await page.request.patch(`/api/events/${id}/capacity`,{headers:{'X-CSRF-Token':csrf},data:{capacity:9}})).status()).toBe(403);
+        at C:\Users\natth\OneDrive\Documents\ChatGPT\SE\gather-sprint2-capacity\tests\e2e\event-capacity.spec.ts:41:137
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    artifacts\playwright-results\event-capacity-S2-B-UI-01--a385e-uota-persist-across-reloads-desktop\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: artifacts\playwright-results\event-capacity-S2-B-UI-01--a385e-uota-persist-across-reloads-desktop\error-context.md
+
+    Error Context: artifacts\playwright-results\event-capacity-S2-B-UI-01--a385e-uota-persist-across-reloads-desktop\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    artifacts\playwright-results\event-capacity-S2-B-UI-01--a385e-uota-persist-across-reloads-desktop\trace.zip
+    Usage:
+
+        npx playwright show-trace artifacts\playwright-results\event-capacity-S2-B-UI-01--a385e-uota-persist-across-reloads-desktop\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [mobile] › tests\e2e\event-capacity.spec.ts:31:1 › S2-B-UI-01 / owner capacity, ACTIVE-only counts and unchanged participant quota persist across reloads 
+
+    Error: expect(locator).toBeDisabled() failed
+
+    Locator: getByRole('button', { name: /^Reserve my place/ })
+    Expected: disabled
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeDisabled" getByRole('button', { name: /^Reserve my place/ }) with timeout 5000ms
+      - waiting for getByRole('button', { name: /^Reserve my place/ })
+
+
+      39 |  expect((await page.request.get(`/api/events/${id}`)).status()).toBe(200);
+      40 |  await login(page,'participant@example.test');await page.goto(`/events/${third}`);
+    > 41 |  await expect(page.getByTestId('daily-quota')).toContainText('2 / 2');await expect(page.getByRole('button',{name:/^Reserve my place/})).toBeDisabled();
+         |                                                                                                                                         ^
+      42 |  await expect(page.getByRole('form',{name:'Change event capacity'})).toHaveCount(0);
+      43 |  const csrf=(await (await page.request.get('/api/auth/csrf')).json()).data.csrfToken;
+      44 |  expect((await page.request.patch(`/api/events/${id}/capacity`,{headers:{'X-CSRF-Token':csrf},data:{capacity:9}})).status()).toBe(403);
+        at C:\Users\natth\OneDrive\Documents\ChatGPT\SE\gather-sprint2-capacity\tests\e2e\event-capacity.spec.ts:41:137
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    artifacts\playwright-results\event-capacity-S2-B-UI-01--a385e-uota-persist-across-reloads-mobile\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: artifacts\playwright-results\event-capacity-S2-B-UI-01--a385e-uota-persist-across-reloads-mobile\error-context.md
+
+    Error Context: artifacts\playwright-results\event-capacity-S2-B-UI-01--a385e-uota-persist-across-reloads-mobile\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    artifacts\playwright-results\event-capacity-S2-B-UI-01--a385e-uota-persist-across-reloads-mobile\trace.zip
+    Usage:
+
+        npx playwright show-trace artifacts\playwright-results\event-capacity-S2-B-UI-01--a385e-uota-persist-across-reloads-mobile\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2 failed
+    [desktop] › tests\e2e\event-capacity.spec.ts:31:1 › S2-B-UI-01 / owner capacity, ACTIVE-only counts and unchanged participant quota persist across reloads 
+    [mobile] › tests\e2e\event-capacity.spec.ts:31:1 › S2-B-UI-01 / owner capacity, ACTIVE-only counts and unchanged participant quota persist across reloads 
+  4 passed (33.0s)

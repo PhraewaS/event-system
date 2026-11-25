@@ -1,0 +1,15 @@
+
+Running 6 tests using 1 worker
+
+(node:36124) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 [desktop] › tests\e2e\event-capacity.spec.ts:31:1 › S2-B-UI-01 / owner capacity, ACTIVE-only counts and unchanged participant quota persist across reloads (6.1s)
+  ok 2 [desktop] › tests\e2e\event-capacity.spec.ts:66:1 › S2-B-UI-02 / server eligibility and stale deadline rejection preserve saved capacity (1.7s)
+  ok 3 [desktop] › tests\e2e\event-capacity.spec.ts:77:1 › S2-B-UI-03 / delayed capacity response cannot navigate back or show success on another page (1.9s)
+(node:38840) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 4 [mobile] › tests\e2e\event-capacity.spec.ts:31:1 › S2-B-UI-01 / owner capacity, ACTIVE-only counts and unchanged participant quota persist across reloads (6.3s)
+  ok 5 [mobile] › tests\e2e\event-capacity.spec.ts:66:1 › S2-B-UI-02 / server eligibility and stale deadline rejection preserve saved capacity (1.9s)
+  ok 6 [mobile] › tests\e2e\event-capacity.spec.ts:77:1 › S2-B-UI-03 / delayed capacity response cannot navigate back or show success on another page (1.9s)
+
+  6 passed (24.2s)

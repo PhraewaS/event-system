@@ -2,7 +2,7 @@
 
 25 พฤศจิกายน 2026 · Developer `guluJa` · independent reviewer `PhraewaS`
 
-**Status: implemented / locally verified; NOT YET accepted in staging or released.** F-05B #85 และ F-06 #9 ยังแยกเป็นงานถัดไป งาน F-05 รวมใน #8 ยังไม่ปิด
+**Status: accepted in sprint2-staging through PR #87; main/GCP release pending.** PhraewaS APPROVED f3c691a วันที่25/11/2026 23:37:38น. UTC+7; merge921ffdcเวลา23:37:45น. พร้อม [staging CI](https://github.com/PhraewaS/event-system/actions/runs/45655949506) ผ่าน Records pending ด้านล่างเป็นประวัติก่อน acceptance นี้ F-05B #85 ดำเนินต่อแยกใน [status matrix](F-05B-implementation.md); F-06 #9 ยังเป็น Sprint3 งาน F-05 รวมใน #8 ยังไม่ปิด
 
 ## Contract → test-first → implementation
 
