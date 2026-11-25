@@ -18,6 +18,7 @@ export type Event = {
   remainingPlaces: number;
   registrationOpen: boolean;
 };
+export type OwnedEvent = Event & {capacityChangeOpen:boolean};
 export type Registration = {
   id: string;
   participantId: string;

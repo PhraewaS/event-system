@@ -1,6 +1,8 @@
 # F-05B — เจ้าของกิจกรรมปรับความจุ
 
-25 พฤศจิกายน 2026 · **Proposal v2 / รอ PhraewaS ตรวจซ้ำก่อน code** · Developer `guluJa`; reviewer `PhraewaS`; [Issue #85](https://github.com/PhraewaS/event-system/issues/85)
+25 พฤศจิกายน 2026 · **Contract v2 accepted in PR #86; implementation รอรีวิว** · Developer `guluJa`; reviewer `PhraewaS`; [Issue #85](https://github.com/PhraewaS/event-system/issues/85)
+
+ประวัติก่อน code: PhraewaS approved contract9477808 ใน PR #86 เวลา16:13:03น. และ mergeเป็นbb5aeccเวลา16:14:08น. UTC+7; F-05A ได้ PhraewaS APPROVED f3c691a ใน PR #87 เวลา23:37:38น. และ mergeเข้า stagingเป็น921ffdcเวลา23:37:45น. วันที่25/11/2026 พร้อม [staging CI](https://github.com/PhraewaS/event-system/actions/runs/45655949506) ผ่านก่อนแยก branch F-05B ผล implementation/tests/review/release แยกใน [status matrix](../sprints/F-05B-implementation.md); pending/planned ใน STS ด้านล่างเป็น snapshot ก่อน implementation
 
 FR-06; BR-01/03/04/07/10; NFR-01–05. งานย่อยของ F-05 เดิมใน [#8](https://github.com/PhraewaS/event-system/issues/8); เชื่อม Issue F-05B ผ่าน Development ของ PR และรายการงานใน #8 หลังเปิดจริง Dependencies: F-01–04 และ [F-05A state/ACTIVE-count contract](F-05A-registration-lifecycle.md). ดู [Sprint 2 plan](../sprints/sprint-2.md)
 
@@ -13,6 +15,8 @@ request ที่ capacity เท่าเดิมผ่านได้ก่�
 ## 2. API / data / errors
 
 `PATCH /api/events/:id/capacity` ต้อง session Organizer + CSRF + valid UUID + strict JSON `{capacity: number}`. 200 `{data: Event}` ตาม public event response เดิม คำนวณ registeredCount/remainingPlaces/registrationOpen จาก ACTIVE state ที่สอดคล้องกันหลัง update
+
+Owner UI อ่าน snapshot จาก `GET /api/organizer/events/:id`: require Organizer+ownership, invalid UUID400/Visitor401/Participant403/foreign-or-absent404; คืน Event พร้อม `capacityChangeOpen` จาก DB clock ก่อน deadline ไม่ใช้ client clock หรือ registrationOpen (งานเต็มยังเพิ่ม capacity ได้) ฟิลด์นี้อยู่เฉพาะ owner response ไม่เพิ่มใน public Event; backend PATCH ตรวจเวลาใหม่หลังได้ lockเสมอ เพราะ eligibility ที่อ่านไว้อาจเก่าแล้ว
 
 | เงื่อนไข | ผล | ผลต่อข้อมูล |
 | --- | --- | --- |
@@ -31,7 +35,7 @@ request ที่ capacity เท่าเดิมผ่านได้ก่�
 
 ## 3. UI และ dependencies
 
-เพิ่ม form ในหน้า owner event/roster แสดง capacity ปัจจุบัน ACTIVE count และที่นั่งคงเหลือ มี validation, submitting, success/error/conflict และ refresh หลังบันทึก Participant/Visitor ไม่เห็นเครื่องมือแก้ แต่ backend ต้องปฏิเสธได้ด้วย ไม่ใช้การซ่อนปุ่มแทน authorization
+เพิ่ม form ในหน้า owner event/roster แสดง capacity ปัจจุบัน ACTIVE count และที่นั่งคงเหลือ มี validation, submitting, success/error/conflict และ refresh หลังบันทึก Participant/Visitor ไม่เห็นเครื่องมือแก้ แต่ backend ต้องปฏิเสธได้ด้วย ไม่ใช้การซ่อนปุ่มแทน authorization ใช้ server eligibility สำหรับ form; delayed response หลังย้ายหน้า/event ต้องไม่แสดง feedback หรือเปลี่ยน URL ในหน้าใหม่
 
 Event list/detail/roster อ่านจำนวนที่อัปเดตหลัง reload การเพิ่ม capacity ไม่เปลี่ยน daily quota ของ Participant; การลด capacity ไม่ลบหรือ cancel ผู้ลงทะเบียน ตรวจ 390×844 และ 1440×1000 โดยคง historical data/session behavior
 

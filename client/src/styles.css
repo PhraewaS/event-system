@@ -953,6 +953,18 @@ progress {
   max-width: 180px;
   display: block;
 }
+.capacity-form {
+  margin: 24px 0 36px;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: white;
+  display: grid;
+  gap: 14px;
+}
+.capacity-form h2, .capacity-form p { margin-bottom: 0; }
+.capacity-form input { max-width: 240px; }
+.capacity-form button { justify-self: start; }
 .form-actions {
   display: flex;
   align-items: center;

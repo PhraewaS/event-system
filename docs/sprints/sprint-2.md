@@ -91,3 +91,15 @@ Review ของ `PhraewaS` ใน [PR #86](https://github.com/PhraewaS/event-sy
 ## 8. Accepted contract และ F-05A implementation
 
 PR #86 ได้รับ PhraewaS APPROVED9477808 วันที่25/11/2026 16:13:03น. และ mergeเป็นbb5aeccเวลา16:14:08น. UTC+7 ข้อความ pending ใน proposal/revision records ก่อนหน้านี้คงตามลำดับประวัติ F-05A เริ่มจากฐานที่ยอมรับนี้ ผลปัจจุบันอยู่ใน [implementation/status matrix](F-05A-implementation.md); การรับ feature เข้า staging/main และ F-05B #85 ยัง pending
+
+## 9. Current Sprint 2 integration status after PR #87
+
+วันที่25/11/2026 PhraewaS APPROVED f3c691a ก่อน PR #87 mergeเข้าsprint2-stagingเป็น921ffdcเวลา23:37:45น. UTC+7; integration CI45655949506ผ่าน จึงเริ่ม F-05B branchจาก921ffdc ข้อความ planned/pending ใน proposalเดิมเป็น snapshotประวัติ ไม่ใช่สถานะปัจจุบัน
+
+| Feature / linked requirements | Actual verification/status | Remaining acceptance |
+| --- | --- | --- |
+| F-05A / FR-06, BR-01–06/10/11, NFR-01–05 | implementation/tests และ independent review acceptedในstaging; [AC→tests/results](F-05A-implementation.md) | Sprint2 main release, real DB cutover/activation และ cloud acceptance ยัง pending |
+| F-05B #85 / FR-06, BR-01/03/04/07/10, NFR-01–05 | implementedบนfeaturebranchหลังรับ A; [9AC→actual tests/status](F-05B-implementation.md) | PhraewaS review, staging integration และ release/post-deploy checks |
+| F-05 parent #8 | ติดตาม A/B และ releaseร่วมกัน | คงเปิดจนขอบเขต F-05 และ acceptanceครบ |
+
+ตามแผนคงเหลือ **2 PR ของ Sprint2**: F-05B feature→sprint2-staging แล้ว reviewed release sprint2-staging→main (หลังintegrationและเอกสารreleaseพร้อม) ใช้ Issuesเดิม #85/#8 ไม่เปิดเพิ่มเพียงเพื่อแยกขั้นตอน tests/เอกสารในfeaturePRเดียวกัน การแก้ตามreviewใช้PRเดิม; หากพบdefectใหม่ที่ต้องแยกจริงจึงประเมินเพิ่ม ไม่รวม F-06/Sprint3 และรายงาน Deliverable2ในจำนวนนี้ การ release/activation/retestอาจมีหลายขั้นแต่ไม่จำเป็นต้องเป็นPRใหม่ทุกขั้น

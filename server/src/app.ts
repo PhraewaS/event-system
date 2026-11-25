@@ -15,6 +15,7 @@ import type { Pool } from "pg";
 import { ZodError } from "zod";
 import {
   emptyInput,
+  capacityInput,
   loginInput,
   pageInput,
   publishInput,
@@ -25,6 +26,8 @@ import { AppError } from "./errors.js";
 import { registerParticipant, cancelRegistration } from "./registrations.js";
 import { lifecycleWritesEnabled } from "./lifecycle.js";
 import { readQuota } from "./quota.js";
+import {eventSelect,ownedEventSelect} from './events.js';
+import {changeEventCapacity} from './capacity.js';
 import { PostgresRateLimitStore } from "./rate-limit-store.js";
 
 declare module "express-session" {
@@ -40,12 +43,6 @@ type User = {
   role: "PARTICIPANT" | "ORGANIZER";
 };
 const user = (res: Response) => res.locals.user as User;
-const eventSelect = `SELECT e.id, e.organizer_id AS "organizerId", u.name AS "organizerName", e.title,
-  e.description, e.location, e.capacity, e.starts_at AS "startsAt", e.registration_deadline AS "registrationDeadline",
-  e.created_at AS "createdAt", c.n AS "registeredCount", e.capacity-c.n AS "remainingPlaces",
-  (clock_timestamp()<e.registration_deadline AND c.n<e.capacity) AS "registrationOpen"
-  FROM events e JOIN users u ON u.id=e.organizer_id
-  CROSS JOIN LATERAL (SELECT count(*)::int AS n FROM registrations WHERE event_id=e.id AND status='ACTIVE') c`;
 const registrationSelect = (lifecycleEnabled: boolean) => `SELECT r.id, r.participant_id AS "participantId", r.created_at AS "createdAt",
   r.status, r.registered_at AS "registeredAt", r.cancelled_at AS "cancelledAt",
   (${lifecycleEnabled ? 'true' : 'false'} AND r.status='ACTIVE' AND clock_timestamp()<e.registration_deadline) AS "canCancel",
@@ -282,6 +279,10 @@ export function createApp(pool: Pool, secret: string, production = false, lifecy
       res.status(201).json({ data: created.rows[0] });
     },
   );
+  app.patch('/api/events/:id/capacity',requireUser,role('ORGANIZER'),csrf,async(req,res)=>{
+    const id=uuid.parse(req.params.id);const input=capacityInput.parse(req.body);
+    res.json({data:await changeEventCapacity(pool,id,user(res).id,input.capacity)});
+  });
   app.post(
     "/api/events/:id/registrations",
     requireUser,
@@ -350,6 +351,12 @@ export function createApp(pool: Pool, secret: string, production = false, lifecy
       page(res, result.rows, offset);
     },
   );
+  app.get('/api/organizer/events/:id',requireUser,role('ORGANIZER'),async(req,res)=>{
+    const id=uuid.parse(req.params.id);
+    const owned=await pool.query(`${ownedEventSelect} WHERE e.id=$1 AND e.organizer_id=$2`,[id,user(res).id]);
+    if(!owned.rowCount)throw new AppError(404,'NOT_FOUND','Event not found.');
+    res.json({data:owned.rows[0]});
+  });
   app.get(
     "/api/events/:id/registrations",
     requireUser,
