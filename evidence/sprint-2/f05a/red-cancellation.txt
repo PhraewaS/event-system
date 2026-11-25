@@ -1,0 +1,41 @@
+
+ RUN  v5.0.5 C:/Users/natth/OneDrive/Documents/ChatGPT/SE/gather-sprint2-lifecycle
+
+ × tests/registration-lifecycle.test.ts > S2-A-API-01 / primary RED: cancel releases exactly one place and quota and preserves own record 260ms
+   → expected 404 to be 200 // Object.is equality
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-02 / repeated cancel is idempotent even after cutoff and with writes disabled
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-03 / active cancellation at or after deadline rejects without writes
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-04 / reactivation returns same ID with new activation and normal inserts stay 201
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-05 / active duplicate, closed, full and quota precedence with no rejected writes
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-06 / ACTIVE-only full aggregate, Thai date/person separation and grandfathered legacy
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-07 / server authorization, CSRF and strict payload preserve data
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-08 / concurrent repeated cancel/reactivate and quota races through independent pools
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-09 / owner/public/own read models agree and disabled writes fail safely
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/registration-lifecycle.test.ts > S2-A-API-01 / primary RED: cancel releases exactly one place and quota and preserves own record
+AssertionError: expected 404 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 404
+
+ ❯ tests/registration-lifecycle.test.ts:43:26
+     41|  expect((await quota(p)).body.data.registeredCount).toBe(1);
+     42|  const response=await cancel(p,original.id);
+     43|  expect(response.status).toBe(200);
+       |                          ^
+     44|  expect(response.body.data).toMatchObject({id:original.id,eventId:e.id…
+     45|  expect(response.body.data.cancelledAt).toBeTruthy();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 8 skipped (9)
+   Start at  16:38:28
+   Duration  5.58s (import 82%, tests 12%, transform 6%)
+

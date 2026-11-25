@@ -1,0 +1,24 @@
+
+ RUN  v5.0.5 C:/Users/natth/OneDrive/Documents/ChatGPT/SE/gather-sprint2-capacity
+
+ ✓ tests/event-capacity.test.ts > S2-B-API-02 / primary RED: owner increases and decreases capacity without changing registrations or quota 485ms
+ ✓ tests/event-capacity.test.ts > S2-B-API-01 / strict capacity inputs and UUID/JSON failures preserve all records 344ms
+ ✓ tests/event-capacity.test.ts > S2-B-API-03 / equality, cancelled rows, empty minimum and no-op retain registration history 364ms
+ ✓ tests/event-capacity.test.ts > S2-B-API-04 / below ACTIVE count rejects with exact no-write snapshot 350ms
+ ✓ tests/event-capacity.test.ts > S2-B-API-05 / closed event rejects even no-op and deadline wins over active count 370ms
+ ✓ tests/event-capacity.test.ts > S2-B-API-06 / role, ownership, CSRF and absent event are denied without private data or writes 509ms
+ ✓ tests/event-capacity.test.ts > S2-B-API-07 / independent pools serialize reduction/increase with registrations and lifecycle races 792ms
+ ✓ tests/event-capacity.test.ts > S2-B-API-07-order-RCA / actual serial reduction-cancel-reactivate schedule agrees with persisted DB 484ms
+ ✓ tests/event-capacity.test.ts > S2-B-API-07-order-RAC / actual serial reduction-cancel-reactivate schedule agrees with persisted DB 452ms
+ ✓ tests/event-capacity.test.ts > S2-B-API-07-order-CRA / actual serial reduction-cancel-reactivate schedule agrees with persisted DB 442ms
+ ✓ tests/event-capacity.test.ts > S2-B-API-07-order-CAR / actual serial reduction-cancel-reactivate schedule agrees with persisted DB 498ms
+ ✓ tests/event-capacity.test.ts > S2-B-API-07-order-ARC / actual serial reduction-cancel-reactivate schedule agrees with persisted DB 459ms
+ ✓ tests/event-capacity.test.ts > S2-B-API-07-order-ACR / actual serial reduction-cancel-reactivate schedule agrees with persisted DB 457ms
+ ✓ tests/event-capacity.test.ts > S2-B-API-05b / DB clock is read after an observed event-lock wait across cutoff 337ms
+ ✓ tests/event-capacity.test.ts > S2-B-REG-01 / fresh app and pool retrieve saved capacity, ACTIVE counts and unchanged lifecycle data 433ms
+
+ Test Files  1 passed (1)
+      Tests  15 passed (15)
+   Start at  00:20:32
+   Duration  7.86s (tests 90%, import 8%, transform 2%)
+

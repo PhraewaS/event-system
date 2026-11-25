@@ -1,0 +1,151 @@
+test-and-docker	Run desktop and mobile browser tests	﻿2026-11-25T16:22:15.4874259Z ##[group]Run npm run test:e2e
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:15.4874790Z ^[[36;1mnpm run test:e2e^[[0m
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:15.4899476Z shell: /usr/bin/bash -e {0}
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:15.4899680Z env:
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:15.4900146Z   DATABASE_URL: ***localhost:5432/event_system_test
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:15.4900543Z   TEST_DATABASE_URL: ***localhost:5432/event_system_test
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:15.4900844Z   SESSION_SECRET: ci-synthetic-session-secret-at-least-32-characters
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:15.4901115Z   NODE_ENV: test
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:15.4901286Z   PYTHONDONTWRITEBYTECODE: 1
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:15.4901515Z   pythonLocation: /opt/hostedtoolcache/Python/3.14.10/x64
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:15.4901841Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.14.10/x64/lib/pkgconfig
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:15.4902139Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.10/x64
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:15.4902409Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.10/x64
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:15.4902671Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.10/x64
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:15.4902992Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.14.10/x64/lib
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:15.4903213Z ##[endgroup]
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:15.5610154Z 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:15.5610652Z > gather-event-system@0.1.0 test:e2e
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:15.5610934Z > playwright test
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:15.5611045Z 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:17.0659726Z 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:17.0660547Z Running 36 tests using 1 worker
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:17.0660879Z 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:22.5753811Z   ✓   1 [desktop] › tests/e2e/daily-quota.spec.ts:37:1 › L7-Q-UI-01 / Q11,Q13 two real reservations, third disabled, own record and next day (1.8s)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:23.6748530Z   ✓   2 [desktop] › tests/e2e/daily-quota.spec.ts:63:1 › L7-Q-UI-02 / Q11,Q12 injected read failure/retry, stale POST and identity switch (1.1s)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:24.2203284Z   ✓   3 [desktop] › tests/e2e/daily-quota.spec.ts:87:1 › L7-Q-UI-03 / Q13 legacy long description and own-record navigation preserved (539ms)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:24.7903033Z   ✓   4 [desktop] › tests/e2e/daily-quota.spec.ts:95:1 › L7-Q-UI-04 / Q04,Q11,Q13 UTC browser shows Thai day and requests matching quota around midnight (563ms)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:25.7200069Z   ✓   5 [desktop] › tests/e2e/daily-quota.spec.ts:115:3 › L7-Q-UI-02b / Q12 late old-account 200 after SPA account switch cannot replace quota or sign out new user (922ms)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:26.6426354Z   ✓   6 [desktop] › tests/e2e/daily-quota.spec.ts:115:3 › L7-Q-UI-02b / Q12 late old-account 401 after SPA account switch cannot replace quota or sign out new user (909ms)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:27.9048284Z   ✓   7 [desktop] › tests/e2e/integration.spec.ts:46:1 › INT-UI-01 / AC-VER-02 competing reservations reconcile winner, loser and owner screens (1.2s)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:28.7187241Z   ✓   8 [desktop] › tests/e2e/integration.spec.ts:98:1 › INT-UI-02 / AC-VER-03 discovery and owned screens consume actual second pages without foreign data (803ms)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:29.9219103Z   ✓   9 [desktop] › tests/e2e/registration-lifecycle.spec.ts:21:1 › S2-A-UI-01 / cancel, reload, reactivate same row and reconcile owner/own/quota (1.2s)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:30.5877687Z   ✓  10 [desktop] › tests/e2e/registration-lifecycle.spec.ts:42:1 › S2-A-UI-02 / stale cancel crossing deadline shows rejection and leaves persisted ACTIVE state (659ms)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:36.1862109Z   ✘  11 [desktop] › tests/e2e/registration-lifecycle.spec.ts:55:1 › S2-A-UI-03 / server eligibility survives a client clock ahead of the deadline (5.5s)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:37.8449946Z   ✓  12 [desktop] › tests/e2e/registration-lifecycle.spec.ts:63:1 › S2-A-UI-04 / late cancel response cannot change the URL after navigation (1.2s)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:38.5704615Z   ✓  13 [desktop] › tests/e2e/ui-review.spec.ts:48:1 › LAB6-76-D1 / AC-05 blank location reports its field and a corrected form can publish (604ms)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:39.3741949Z   ✓  14 [desktop] › tests/e2e/ui-review.spec.ts:72:1 › LAB6-76-D2 / NFR-03 long accepted descriptions stay readable without horizontal overflow (789ms)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:40.9751060Z   ✓  15 [desktop] › tests/e2e/ui-review.spec.ts:121:1 › UI-REVIEW-01 / AC-12-01,04,05,07,08 publish → register → persisted personal view → owner roster (1.6s)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:41.7042989Z   ✓  16 [desktop] › tests/e2e/ui-review.spec.ts:220:1 › UI-REVIEW-02 / AC-12-01,02,08 invalid login, role restrictions and ownership (723ms)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:42.5720543Z   ✓  17 [desktop] › tests/e2e/ui-review.spec.ts:266:1 › UI-REVIEW-03 / AC-12-03,04,07 discovery, validation and closed event states (862ms)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:43.4733554Z   ✓  18 [desktop] › tests/e2e/ui-review.spec.ts:321:1 › UI-REVIEW-04 / AC-12-06,07 loading, empty, API failure and expired private identity (889ms)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:45.7615755Z   ✓  19 [mobile] › tests/e2e/daily-quota.spec.ts:37:1 › L7-Q-UI-01 / Q11,Q13 two real reservations, third disabled, own record and next day (1.8s)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:46.8900362Z   ✓  20 [mobile] › tests/e2e/daily-quota.spec.ts:63:1 › L7-Q-UI-02 / Q11,Q12 injected read failure/retry, stale POST and identity switch (1.1s)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:47.4091808Z   ✓  21 [mobile] › tests/e2e/daily-quota.spec.ts:87:1 › L7-Q-UI-03 / Q13 legacy long description and own-record navigation preserved (512ms)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:48.0745861Z   ✓  22 [mobile] › tests/e2e/daily-quota.spec.ts:95:1 › L7-Q-UI-04 / Q04,Q11,Q13 UTC browser shows Thai day and requests matching quota around midnight (658ms)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:49.0576387Z   ✓  23 [mobile] › tests/e2e/daily-quota.spec.ts:115:3 › L7-Q-UI-02b / Q12 late old-account 200 after SPA account switch cannot replace quota or sign out new user (975ms)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:50.0625614Z   ✓  24 [mobile] › tests/e2e/daily-quota.spec.ts:115:3 › L7-Q-UI-02b / Q12 late old-account 401 after SPA account switch cannot replace quota or sign out new user (991ms)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:51.4030064Z   ✓  25 [mobile] › tests/e2e/integration.spec.ts:46:1 › INT-UI-01 / AC-VER-02 competing reservations reconcile winner, loser and owner screens (1.2s)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:52.2477422Z   ✓  26 [mobile] › tests/e2e/integration.spec.ts:98:1 › INT-UI-02 / AC-VER-03 discovery and owned screens consume actual second pages without foreign data (831ms)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:53.5417550Z   ✓  27 [mobile] › tests/e2e/registration-lifecycle.spec.ts:21:1 › S2-A-UI-01 / cancel, reload, reactivate same row and reconcile owner/own/quota (1.3s)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:54.2377051Z   ✓  28 [mobile] › tests/e2e/registration-lifecycle.spec.ts:42:1 › S2-A-UI-02 / stale cancel crossing deadline shows rejection and leaves persisted ACTIVE state (689ms)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:22:59.8595780Z   ✘  29 [mobile] › tests/e2e/registration-lifecycle.spec.ts:55:1 › S2-A-UI-03 / server eligibility survives a client clock ahead of the deadline (5.5s)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:01.5148628Z   ✓  30 [mobile] › tests/e2e/registration-lifecycle.spec.ts:63:1 › S2-A-UI-04 / late cancel response cannot change the URL after navigation (1.2s)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:02.3257069Z   ✓  31 [mobile] › tests/e2e/ui-review.spec.ts:48:1 › LAB6-76-D1 / AC-05 blank location reports its field and a corrected form can publish (690ms)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:03.3568357Z   ✓  32 [mobile] › tests/e2e/ui-review.spec.ts:72:1 › LAB6-76-D2 / NFR-03 long accepted descriptions stay readable without horizontal overflow (1.0s)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:05.0261277Z   ✓  33 [mobile] › tests/e2e/ui-review.spec.ts:121:1 › UI-REVIEW-01 / AC-12-01,04,05,07,08 publish → register → persisted personal view → owner roster (1.7s)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:05.7628273Z   ✓  34 [mobile] › tests/e2e/ui-review.spec.ts:220:1 › UI-REVIEW-02 / AC-12-01,02,08 invalid login, role restrictions and ownership (730ms)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:06.7741425Z   ✓  35 [mobile] › tests/e2e/ui-review.spec.ts:266:1 › UI-REVIEW-03 / AC-12-03,04,07 discovery, validation and closed event states (1.0s)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.6576359Z   ✓  36 [mobile] › tests/e2e/ui-review.spec.ts:321:1 › UI-REVIEW-04 / AC-12-06,07 loading, empty, API failure and expired private identity (869ms)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7103396Z 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7107185Z 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7116171Z   1) [desktop] › tests/e2e/registration-lifecycle.spec.ts:55:1 › S2-A-UI-03 / server eligibility survives a client clock ahead of the deadline 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7117174Z 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7117313Z     Error: expect(locator).toBeVisible() failed
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7117481Z 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7117667Z     Locator: getByRole('button', { name: 'Cancel registration', exact: true })
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7117960Z     Expected: visible
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7118179Z     Timeout: 5000ms
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7118421Z     Error: element(s) not found
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7118570Z 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7118648Z     Call log:
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7119114Z       - Expect "toBeVisible" getByRole('button', { name: 'Cancel registration', exact: true }) with timeout 5000ms
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7119595Z       - waiting for getByRole('button', { name: 'Cancel registration', exact: true })
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7119808Z 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7119813Z 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7119978Z       57 |  await page.clock.setFixedTime(new Date(Date.now()+400*86400000));
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7120272Z       58 |  await page.reload();
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7120618Z     > 59 |  await expect(page.getByRole('button',{name:'Cancel registration',exact:true})).toBeVisible();
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7120994Z          |                                                                                 ^
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7121358Z       60 |  expect((await page.request.get('/api/registrations/mine')).status()).toBe(200);
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7121649Z       61 | });
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7121795Z       62 |
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7122119Z         at /home/runner/work/event-system/event-system/tests/e2e/registration-lifecycle.spec.ts:59:81
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7122467Z 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7122770Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7123331Z     artifacts/playwright-results/registration-lifecycle-S2--86391-clock-ahead-of-the-deadline-desktop/test-failed-1.png
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7123924Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7124133Z 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7124647Z     Error Context: artifacts/playwright-results/registration-lifecycle-S2--86391-clock-ahead-of-the-deadline-desktop/error-context.md
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7125028Z 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7125371Z     Error Context: artifacts/playwright-results/registration-lifecycle-S2--86391-clock-ahead-of-the-deadline-desktop/error-context.md
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7125731Z 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7126005Z     attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7126526Z     artifacts/playwright-results/registration-lifecycle-S2--86391-clock-ahead-of-the-deadline-desktop/trace.zip
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7126905Z     Usage:
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7126990Z 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7127344Z         npx playwright show-trace artifacts/playwright-results/registration-lifecycle-S2--86391-clock-ahead-of-the-deadline-desktop/trace.zip
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7127794Z 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7128064Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7128278Z 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7128680Z   2) [mobile] › tests/e2e/registration-lifecycle.spec.ts:55:1 › S2-A-UI-03 / server eligibility survives a client clock ahead of the deadline 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7129023Z 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7129140Z     Error: expect(locator).toBeVisible() failed
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7129294Z 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7129465Z     Locator: getByRole('button', { name: 'Cancel registration', exact: true })
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7129757Z     Expected: visible
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7129927Z     Timeout: 5000ms
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7130118Z     Error: element(s) not found
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7130250Z 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7130317Z     Call log:
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7130817Z       - Expect "toBeVisible" getByRole('button', { name: 'Cancel registration', exact: true }) with timeout 5000ms
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7131314Z       - waiting for getByRole('button', { name: 'Cancel registration', exact: true })
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7131532Z 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7131671Z 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7131889Z       57 |  await page.clock.setFixedTime(new Date(Date.now()+400*86400000));
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7132171Z       58 |  await page.reload();
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7132561Z     > 59 |  await expect(page.getByRole('button',{name:'Cancel registration',exact:true})).toBeVisible();
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7133077Z          |                                                                                 ^
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7133571Z       60 |  expect((await page.request.get('/api/registrations/mine')).status()).toBe(200);
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7133989Z       61 | });
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7134189Z       62 |
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7134876Z         at /home/runner/work/event-system/event-system/tests/e2e/registration-lifecycle.spec.ts:59:81
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7135279Z 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7135732Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7136519Z     artifacts/playwright-results/registration-lifecycle-S2--86391-clock-ahead-of-the-deadline-mobile/test-failed-1.png
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7137379Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7137677Z 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7138194Z     Error Context: artifacts/playwright-results/registration-lifecycle-S2--86391-clock-ahead-of-the-deadline-mobile/error-context.md
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7138617Z 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7138950Z     Error Context: artifacts/playwright-results/registration-lifecycle-S2--86391-clock-ahead-of-the-deadline-mobile/error-context.md
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7139589Z 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7139869Z     attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7140379Z     artifacts/playwright-results/registration-lifecycle-S2--86391-clock-ahead-of-the-deadline-mobile/trace.zip
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7140753Z     Usage:
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7140838Z 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7141201Z         npx playwright show-trace artifacts/playwright-results/registration-lifecycle-S2--86391-clock-ahead-of-the-deadline-mobile/trace.zip
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7141582Z 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7141821Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7142018Z 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7142105Z   2 failed
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7142633Z     [desktop] › tests/e2e/registration-lifecycle.spec.ts:55:1 › S2-A-UI-03 / server eligibility survives a client clock ahead of the deadline 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7143354Z     [mobile] › tests/e2e/registration-lifecycle.spec.ts:55:1 › S2-A-UI-03 / server eligibility survives a client clock ahead of the deadline 
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7143766Z   34 passed (51.7s)
+test-and-docker	Run desktop and mobile browser tests	2026-11-25T16:23:07.7803869Z ##[error]Process completed with exit code 1.
+build-and-test	Require successful CI and Docker checks	﻿2026-11-25T16:23:17.7615800Z ##[group]Run test "$RESULT" = success
+build-and-test	Require successful CI and Docker checks	2026-11-25T16:23:17.7616462Z ^[[36;1mtest "$RESULT" = success^[[0m
+build-and-test	Require successful CI and Docker checks	2026-11-25T16:23:19.7697699Z shell: /usr/bin/bash -e {0}
+build-and-test	Require successful CI and Docker checks	2026-11-25T16:23:19.7698628Z env:
+build-and-test	Require successful CI and Docker checks	2026-11-25T16:23:19.7698934Z   RESULT: failure
+build-and-test	Require successful CI and Docker checks	2026-11-25T16:23:19.7699232Z ##[endgroup]
+build-and-test	Require successful CI and Docker checks	2026-11-25T16:23:19.7852516Z ##[error]Process completed with exit code 1.

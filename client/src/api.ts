@@ -18,10 +18,15 @@ export type Event = {
   remainingPlaces: number;
   registrationOpen: boolean;
 };
+export type OwnedEvent = Event & {capacityChangeOpen:boolean};
 export type Registration = {
   id: string;
   participantId: string;
   createdAt: string;
+  status: "ACTIVE" | "CANCELLED";
+  registeredAt: string;
+  cancelledAt: string | null;
+  canCancel: boolean;
   event: Pick<
     Event,
     "id" | "title" | "location" | "startsAt" | "registrationDeadline"

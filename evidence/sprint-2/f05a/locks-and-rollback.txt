@@ -1,0 +1,22 @@
+
+ RUN  v5.0.5 C:/Users/natth/OneDrive/Documents/ChatGPT/SE/gather-sprint2-lifecycle
+
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-01 / primary RED: cancel releases exactly one place and quota and preserves own record
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-02 / repeated cancel is idempotent even after cutoff and with writes disabled
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-03 / active cancellation at or after deadline rejects without writes
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-04 / reactivation returns same ID with new activation and normal inserts stay 201
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-05 / active duplicate, closed, full and quota precedence with no rejected writes
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-06 / ACTIVE-only full aggregate, Thai date/person separation and grandfathered legacy
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-07 / server authorization, CSRF and strict payload preserve data
+ ✓ tests/registration-lifecycle.test.ts > S2-A-API-08 / concurrent repeated cancel/reactivate and quota races through independent pools 737ms
+ ✓ tests/registration-lifecycle.test.ts > S2-A-API-03b / cancellation reads database clock after actual event lock wait 257ms
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-09 / owner/public/own read models agree and disabled writes fail safely
+ ↓ tests/registration-lifecycle-upgrade.test.ts > S2-A-DB-01a / populated upgrade preserves IDs/createdAt and enforces defaults/constraints
+ ↓ tests/registration-lifecycle-upgrade.test.ts > S2-A-DB-01b / actual e2b9842 API and new disabled API both insert on upgraded DB
+ ✓ tests/registration-lifecycle-upgrade.test.ts > S2-A-DB-01c / state-aware rollback app keeps cancelled IDs/history and ACTIVE-only reads 904ms
+
+ Test Files  2 passed (2)
+      Tests  3 passed | 10 skipped (13)
+   Start at  16:49:15
+   Duration  5.82s (tests 68%, import 29%, transform 3%)
+

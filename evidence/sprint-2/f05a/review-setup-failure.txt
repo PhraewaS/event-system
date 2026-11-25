@@ -1,0 +1,39 @@
+
+ RUN  v5.0.5 C:/Users/natth/OneDrive/Documents/ChatGPT/SE/gather-sprint2-lifecycle
+
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-10 / server cancellation eligibility follows DB clock, state and write gate
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-01 / primary RED: cancel releases exactly one place and quota and preserves own record
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-02 / repeated cancel is idempotent even after cutoff and with writes disabled
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-03 / active cancellation at or after deadline rejects without writes
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-04 / reactivation returns same ID with new activation and normal inserts stay 201
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-05 / active duplicate, closed, full and quota precedence with no rejected writes
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-06 / ACTIVE-only full aggregate, Thai date/person separation and grandfathered legacy
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-07 / server authorization, CSRF and strict payload preserve data
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-08 / concurrent repeated cancel/reactivate and quota races through independent pools
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-03b / cancellation reads database clock after actual event lock wait
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-09 / owner/public/own read models agree and disabled writes fail safely
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/registration-lifecycle.test.ts [ tests/registration-lifecycle.test.ts ]
+Error: connect ECONNREFUSED 127.0.0.1:55462
+ ❯ ../gather-lab6-special/node_modules/pg-pool/index.js:45:11
+ ❯ migrate server/src/migrate.ts:9:18
+      7|
+      8| export async function migrate(pool: Pool) {
+      9|   const client = await pool.connect();
+       |                  ^
+     10|   try {
+     11|     await client.query("BEGIN");
+ ❯ tests/registration-lifecycle.test.ts:52:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { errno: -4078, code: 'ECONNREFUSED', syscall: 'connect', address: '127.0.0.1', port: 55462 }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  11 skipped (11)
+   Start at  22:25:12
+   Duration  1.30s (import 85%, transform 12%, tests 1%, worker 1%)
+

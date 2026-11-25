@@ -1,4 +1,18 @@
-# Gather — Event registration (Sprint 1)
+# Gather — Event registration
+
+## Sprint 2 — F-05A/B accepted in staging; main/GCP release pending
+
+Released main baseline is `e2b9842` (Lab7). Contract PR #86 was approved at9477808 before implementation. PhraewaS approved F-05A atf3c691a; PR #87 merged to `sprint2-staging` at921ffdc. PhraewaS approved F-05B at8c543cf; PR #88 merged to staging at86963e3 on26November2026 00:32:15 UTC+7. [Staging integration CI](https://github.com/PhraewaS/event-system/actions/runs/45665807924) passed116 unit/API/DB/client tests and42 desktop/mobile browser executions plus release checks/Compose/Docker. [F-05A evidence](docs/sprints/F-05A-implementation.md), [F-05B contract](docs/features/F-05B-event-capacity.md) and [F-05B actual status/tests](docs/sprints/F-05B-implementation.md) retain the AC mapping and earlier test/review history. **Release PR #89, its final approval/merge, main CI, GCP deployment/cutover/activation and post-deploy acceptance remain pending.** F-06 attendance (#9) is still future Sprint3 work. Further review corrections require fresh CI on their own revision; the86963e3 result does not cover later changes automatically.
+
+Capacity changes use `PATCH /api/events/:id/capacity`, strict integer1–1,000,000, owning Organizer+CSRF, DB clock before cutoff, and new capacity≥ACTIVE count. No new migration, registration deletion or quota change. Owner UI reads eligibility from private `GET /api/organizer/events/:id`; public Event response fields remain unchanged. Set up/migrate/build/test using the existing commands below.
+
+Normal releases keep lifecycle writes disabled until the [cutover/rollback runbook](deploy/lifecycle-release.md) is completed, including retiring old DB logins/sessions rather than treating request timeout as proof of completion. `.env.example` documents the default-false gate; the dedicated browser test server explicitly enables it. Compatibility tests create a unique disposable `s2_upgrade_*_test` database per run and drop only the database that run created; the isolated local/CI test role needs CREATEDB. DB-fence tests additionally create synthetic login roles/tables and require CREATEROLE plus authority to terminate those test-role sessions (the dedicated local/CI PostgreSQL bootstrap test user has this authority). Never grant these privileges to the application runtime or point destructive test suites at the application database. Participant cancellation buttons use server `canCancel`, and delayed cancel responses are guarded after navigation.
+
+Before lifecycle activation, the runbook also requires a cloud-side deployment-identity gate against unsafe historical Deploy demo reruns. The current image SHA/digest checks cannot retrofit historical workflow source. This is a required operator plan, **not evidence that WIF/IAM has already been changed or old reruns rejected**; see the runbook's historical-rerun section.
+
+## Historical Sprint 1 / cloud records
+
+The dated snapshots below retain their original test counts, release references and process findings; they are not results of this F-05A branch. Current feature evidence is linked above.
 
 Gather is a React → Express → PostgreSQL event registration app. Organizers publish capacity-limited events and inspect owned rosters; Participants reserve places and view private registrations. This branch has 47 unit/API/DB/client tests and 12 desktop/mobile browser cases. Hosted PR #39 CI passed 47/47 and 12/12 at 7ea91c9; the reviewer's separate local browser run passed 11 with one Desktop INT-UI-01 timeout, detailed below.
 

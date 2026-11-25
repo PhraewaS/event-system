@@ -1,0 +1,14 @@
+
+ RUN  v5.0.5 C:/Users/natth/OneDrive/Documents/ChatGPT/SE/gather-sprint2-lifecycle
+
+ ✓ tests/registration-lifecycle-upgrade.test.ts > S2-A-DB-01a / populated upgrade preserves IDs/createdAt and enforces defaults/constraints 657ms
+ ✓ tests/registration-lifecycle-upgrade.test.ts > S2-A-DB-01b / actual e2b9842 API and new disabled API both insert on upgraded DB 637ms
+ ✓ tests/registration-lifecycle-upgrade.test.ts > S2-A-DB-01c / state-aware rollback app keeps cancelled IDs/history and ACTIVE-only reads 714ms
+ ✓ tests/registration-lifecycle-unit.test.ts > S2-A-UNIT-01 / exact deadline boundary 3ms
+ ✓ tests/registration-lifecycle-unit.test.ts > S2-A-DEPLOY-01 / lifecycle gate defaults false and rejects invalid config 2ms
+
+ Test Files  2 passed (2)
+      Tests  5 passed (5)
+   Start at  16:43:31
+   Duration  5.28s (tests 83%, import 14%, transform 3%)
+

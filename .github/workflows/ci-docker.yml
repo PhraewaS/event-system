@@ -3,7 +3,7 @@ on:
   workflow_call:
   workflow_dispatch:
   pull_request:
-    branches: [main, sprint1-staging]
+    branches: [main, "sprint*-staging"]
   push:
     branches: [main, "sprint*-staging"]
 permissions:
@@ -38,6 +38,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
+          fetch-depth: 0 # DB-01b loads actual immutable e2b9842 API from Git history.
       - name: Setup Node.js 24
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
@@ -53,6 +54,7 @@ jobs:
           bash deploy/tests/test_deploy_stub.sh
           bash deploy/tests/test_teardown_stub.sh
           bash deploy/tests/test_release_stub.sh
+          python3 deploy/tests/test_lifecycle_release.py
           python3 -m unittest discover -s deploy/tests -p 'test_smoke.py' -v
       - name: Install root dependencies
         run: npm ci

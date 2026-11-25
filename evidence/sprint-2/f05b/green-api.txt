@@ -1,0 +1,20 @@
+
+ RUN  v5.0.5 C:/Users/natth/OneDrive/Documents/ChatGPT/SE/gather-sprint2-capacity
+
+ ✓ tests/event-capacity.test.ts > S2-B-API-02 / primary RED: owner increases and decreases capacity without changing registrations or quota 466ms
+ ✓ tests/event-capacity.test.ts > S2-B-API-01 / strict capacity inputs and UUID/JSON failures preserve all records 386ms
+ ✓ tests/event-capacity.test.ts > S2-B-API-03 / equality, cancelled rows, empty minimum and no-op retain registration history 496ms
+ ✓ tests/event-capacity.test.ts > S2-B-API-04 / below ACTIVE count rejects with exact no-write snapshot 373ms
+ ✓ tests/event-capacity.test.ts > S2-B-API-05 / closed event rejects even no-op and deadline wins over active count 366ms
+ ✓ tests/event-capacity.test.ts > S2-B-API-06 / role, ownership, CSRF and absent event are denied without private data or writes 470ms
+ ✓ tests/event-capacity.test.ts > S2-B-API-07 / independent pools serialize reduction/increase with registrations and lifecycle races 874ms
+ ✓ tests/event-capacity.test.ts > S2-B-API-05b / DB clock is read after an observed event-lock wait across cutoff 411ms
+ ✓ tests/event-capacity.test.ts > S2-B-REG-01 / fresh app and pool retrieve saved capacity, ACTIVE counts and unchanged lifecycle data 508ms
+ ✓ tests/event-capacity-unit.test.ts > S2-B-UNIT-01 / strict integer bounds and payload shape 7ms
+ ✓ tests/event-capacity-unit.test.ts > S2-B-UNIT-02 / exact cutoff and deadline precedence over active lower bound 0ms
+
+ Test Files  2 passed (2)
+      Tests  11 passed (11)
+   Start at  23:45:49
+   Duration  5.96s (tests 80%, import 17%, transform 3%)
+

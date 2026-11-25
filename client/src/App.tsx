@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { thaiEventDay } from "./event-day";
 import {
   api,
@@ -9,6 +9,7 @@ import {
   ApiError,
   type User,
   type Event,
+  type OwnedEvent,
   type Registration,
   type DailyQuota,
   type RosterEntry,
@@ -481,7 +482,7 @@ function EventDetail({
       <Notice error>{result.error || "Event could not be loaded."}</Notice>
     );
   const { event, registrations } = result.value;
-  const registered = registrations.some((r) => r.event.id === id);
+  const registered = registrations.some((r) => r.event.id === id && r.status === "ACTIVE");
   async function register() {
     setBusy(true);
     setError("");
@@ -587,10 +588,29 @@ function EventDetail({
   );
 }
 function MyRegistrations({ navigate }: { navigate: Navigate }) {
+  const generation = useRef(0);
+  useEffect(() => { generation.current++; return () => { generation.current++; }; }, []);
+  const [revision,setRevision] = useState(0);
+  const [busy,setBusy] = useState<string | null>(null);
+  const [feedback,setFeedback] = useState("");
+  const [changeError,setChangeError] = useState("");
   const { value, loading, error } = useResource(
     () => collection<Registration>("/registrations/mine"),
-    "mine",
+    `mine:${revision}`,
   );
+  async function cancel(id:string) {
+    const requestGeneration = generation.current;
+    const requestUrl = window.location.href;
+    const isCurrent = () => requestGeneration === generation.current && requestUrl === window.location.href;
+    setBusy(id);setChangeError("");setFeedback("");
+    try {
+      await api(`/registrations/${id}/cancel`,{method:"POST",body:"{}"});
+      if (!isCurrent()) return;
+      window.history.replaceState({},"","/my-registrations");
+      setFeedback("Registration cancelled. Your place has been released.");
+    } catch(err) {if (isCurrent()) setChangeError(message(err));}
+    finally {if (requestGeneration === generation.current) {setBusy(null);setRevision(v=>v+1);}}
+  }
   return (
     <>
       <Heading eyebrow="YOUR PLANS, ALL TOGETHER" title="My registrations">
@@ -601,6 +621,8 @@ function MyRegistrations({ navigate }: { navigate: Navigate }) {
       {window.location.search.includes("confirmed=") && (
         <Notice>Your place is confirmed. See you there!</Notice>
       )}
+      {feedback && <Notice>{feedback}</Notice>}
+      {changeError && <Notice error>{changeError}</Notice>}
       {loading ? (
         <Loading />
       ) : error ? (
@@ -618,7 +640,7 @@ function MyRegistrations({ navigate }: { navigate: Navigate }) {
                 </span>
               </div>
               <div className="registration-info">
-                <span className="badge">Confirmed</span>
+                <span className={`badge ${r.status === "CANCELLED" ? "muted" : ""}`}>{r.status === "CANCELLED" ? "Cancelled" : "Confirmed"}</span>
                 <h2>
                   <Link to={`/events/${r.event.id}`} navigate={navigate}>
                     {r.event.title}
@@ -629,6 +651,12 @@ function MyRegistrations({ navigate }: { navigate: Navigate }) {
                 </p>
                 <p className="muted-text">{r.event.location}</p>
                 <small className="registration-id">Registration {r.id}</small>
+                {r.canCancel && (
+                  <button type="button" className="button secondary" disabled={busy !== null} onClick={()=>cancel(r.id)}>
+                    {busy === r.id ? "Cancelling…" : "Cancel registration"}
+                  </button>
+                )}
+                {r.status === "CANCELLED" && <p className="muted-text">Your place is no longer reserved. Open the event to register again if a place and daily quota are available.</p>}
               </div>
               <Link
                 className="text-link"
@@ -824,8 +852,8 @@ function Publish({ navigate }: { navigate: Navigate }) {
           </h2>
           <p>Your event becomes visible as soon as you publish.</p>
           <p>
-            Choose your capacity carefully. Published events and capacity cannot
-            be edited in this version.
+            You can change capacity from your event's guest list before registration
+            closes. Capacity cannot be lower than the number of active registrations.
           </p>
           <p>
             Each participant can reserve one place. Registration automatically
@@ -836,12 +864,39 @@ function Publish({ navigate }: { navigate: Navigate }) {
     </>
   );
 }
+function CapacityForm({event,onResult}:{event:OwnedEvent;onResult:(error:string)=>void}) {
+  const [capacity,setCapacity]=useState(String(event.capacity));
+  const [submitting,setSubmitting]=useState(false);
+  const generation=useRef(0);
+  useEffect(()=>{generation.current++;return()=>{generation.current++;};},[]);
+  async function submit(e:FormEvent<HTMLFormElement>){
+    e.preventDefault();const current=generation.current;const url=window.location.href;
+    const isCurrent=()=>current===generation.current&&window.location.href===url;
+    setSubmitting(true);
+    try{
+      await api<Event>(`/events/${event.id}/capacity`,{method:'PATCH',body:JSON.stringify({capacity:Number(capacity)})});
+      if(isCurrent())onResult('');
+    }catch(error){if(isCurrent())onResult(message(error));}
+    finally{if(isCurrent())setSubmitting(false);}
+  }
+  return <form className="capacity-form" aria-label="Change event capacity" onSubmit={submit}>
+    <h2>Event capacity</h2>
+    <p>Choose 1–1,000,000 places, with at least {event.registeredCount} for current active registrations. Cancelled registrations do not use a place.</p>
+    <label htmlFor="event-capacity">Total capacity</label>
+    <input id="event-capacity" name="capacity" type="number" min="1" max="1000000" step="1" required value={capacity}
+      disabled={submitting||!event.capacityChangeOpen} onChange={e=>setCapacity(e.target.value)} />
+    {!event.capacityChangeOpen&&<p>Capacity changes for this event have closed.</p>}
+    <button className="button" type="submit" disabled={submitting||!event.capacityChangeOpen}>{submitting?'Saving…':'Save capacity'}</button>
+  </form>;
+}
 function Roster({ id, navigate }: { id: string; navigate: Navigate }) {
+  const [revision,setRevision]=useState(0);
+  const [feedback,setFeedback]=useState<{eventId:string;error:boolean;text:string}|null>(null);
   const { value, loading, error } = useResource(async () => {
     // Check private ownership first; public event details alone grant no roster access.
     const roster = await collection<RosterEntry>(`/events/${id}/registrations`);
-    return { event: await api<Event>(`/events/${id}`), roster };
-  }, id);
+    return { event: await api<OwnedEvent>(`/organizer/events/${id}`), roster };
+  }, `${id}:${revision}`);
   if (loading) return <Loading />;
   if (error || !value)
     return <Notice error>{error || "Unable to load registrations."}</Notice>;
@@ -876,6 +931,11 @@ function Roster({ id, navigate }: { id: string; navigate: Navigate }) {
           <span>Total capacity</span>
         </div>
       </div>
+      {feedback?.eventId===id&&<Notice error={feedback.error}>{feedback.text}</Notice>}
+      <CapacityForm key={`${id}:${revision}`} event={value.event} onResult={error=>{
+        setFeedback({eventId:id,error:!!error,text:error||'Capacity updated. Registration counts have been refreshed.'});
+        setRevision(v=>v+1);
+      }} />
       <div className="section-heading">
         <h2>Registrations</h2>
         <span className="muted-text">

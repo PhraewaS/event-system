@@ -15,6 +15,7 @@ import type { Pool } from "pg";
 import { ZodError } from "zod";
 import {
   emptyInput,
+  capacityInput,
   loginInput,
   pageInput,
   publishInput,
@@ -22,8 +23,11 @@ import {
   uuid,
 } from "./validation.js";
 import { AppError } from "./errors.js";
-import { registerParticipant } from "./registrations.js";
+import { registerParticipant, cancelRegistration } from "./registrations.js";
+import { lifecycleWritesEnabled } from "./lifecycle.js";
 import { readQuota } from "./quota.js";
+import {eventSelect,ownedEventSelect} from './events.js';
+import {changeEventCapacity} from './capacity.js';
 import { PostgresRateLimitStore } from "./rate-limit-store.js";
 
 declare module "express-session" {
@@ -39,13 +43,9 @@ type User = {
   role: "PARTICIPANT" | "ORGANIZER";
 };
 const user = (res: Response) => res.locals.user as User;
-const eventSelect = `SELECT e.id, e.organizer_id AS "organizerId", u.name AS "organizerName", e.title,
-  e.description, e.location, e.capacity, e.starts_at AS "startsAt", e.registration_deadline AS "registrationDeadline",
-  e.created_at AS "createdAt", c.n AS "registeredCount", e.capacity-c.n AS "remainingPlaces",
-  (clock_timestamp()<e.registration_deadline AND c.n<e.capacity) AS "registrationOpen"
-  FROM events e JOIN users u ON u.id=e.organizer_id
-  CROSS JOIN LATERAL (SELECT count(*)::int AS n FROM registrations WHERE event_id=e.id) c`;
-const registrationSelect = `SELECT r.id, r.participant_id AS "participantId", r.created_at AS "createdAt",
+const registrationSelect = (lifecycleEnabled: boolean) => `SELECT r.id, r.participant_id AS "participantId", r.created_at AS "createdAt",
+  r.status, r.registered_at AS "registeredAt", r.cancelled_at AS "cancelledAt",
+  (${lifecycleEnabled ? 'true' : 'false'} AND r.status='ACTIVE' AND clock_timestamp()<e.registration_deadline) AS "canCancel",
   json_build_object('id', e.id, 'title', e.title, 'location', e.location, 'startsAt', e.starts_at,
     'registrationDeadline', e.registration_deadline) AS event
   FROM registrations r JOIN events e ON e.id=r.event_id`;
@@ -59,7 +59,7 @@ const page = (res: Response, rows: unknown[], offset: number) =>
     },
   });
 
-export function createApp(pool: Pool, secret: string, production = false) {
+export function createApp(pool: Pool, secret: string, production = false, lifecycleEnabled = lifecycleWritesEnabled()) {
   if (secret.length < 32)
     throw new Error(
       "SESSION_SECRET must contain at least 32 random characters.",
@@ -279,6 +279,10 @@ export function createApp(pool: Pool, secret: string, production = false) {
       res.status(201).json({ data: created.rows[0] });
     },
   );
+  app.patch('/api/events/:id/capacity',requireUser,role('ORGANIZER'),csrf,async(req,res)=>{
+    const id=uuid.parse(req.params.id);const input=capacityInput.parse(req.body);
+    res.json({data:await changeEventCapacity(pool,id,user(res).id,input.capacity)});
+  });
   app.post(
     "/api/events/:id/registrations",
     requireUser,
@@ -287,9 +291,15 @@ export function createApp(pool: Pool, secret: string, production = false) {
     async (req, res) => {
       const id = uuid.parse(req.params.id);
       emptyInput.parse(req.body);
-      res
-        .status(201)
-        .json({ data: await registerParticipant(pool, id, user(res).id) });
+      const result = await registerParticipant(pool, id, user(res).id, lifecycleEnabled);
+      res.status(result.created ? 201 : 200).json({data:result.registration});
+    },
+  );
+  app.post(
+    "/api/registrations/:id/cancel", requireUser, role("PARTICIPANT"), csrf,
+    async (req,res) => {
+      const id=uuid.parse(req.params.id);emptyInput.parse(req.body);
+      res.json({data:await cancelRegistration(pool,id,user(res).id,lifecycleEnabled)});
     },
   );
   app.get(
@@ -299,7 +309,7 @@ export function createApp(pool: Pool, secret: string, production = false) {
     async (req, res) => {
       const { offset } = pageInput.parse(req.query);
       const result = await pool.query(
-        `${registrationSelect} WHERE r.participant_id=$1 ORDER BY r.created_at DESC,r.id LIMIT 200 OFFSET $2`,
+        `${registrationSelect(lifecycleEnabled)} WHERE r.participant_id=$1 ORDER BY r.created_at DESC,r.id LIMIT 200 OFFSET $2`,
         [user(res).id, offset],
       );
       page(res, result.rows, offset);
@@ -320,7 +330,7 @@ export function createApp(pool: Pool, secret: string, production = false) {
     role("PARTICIPANT"),
     async (req, res) => {
       const found = await pool.query(
-        `${registrationSelect} WHERE r.id=$1 AND r.participant_id=$2`,
+        `${registrationSelect(lifecycleEnabled)} WHERE r.id=$1 AND r.participant_id=$2`,
         [uuid.parse(req.params.id), user(res).id],
       );
       if (!found.rowCount)
@@ -341,6 +351,12 @@ export function createApp(pool: Pool, secret: string, production = false) {
       page(res, result.rows, offset);
     },
   );
+  app.get('/api/organizer/events/:id',requireUser,role('ORGANIZER'),async(req,res)=>{
+    const id=uuid.parse(req.params.id);
+    const owned=await pool.query(`${ownedEventSelect} WHERE e.id=$1 AND e.organizer_id=$2`,[id,user(res).id]);
+    if(!owned.rowCount)throw new AppError(404,'NOT_FOUND','Event not found.');
+    res.json({data:owned.rows[0]});
+  });
   app.get(
     "/api/events/:id/registrations",
     requireUser,
@@ -356,7 +372,7 @@ export function createApp(pool: Pool, secret: string, production = false) {
         throw new AppError(404, "NOT_FOUND", "Event not found.");
       const result = await pool.query(
         `SELECT r.id,r.created_at AS "createdAt",json_build_object('id',u.id,'name',u.name,'email',u.email) AS participant
-      FROM registrations r JOIN users u ON u.id=r.participant_id WHERE r.event_id=$1 ORDER BY r.created_at,r.id LIMIT 200 OFFSET $2`,
+      FROM registrations r JOIN users u ON u.id=r.participant_id WHERE r.event_id=$1 AND r.status='ACTIVE' ORDER BY r.created_at,r.id LIMIT 200 OFFSET $2`,
         [id, offset],
       );
       page(res, result.rows, offset);
