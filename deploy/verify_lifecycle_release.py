@@ -13,6 +13,8 @@ def verify():
  if os.environ.get('ACTIVATE_LIFECYCLE','false')=='true':
   if os.environ.get('LIFECYCLE_CUTOVER_CONFIRMED')!='true' or not re.fullmatch(proof,os.environ.get('LIFECYCLE_CUTOVER_EVIDENCE','')):
    raise ValueError('Activation requires confirmed old-traffic drain and recorded cutover evidence.')
+  if os.environ.get('LIFECYCLE_DB_FENCE_CONFIRMED')!='true' or not re.fullmatch(proof,os.environ.get('LIFECYCLE_DB_FENCE_EVIDENCE','')):
+   raise ValueError('Activation requires retired database logins/sessions and recorded database-fence evidence; timeout alone is insufficient.')
 if __name__=='__main__':
  try:verify()
  except (ValueError,KeyError,TypeError) as e:print('Lifecycle release blocked: '+str(e),file=sys.stderr);sys.exit(1)

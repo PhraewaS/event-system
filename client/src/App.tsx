@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { thaiEventDay } from "./event-day";
 import {
   api,
@@ -587,6 +587,8 @@ function EventDetail({
   );
 }
 function MyRegistrations({ navigate }: { navigate: Navigate }) {
+  const generation = useRef(0);
+  useEffect(() => { generation.current++; return () => { generation.current++; }; }, []);
   const [revision,setRevision] = useState(0);
   const [busy,setBusy] = useState<string | null>(null);
   const [feedback,setFeedback] = useState("");
@@ -596,13 +598,17 @@ function MyRegistrations({ navigate }: { navigate: Navigate }) {
     `mine:${revision}`,
   );
   async function cancel(id:string) {
+    const requestGeneration = generation.current;
+    const requestUrl = window.location.href;
+    const isCurrent = () => requestGeneration === generation.current && requestUrl === window.location.href;
     setBusy(id);setChangeError("");setFeedback("");
     try {
       await api(`/registrations/${id}/cancel`,{method:"POST",body:"{}"});
+      if (!isCurrent()) return;
       window.history.replaceState({},"","/my-registrations");
       setFeedback("Registration cancelled. Your place has been released.");
-    } catch(err) {setChangeError(message(err));}
-    finally {setBusy(null);setRevision(v=>v+1);}
+    } catch(err) {if (isCurrent()) setChangeError(message(err));}
+    finally {if (requestGeneration === generation.current) {setBusy(null);setRevision(v=>v+1);}}
   }
   return (
     <>
@@ -644,7 +650,7 @@ function MyRegistrations({ navigate }: { navigate: Navigate }) {
                 </p>
                 <p className="muted-text">{r.event.location}</p>
                 <small className="registration-id">Registration {r.id}</small>
-                {r.status === "ACTIVE" && Date.now() < Date.parse(r.event.registrationDeadline) && (
+                {r.canCancel && (
                   <button type="button" className="button secondary" disabled={busy !== null} onClick={()=>cancel(r.id)}>
                     {busy === r.id ? "Cancelling…" : "Cancel registration"}
                   </button>

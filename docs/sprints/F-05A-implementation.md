@@ -17,7 +17,7 @@
 
 Feature branch: `codex/sprint2-registration-lifecycle-8` จาก stagingbb5aecc. Hosted CI/teammate review/merge/release ต้องบันทึกหลังเกิดจริง ไม่ใช้ผลของ #86 แทน
 
-## Actual verification
+## Actual verification — initial submission 81e28e1
 
 Local runtime: Node24.19.0, PostgreSQL17, Edge157 ผ่าน Playwright ที่390×844 และ1440×1000; ฐานใหม่ `gather_sprint2_lifecycle_test` และ `_upgrade_test` บน127.0.0.1:55462 ไม่ใช้ Cloud SQL
 
@@ -68,3 +68,24 @@ screenshots สร้างจาก synthetic fixtures; แต่ละ viewpor
 - PhraewaS ต้องตรวจ feature diff/tests/permissions และ revisionล่าสุดก่อน mergeเข้าsprint2-staging จากนั้นจึงเริ่ม F-05B จาก stagingที่ยอมรับแล้ว; #8 ยังเปิดรอขอบเขตF-05และreleaseครบ
 
 AI assistance: ใช้ AI ช่วย implementation, tests และการรวบรวมหลักฐาน; `guluJa` เป็นเจ้าของงาน/ดำเนิน Issue และ PR; `PhraewaS` รีวิว contract แล้ว ส่วน implementation review ยัง pending ไม่อ้าง pair programming หรือ manual execution โดยสมาชิกทั้งสอง
+
+## Review #87 — corrections on 25 November 2026
+
+[PhraewaS review ใน PR #87](https://github.com/PhraewaS/event-system/pull/87) เกิดที่ 81e28e1 เวลา22:10:09น. UTC+7; ยอมรับแก้ทั้งสามข้อเพราะเป็น gaps ของ acceptance/STS เดิม ไม่เพิ่มขอบเขต F-05B หรือย้าย release ก่อน review
+
+| ข้อเสนอ | การแก้ / actual tests |
+| --- | --- |
+| Timeout ไม่ยืนยัน writer เก่าหยุด | เพิ่ม operator script `deploy/fence-legacy-db.mjs`: distinct old/new/admin logins, NOLOGIN old role + terminate sessions + zero sessions + explicit reconnect rejection; DEPLOY-02/03 ใช้ local PostgreSQL จริงและยืนยัน uncommitted old write ไม่ถูก commit; release activation ต้องมี DB-fence confirmation/evidence เพิ่มจาก traffic evidence |
+| Server eligibility และ late response | own-list/detail เพิ่ม `canCancel` จาก DB clock/status/gate; API-10 ตรวจ active/cancelled/cutoff/gatefalse; UI-03 ตั้ง client clock ล่วงหน้า; UI-04 hold response แล้วนำทางออก ต้องไม่เปลี่ยน URL กลับหรือแสดงหน้าเก่า ทั้งสอง viewports |
+| DB isolation และ coexistence assertions | random `s2_upgrade_*_test` ใหม่ต่อ invocation; reset/drop เฉพาะ DB ที่ run สร้างสำเร็จ พร้อม legacy extraction directory แยก; DB-01b ตรวจ public counts/remaining places/owner roster จาก actual old และ new API หลังแต่ละรุ่นลงทะเบียนใน event เดียวกัน |
+
+### Test-first and executed evidence
+
+- RED commit `59a1a1b`: [API eligibility](../../evidence/sprint-2/f05a/review-red-eligibility.txt) 1 failed/10 filtered, [browser](../../evidence/sprint-2/f05a/review-red-browser.txt) 4 failed จาก clock-skew/URL overwrite, [activation guard](../../evidence/sprint-2/f05a/review-red-fence-gate.txt) 2 failed/4 passed
+- เริ่ม local PostgreSQL ใน sandbox ไม่สำเร็จหนึ่งครั้ง (ECONNREFUSED); เก็บ [setup failure](../../evidence/sprint-2/f05a/review-setup-failure.txt) แยก **ไม่นับเป็น meaningful RED** หลังเปิดเฉพาะ test cluster พอร์ต55462 แล้วจึงเก็บ RED จริงด้านบน
+- [Build](../../evidence/sprint-2/f05a/review-build.txt) ผ่าน; [targeted API/DB](../../evidence/sprint-2/f05a/review-green-api-db.txt) 16 passed (ก่อนเพิ่ม assertion ยืนยัน persisted rollback); [lifecycle browser](../../evidence/sprint-2/f05a/review-green-browser.txt) 8 passed/0 failed ที่สองviewport รวมเคสเดิมและใหม่ ไม่ใช้ผล8นี้แทน full browser regression
+- [Parallel upgrade run 1](../../evidence/sprint-2/f05a/review-upgrade-parallel-1.txt) / [run 2](../../evidence/sprint-2/f05a/review-upgrade-parallel-2.txt) ทำงานพร้อมกัน ใช้คนละ DB จริง 3 passed ต่อรอบ และ cleanup DB ที่ตนสร้างสำเร็จเท่านั้น
+- [Offline activation/rollback tests](../../evidence/sprint-2/f05a/review-green-fence-gate.txt) 6 passed; fake gcloud ไม่มี cloud mutations
+- [Full unit/API/DB/client regression](../../evidence/sprint-2/f05a/review-full-tests.txt) หลัง corrections ทั้งหมด: 99 passed/0 failed/0 skipped (14 files); เพิ่มจาก96เดิมคือ API-10 และ DEPLOY-02/03; hosted CI ของ PR ต้องผ่าน revision ล่าสุดก่อน review/merge
+
+ข้อจำกัด: PostgreSQL role retirement ทดสอบจริงเฉพาะ local synthetic roles/database; **ยังไม่ได้ retire Cloud SQL credentials, deploy หรือยืนยัน cloud cutover** การเปิด lifecycle จริงยังต้องให้ operator ทำ inventory revisions/jobs → pinned replacement secret version → fence ทุก old login → ตรวจ proof → activation ตาม runbook Workflow ตรวจ flags/URL format แต่ไม่รับรอง private DB state แทน operator; คง #8 เปิดไว้

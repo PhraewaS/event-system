@@ -11,12 +11,21 @@ on:
         required: false
         default: false
       lifecycle_cutover_confirmed:
-        description: Old revision traffic/tags removed and request timeout drain completed
+        description: Old revision traffic/tags removed; database writers fenced separately
         type: boolean
         required: false
         default: false
       lifecycle_cutover_evidence:
         description: GitHub evidence URL documenting the completed cutover checks
+        type: string
+        required: false
+      lifecycle_db_fence_confirmed:
+        description: All old runtime DB logins disabled, sessions terminated, and reconnect rejected
+        type: boolean
+        required: false
+        default: false
+      lifecycle_db_fence_evidence:
+        description: GitHub evidence URL for verified DB-role retirement and old-revision inventory
         type: string
         required: false
       image_tag:
@@ -63,6 +72,8 @@ jobs:
       ACTIVATE_LIFECYCLE: ${{ github.event_name == 'workflow_dispatch' && inputs.activate_lifecycle || 'false' }}
       LIFECYCLE_CUTOVER_CONFIRMED: ${{ inputs.lifecycle_cutover_confirmed || 'false' }}
       LIFECYCLE_CUTOVER_EVIDENCE: ${{ inputs.lifecycle_cutover_evidence }}
+      LIFECYCLE_DB_FENCE_CONFIRMED: ${{ inputs.lifecycle_db_fence_confirmed || 'false' }}
+      LIFECYCLE_DB_FENCE_EVIDENCE: ${{ inputs.lifecycle_db_fence_evidence }}
       LIFECYCLE_APPROVED_IMAGES_JSON: ${{ vars.LIFECYCLE_APPROVED_IMAGES_JSON || '[]' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7

@@ -46,8 +46,9 @@ const eventSelect = `SELECT e.id, e.organizer_id AS "organizerId", u.name AS "or
   (clock_timestamp()<e.registration_deadline AND c.n<e.capacity) AS "registrationOpen"
   FROM events e JOIN users u ON u.id=e.organizer_id
   CROSS JOIN LATERAL (SELECT count(*)::int AS n FROM registrations WHERE event_id=e.id AND status='ACTIVE') c`;
-const registrationSelect = `SELECT r.id, r.participant_id AS "participantId", r.created_at AS "createdAt",
+const registrationSelect = (lifecycleEnabled: boolean) => `SELECT r.id, r.participant_id AS "participantId", r.created_at AS "createdAt",
   r.status, r.registered_at AS "registeredAt", r.cancelled_at AS "cancelledAt",
+  (${lifecycleEnabled ? 'true' : 'false'} AND r.status='ACTIVE' AND clock_timestamp()<e.registration_deadline) AS "canCancel",
   json_build_object('id', e.id, 'title', e.title, 'location', e.location, 'startsAt', e.starts_at,
     'registrationDeadline', e.registration_deadline) AS event
   FROM registrations r JOIN events e ON e.id=r.event_id`;
@@ -307,7 +308,7 @@ export function createApp(pool: Pool, secret: string, production = false, lifecy
     async (req, res) => {
       const { offset } = pageInput.parse(req.query);
       const result = await pool.query(
-        `${registrationSelect} WHERE r.participant_id=$1 ORDER BY r.created_at DESC,r.id LIMIT 200 OFFSET $2`,
+        `${registrationSelect(lifecycleEnabled)} WHERE r.participant_id=$1 ORDER BY r.created_at DESC,r.id LIMIT 200 OFFSET $2`,
         [user(res).id, offset],
       );
       page(res, result.rows, offset);
@@ -328,7 +329,7 @@ export function createApp(pool: Pool, secret: string, production = false, lifecy
     role("PARTICIPANT"),
     async (req, res) => {
       const found = await pool.query(
-        `${registrationSelect} WHERE r.id=$1 AND r.participant_id=$2`,
+        `${registrationSelect(lifecycleEnabled)} WHERE r.id=$1 AND r.participant_id=$2`,
         [uuid.parse(req.params.id), user(res).id],
       );
       if (!found.rowCount)

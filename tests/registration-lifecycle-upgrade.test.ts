@@ -5,22 +5,27 @@ import request from 'supertest';
 import {execFileSync} from 'node:child_process';
 import {pathToFileURL} from 'node:url';
 import path from 'node:path';
+import {randomUUID} from 'node:crypto';
 import {createApp} from '../server/src/app.js';
 import {migrate} from '../server/src/migrate.js';
 import {seed,demoIds} from '../server/src/seed.js';
 
 const target=new URL(process.env.TEST_DATABASE_URL!);
 if(!target.pathname.endsWith('_test')||!['127.0.0.1','localhost'].includes(target.hostname))throw new Error('Local disposable *_test DB required');
-const name=target.pathname.slice(1)+'_upgrade_test';if(name.length>63)throw new Error('Test DB name too long');
+// A run owns a newly created DB; never reuse/drop a fixed developer DB.
+const name=`s2_upgrade_${process.pid}_${randomUUID().replaceAll('-','')}_test`;
+let created=false;
 const adminUrl=new URL(target);adminUrl.pathname='/postgres';target.pathname='/'+name;
 const pool=new Pool({connectionString:target.href});
 const secret='s2-upgrade-synthetic-session-secret-at-least-32';const password='S2-upgrade-synthetic-password!';
 let oldCreate:typeof createApp;let oldMigrate:typeof migrate;
 beforeAll(async()=>{
  const admin=new Pool({connectionString:adminUrl.href});
- try{if(!(await admin.query('SELECT 1 FROM pg_database WHERE datname=$1',[name])).rowCount)await admin.query(`CREATE DATABASE "${name}"`);}finally{await admin.end();}
- execFileSync(process.execPath,['scripts/prepare-lifecycle-legacy.mjs']);
- const root=path.resolve('artifacts/legacy-e2b9842/server/src');
+ try{await admin.query(`CREATE DATABASE "${name}"`);created=true;}finally{await admin.end();}
+ console.info(`Disposable upgrade database: ${name}`);
+ const extraction=`artifacts/legacy-e2b9842-${name}`;
+ execFileSync(process.execPath,['scripts/prepare-lifecycle-legacy.mjs',extraction]);
+ const root=path.resolve(extraction,'server/src');
  oldCreate=(await import(pathToFileURL(path.join(root,'app.ts')).href)).createApp;
  oldMigrate=(await import(pathToFileURL(path.join(root,'migrate.ts')).href)).migrate;
 });
@@ -29,7 +34,10 @@ beforeEach(async()=>{
  await pool.query('DROP SCHEMA public CASCADE; CREATE SCHEMA public');
  await oldMigrate(pool);await seed(pool,password);
 });
-afterAll(async()=>{await pool.end();});
+afterAll(async()=>{
+ await pool.end();
+ if(created){const admin=new Pool({connectionString:adminUrl.href});try{await admin.query(`DROP DATABASE "${name}"`);}finally{await admin.end();}}
+});
 async function actor(app:ReturnType<typeof createApp>,email='participant@example.test'){
  const agent=request.agent(app);const b=await agent.get('/api/auth/csrf');
  const r=await agent.post('/api/auth/login').set('X-CSRF-Token',b.body.data.csrfToken).send({email,password}).expect(200);
@@ -55,8 +63,18 @@ test('S2-A-DB-01a / populated upgrade preserves IDs/createdAt and enforces defau
 });
 test('S2-A-DB-01b / actual e2b9842 API and new disabled API both insert on upgraded DB',async()=>{
  await migrate(pool);const old=oldCreate(pool,secret);const fresh=createApp(pool,secret,false,false);
- const oldP=await actor(old);await post(oldP,(await event(old)).id).expect(201);
- const newP=await actor(fresh,'participant2@example.test');await post(newP,(await event(fresh)).id).expect(201);
+ const e=await event(old);const oldP=await actor(old);const oldReg=(await post(oldP,e.id).expect(201)).body.data;
+ async function checkBoth(count:number,ids:string[]){
+  for(const app of [old,fresh]){
+   expect((await request(app).get(`/api/events/${e.id}`).expect(200)).body.data).toMatchObject({registeredCount:count,remainingPlaces:10-count});
+   const owner=await actor(app,'organizer@example.test');
+   const roster=(await owner.agent.get(`/api/events/${e.id}/registrations`).expect(200)).body.data;
+   expect(roster.map((r:{id:string})=>r.id).sort()).toEqual([...ids].sort());
+  }
+ }
+ await checkBoth(1,[oldReg.id]);
+ const newP=await actor(fresh,'participant2@example.test');const newReg=(await post(newP,e.id).expect(201)).body.data;
+ await checkBoth(2,[oldReg.id,newReg.id]);
  const rows=(await pool.query('SELECT status,registered_at,cancelled_at FROM registrations')).rows;
  expect(rows).toHaveLength(2);for(const row of rows){expect(row.status).toBe('ACTIVE');expect(row.registered_at).toBeInstanceOf(Date);expect(row.cancelled_at).toBeNull();}
  for(const p of [oldP,newP]){const day=new Date(Date.now()+40*86400000+7*3600000).toISOString().slice(0,10);expect((await p.agent.get(`/api/registrations/quota?date=${day}`)).body.data.registeredCount).toBe(1);}

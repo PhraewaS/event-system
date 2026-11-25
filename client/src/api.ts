@@ -25,6 +25,7 @@ export type Registration = {
   status: "ACTIVE" | "CANCELLED";
   registeredAt: string;
   cancelledAt: string | null;
+  canCancel: boolean;
   event: Pick<
     Event,
     "id" | "title" | "location" | "startsAt" | "registrationDeadline"

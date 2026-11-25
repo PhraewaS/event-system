@@ -1,0 +1,25 @@
+
+ RUN  v5.0.5 C:/Users/natth/OneDrive/Documents/ChatGPT/SE/gather-sprint2-lifecycle
+
+ ✓ tests/registration-lifecycle.test.ts > S2-A-API-10 / server cancellation eligibility follows DB clock, state and write gate 460ms
+ ✓ tests/registration-lifecycle.test.ts > S2-A-API-01 / primary RED: cancel releases exactly one place and quota and preserves own record 193ms
+ ✓ tests/registration-lifecycle.test.ts > S2-A-API-02 / repeated cancel is idempotent even after cutoff and with writes disabled 244ms
+ ✓ tests/registration-lifecycle.test.ts > S2-A-API-03 / active cancellation at or after deadline rejects without writes 163ms
+ ✓ tests/registration-lifecycle.test.ts > S2-A-API-04 / reactivation returns same ID with new activation and normal inserts stay 201 171ms
+ ✓ tests/registration-lifecycle.test.ts > S2-A-API-05 / active duplicate, closed, full and quota precedence with no rejected writes 478ms
+ ✓ tests/registration-lifecycle.test.ts > S2-A-API-06 / ACTIVE-only full aggregate, Thai date/person separation and grandfathered legacy 10935ms
+ ✓ tests/registration-lifecycle.test.ts > S2-A-API-07 / server authorization, CSRF and strict payload preserve data 285ms
+ ✓ tests/registration-lifecycle.test.ts > S2-A-API-08 / concurrent repeated cancel/reactivate and quota races through independent pools 571ms
+ ✓ tests/registration-lifecycle.test.ts > S2-A-API-03b / cancellation reads database clock after actual event lock wait 223ms
+ ✓ tests/registration-lifecycle.test.ts > S2-A-API-09 / owner/public/own read models agree and disabled writes fail safely 320ms
+ ✓ tests/registration-lifecycle-upgrade.test.ts > S2-A-DB-01a / populated upgrade preserves IDs/createdAt and enforces defaults/constraints 511ms
+ ✓ tests/registration-lifecycle-upgrade.test.ts > S2-A-DB-01b / actual e2b9842 API and new disabled API both insert on upgraded DB 734ms
+ ✓ tests/registration-lifecycle-upgrade.test.ts > S2-A-DB-01c / state-aware rollback app keeps cancelled IDs/history and ACTIVE-only reads 643ms
+ ✓ tests/lifecycle-db-fence.test.ts > S2-A-DEPLOY-02 / real PostgreSQL rejects reconnect and rolls back an old in-flight writer after role fencing 360ms
+ ✓ tests/lifecycle-db-fence.test.ts > S2-A-DEPLOY-03 / shared old and replacement credentials fail before NOLOGIN mutation 131ms
+
+ Test Files  3 passed (3)
+      Tests  16 passed (16)
+   Start at  22:28:25
+   Duration  21.28s (tests 91%, import 8%, transform 1%)
+
