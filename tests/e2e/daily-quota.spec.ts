@@ -18,6 +18,8 @@ test.beforeEach(async()=>{
 });
 test.afterAll(async()=>{await pool.end();});
 async function login(page:Page,email="participant@example.test") {
+  // A click does not await an async logout handler. Do not abort it with goto.
+  await expect(page.getByRole("button",{name:"Sign out",exact:true})).toHaveCount(0);
   await page.goto("/login"); await page.getByLabel("Email address",{exact:true}).fill(email);
   await page.getByLabel("Password",{exact:true}).fill(password);
   await page.getByRole("button",{name:"Sign in",exact:true}).click(); await expect(page).toHaveURL(/\/events$/);

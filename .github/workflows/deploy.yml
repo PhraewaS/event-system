@@ -5,6 +5,20 @@ on:
     branches: [main]
   workflow_dispatch:
     inputs:
+      activate_lifecycle:
+        description: Enable lifecycle writes on an already verified state-aware image
+        type: boolean
+        required: false
+        default: false
+      lifecycle_cutover_confirmed:
+        description: Old revision traffic/tags removed and request timeout drain completed
+        type: boolean
+        required: false
+        default: false
+      lifecycle_cutover_evidence:
+        description: GitHub evidence URL documenting the completed cutover checks
+        type: string
+        required: false
       image_tag:
         description: Full commit SHA of the approved image
         required: true
@@ -46,6 +60,10 @@ jobs:
       IMAGE_TAG: ${{ github.event_name == 'push' && github.sha || inputs.image_tag }}
       EXPECTED_IMAGE_DIGEST: ${{ inputs.image_digest }}
       ROLLBACK: ${{ github.event_name == 'workflow_dispatch' }}
+      ACTIVATE_LIFECYCLE: ${{ github.event_name == 'workflow_dispatch' && inputs.activate_lifecycle || 'false' }}
+      LIFECYCLE_CUTOVER_CONFIRMED: ${{ inputs.lifecycle_cutover_confirmed || 'false' }}
+      LIFECYCLE_CUTOVER_EVIDENCE: ${{ inputs.lifecycle_cutover_evidence }}
+      LIFECYCLE_APPROVED_IMAGES_JSON: ${{ vars.LIFECYCLE_APPROVED_IMAGES_JSON || '[]' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -106,6 +124,7 @@ jobs:
             fi
             printf -- '- Commit image tag: `%s`\n' "$IMAGE_TAG"
             printf -- '- Deployed image digest: `%s`\n' "$DEPLOYED_IMAGE"
+            printf -- '- Lifecycle writes enabled: `%s`\n' "$ACTIVATE_LIFECYCLE"
             printf -- '- URL: %s\n' "$SERVICE_URL"
             printf -- '- Smoke test: passed (health, readiness, homepage, JavaScript, events)\n'
             printf -- '- SKIP login: optional login smoke is disabled for this release\n'

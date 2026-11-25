@@ -8,7 +8,8 @@ export function quotaSnapshot(date: string, registeredCount: number) {
 export async function readQuota(db: Pool | PoolClient, participantId: string, date: string) {
   const result = await db.query(
     `SELECT count(*)::int AS count FROM registrations r JOIN events e ON e.id=r.event_id
-     WHERE r.participant_id=$1 AND (e.starts_at AT TIME ZONE 'Asia/Bangkok')::date=$2::date`,
+     WHERE r.participant_id=$1 AND r.status='ACTIVE'
+       AND (e.starts_at AT TIME ZONE 'Asia/Bangkok')::date=$2::date`,
     [participantId, date],
   );
   return quotaSnapshot(date, result.rows[0].count);

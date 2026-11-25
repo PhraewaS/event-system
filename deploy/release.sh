@@ -45,8 +45,11 @@ set -euo pipefail
 SERVICE_NAME="${SERVICE_NAME:-gather}"
 MIGRATE_JOB_NAME="${MIGRATE_JOB_NAME:-gather-migrate}"
 ROLLBACK="${ROLLBACK:-false}"
+ACTIVATE_LIFECYCLE="${ACTIVATE_LIFECYCLE:-false}"
+export ROLLBACK ACTIVATE_LIFECYCLE
 [[ "$IMAGE_TAG" =~ ^[0-9a-f]{40}$ ]] || { echo 'Invalid image tag.' >&2; exit 1; }
 [[ "$ROLLBACK" == true || "$ROLLBACK" == false ]] || { echo 'Invalid rollback mode.' >&2; exit 1; }
+[[ "$ACTIVATE_LIFECYCLE" == true || "$ACTIVATE_LIFECYCLE" == false ]] || { echo 'Invalid activation mode.' >&2; exit 1; }
 
 # ------------------------------------------------------------------------------
 # 2. Find the image and pin it by digest
@@ -62,6 +65,12 @@ if [[ -n "${EXPECTED_IMAGE_DIGEST:-}" && "$DIGEST_IMAGE" != "$IMAGE_REPO@$EXPECT
   exit 1
 fi
 
+# A traffic rollback does not undo database state. No unverified old reader may
+# receive traffic once lifecycle state exists. Validate BEFORE any mutation.
+"${PYTHON_COMMAND:-python3}" "$(dirname "$0")/verify_lifecycle_release.py"
+LIFECYCLE_WRITES=false
+if [[ "$ACTIVATE_LIFECYCLE" == true ]]; then LIFECYCLE_WRITES=true; fi
+
 # ------------------------------------------------------------------------------
 # 3. Database migration (normal release only; `--wait` blocks until it finishes)
 #    ⭐ IMPORTANT: a failure here aborts the release (set -e) — service untouched.
@@ -76,7 +85,9 @@ fi
 # ------------------------------------------------------------------------------
 # 4. Point the Cloud Run service at the image and send it 100% of traffic
 # ------------------------------------------------------------------------------
-gcloud run services update "$SERVICE_NAME" --image="$DIGEST_IMAGE" --project="$PROJECT_ID" --region="$REGION" --quiet
+gcloud run services update "$SERVICE_NAME" --image="$DIGEST_IMAGE" \
+  --update-env-vars="REGISTRATION_LIFECYCLE_WRITES_ENABLED=$LIFECYCLE_WRITES" \
+  --project="$PROJECT_ID" --region="$REGION" --quiet
 # Restore 100% traffic to the new latest revision even if it was previously pinned.
 gcloud run services update-traffic "$SERVICE_NAME" --to-latest --project="$PROJECT_ID" --region="$REGION" --quiet
 

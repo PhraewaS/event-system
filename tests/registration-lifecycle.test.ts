@@ -9,7 +9,7 @@ import { seed, demoIds } from "../server/src/seed.js";
 
 const url = process.env.TEST_DATABASE_URL;
 if (!url || !new URL(url).pathname.endsWith("_test")) throw new Error("Dedicated *_test DB required");
-const pool = new Pool({connectionString:url, max:12});
+const pool = new Pool({connectionString:url, max:12,application_name:"s2-primary-api"});
 const other = new Pool({connectionString:url,max:12,application_name:"s2-other-api"});
 const secret = "sprint2-synthetic-session-secret-32-characters";
 const password = "Sprint2-synthetic-test-password!";
@@ -32,6 +32,23 @@ const cancel=(p:Actor,id:string)=>p.agent.post(`/api/registrations/${id}/cancel`
 const quota=(p:Actor)=>p.agent.get(`/api/registrations/quota?date=${day}`);
 const rows=async()=> (await pool.query("SELECT * FROM registrations ORDER BY id")).rows;
 const publicEvent=(id:string)=>request(app).get(`/api/events/${id}`);
+async function waitForLock(queryPrefix:string,count=1){
+ const end=Date.now()+5000;
+ while(Date.now()<end){
+  const waiting=await pool.query("SELECT count(*)::int n FROM pg_stat_activity WHERE application_name IN ('s2-primary-api','s2-other-api') AND wait_event_type='Lock' AND query LIKE $1",[queryPrefix+'%']);
+  if(waiting.rows[0].n>=count)return;
+  await new Promise(r=>setTimeout(r,10));
+ }
+ throw new Error('Expected actual database lock wait was not observed');
+}
+async function compete(actions:(()=>PromiseLike<request.Response>)[]){
+ const blocker=await pool.connect();let pending:Promise<request.Response[]>|undefined;
+ try{
+  await blocker.query('BEGIN');await blocker.query('SELECT id FROM users WHERE id=$1 FOR UPDATE',[demoIds.participant]);
+  pending=Promise.all(actions.map(a=>a()));
+  await waitForLock('SELECT id FROM users WHERE id=',2);await blocker.query('COMMIT');return await pending;
+ }finally{await blocker.query('ROLLBACK');blocker.release();if(pending)await pending.catch(()=>{});}
+}
 beforeAll(async()=>{await migrate(pool); await pool.query("TRUNCATE registrations,events,users,session,login_rate_limits CASCADE");await seed(pool,password);});
 beforeEach(async()=>{await pool.query("TRUNCATE registrations,events,session,login_rate_limits CASCADE");});
 afterAll(async()=>{await Promise.all([pool.end(),other.end()]);});
@@ -114,15 +131,26 @@ test("S2-A-API-07 / server authorization, CSRF and strict payload preserve data"
 
 test("S2-A-API-08 / concurrent repeated cancel/reactivate and quota races through independent pools",async()=>{
  const p=await actor();const rival=await actor("participant@example.test",second);const e=await event(1);const r=(await post(p,e.id).expect(201)).body.data;
- const cancelled=await Promise.all([cancel(p,r.id),cancel(rival,r.id)]);expect(cancelled.map(x=>x.status)).toEqual([200,200]);
+ const cancelled=await compete([()=>cancel(p,r.id),()=>cancel(rival,r.id)]);expect(cancelled.map(x=>x.status)).toEqual([200,200]);
  expect((await quota(p)).body.data.registeredCount).toBe(0);
- const active=await Promise.all([post(p,e.id),post(rival,e.id)]);expect(active.map(x=>x.status).sort()).toEqual([200,409]);expect((await rows()).length).toBe(1);
- const b=await event();const c=await event();const race=await Promise.all([post(p,b.id),post(rival,c.id)]);
+ const active=await compete([()=>post(p,e.id),()=>post(rival,e.id)]);expect(active.map(x=>x.status).sort()).toEqual([200,409]);expect((await rows()).length).toBe(1);
+ const b=await event();const c=await event();const race=await compete([()=>post(p,b.id),()=>post(rival,c.id)]);
  expect(race.map(x=>x.status).sort()).toEqual([201,409]);expect((await quota(p)).body.data.registeredCount).toBe(2);
- const loser=race[0].status===409?b:c; const mixed=await Promise.all([cancel(p,r.id),post(rival,loser.id)]);
+ const loser=race[0].status===409?b:c; const mixed=await compete([()=>cancel(p,r.id),()=>post(rival,loser.id)]);
  expect(mixed[0].status).toBe(200);expect([201,409]).toContain(mixed[1].status);
  expect((await quota(p)).body.data.registeredCount).toBeLessThanOrEqual(2);
  expect((await publicEvent(e.id)).body.data.registeredCount).toBe(0);
+});
+
+test('S2-A-API-03b / cancellation reads database clock after actual event lock wait',async()=>{
+ const p=await actor();const rival=await actor('participant@example.test',second);const e=await event();const r=(await post(p,e.id).expect(201)).body.data;const before=await rows();
+ const blocker=await pool.connect();let pending:Promise<request.Response>|undefined;
+ try{
+  await blocker.query('BEGIN');await blocker.query('SELECT id FROM events WHERE id=$1 FOR UPDATE',[e.id]);
+  pending=cancel(rival,r.id).then(x=>x);await waitForLock('SELECT registration_deadline FROM events');
+  await blocker.query('UPDATE events SET registration_deadline=clock_timestamp() WHERE id=$1',[e.id]);await blocker.query('COMMIT');
+  const response=await pending;expect(response.status).toBe(409);expect(response.body.error.code).toBe('CANCELLATION_CLOSED');expect(await rows()).toEqual(before);
+ }finally{await blocker.query('ROLLBACK');blocker.release();if(pending)await pending.catch(()=>{});}
 });
 
 test("S2-A-API-09 / owner/public/own read models agree and disabled writes fail safely",async()=>{

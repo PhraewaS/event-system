@@ -1,5 +1,5 @@
 """S2-A-DEPLOY-01: offline fake gcloud, no cloud access or real credentials."""
-import json,os,shutil,subprocess,tempfile,unittest
+import json,os,shutil,subprocess,tempfile,unittest,sys
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[2]
 SHA='1'*40; DIGEST='sha256:'+'a'*64
@@ -17,7 +17,7 @@ esac
 ''',encoding='utf-8');stub.chmod(0o755)
   self.env={**os.environ,'PATH':str(self.folder)+os.pathsep+os.environ['PATH'],'CALL_LOG':str(self.log).replace('\\','/'),
    'PROJECT_ID':'release-test','REGION':'asia-southeast1','IMAGE_TAG':SHA,'EXPECTED_IMAGE_DIGEST':DIGEST,'ROLLBACK':'true',
-   'ACTIVATE_LIFECYCLE':'false','LIFECYCLE_CUTOVER_CONFIRMED':'false','LIFECYCLE_APPROVED_IMAGES_JSON':'[]'}
+   'ACTIVATE_LIFECYCLE':'false','LIFECYCLE_CUTOVER_CONFIRMED':'false','LIFECYCLE_APPROVED_IMAGES_JSON':'[]','PYTHON_COMMAND':sys.executable.replace('\\','/')}
  def tearDown(self):self.tmp.cleanup()
  def run_release(self,**changes):
   env={**self.env,**changes}

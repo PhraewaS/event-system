@@ -21,6 +21,7 @@ trap 'rm -rf "$TASK_TMP"' EXIT
 export PROJECT_ID=release-test REGION=asia-southeast1
 export IMAGE_TAG=1111111111111111111111111111111111111111
 export FIXTURE_DIGEST=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+export LIFECYCLE_APPROVED_IMAGES_JSON='[{"sha":"1111111111111111111111111111111111111111","digest":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","compatibility":"ACTIVE_V1","evidence":"https://github.com/PhraewaS/event-system/actions/runs/123"}]'
 export CALL_LOG="$TASK_TMP/calls" GITHUB_ENV="$TASK_TMP/env"
 export PATH="$TASK_TMP:$PATH"
 cat > "$TASK_TMP/gcloud" <<'STUB'

@@ -41,6 +41,7 @@ export default defineConfig({
       NODE_ENV: "test",
       PORT: "3100",
       SESSION_SECRET: "e2e-synthetic-session-secret-at-least-32-chars",
+      REGISTRATION_LIFECYCLE_WRITES_ENABLED: "true", // Dedicated test server only.
     },
     timeout: 60000,
   },
