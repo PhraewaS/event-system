@@ -89,3 +89,11 @@ AI assistance: ใช้ AI ช่วย implementation, tests และกา�
 - [Full unit/API/DB/client regression](../../evidence/sprint-2/f05a/review-full-tests.txt) หลัง corrections ทั้งหมด: 99 passed/0 failed/0 skipped (14 files); เพิ่มจาก96เดิมคือ API-10 และ DEPLOY-02/03; hosted CI ของ PR ต้องผ่าน revision ล่าสุดก่อน review/merge
 
 ข้อจำกัด: PostgreSQL role retirement ทดสอบจริงเฉพาะ local synthetic roles/database; **ยังไม่ได้ retire Cloud SQL credentials, deploy หรือยืนยัน cloud cutover** การเปิด lifecycle จริงยังต้องให้ operator ทำ inventory revisions/jobs → pinned replacement secret version → fence ทุก old login → ตรวจ proof → activation ตาม runbook Workflow ตรวจ flags/URL format แต่ไม่รับรอง private DB state แทน operator; คง #8 เปิดไว้
+
+### Follow-up review at 7f49a7a
+
+PhraewaS ยืนยัน UI/upgrade tests และ CI แล้ว แต่ขอแผนรองรับ legacy Cloud SQL role ที่มี CREATEROLE (review25/11/2026 23:09:06น. UTC+7) จึงเพิ่ม read-only preflight SQL สำหรับ flags/memberships/ownership/session และ operator authority พร้อมเส้นทาง manual retirement ของ privileged old login ใน runbook คง guard ของ `fence-legacy-db.mjs` เดิมไว้ ไม่ให้ ordinary-role automation เปลี่ยน privileged account โดยอัตโนมัติ
+
+เป็นการขยาย deployment procedure ตาม Part E ของ Deliverable2; **ไม่มีการเปลี่ยน application code, migrations, Cloud SQL roles/secrets หรือการ deploy ในรอบนี้** คำสั่ง mutation ใน runbook เป็นแผนที่ต้องให้ operator ตรวจสิทธิ์และดำเนินการภายหลัง หลักฐาน actual cloud fence/activation ยังคง pending
+
+ตรวจ syntax/execution ของ read-only preflight บน local PostgreSQL17.11 ที่พอร์ต55462; [ผล local](../../evidence/sprint-2/f05a/followup-preflight-local.txt) ระบุ transaction_read_only=on และ COMMIT สำเร็จ ใช้ synthetic local test owner เป็นทั้ง operator/old role และ replacement ที่ไม่มีอยู่เพื่อแสดงกรณีที่ต้องหยุด **ไม่ใช่ preflight ผ่านสำหรับ cutover** และไม่ใช่ค่าของบัญชี gather บน Cloud SQL
