@@ -87,3 +87,7 @@ Acceptance ของ PR เอกสารนี้แยกจาก feature ac
 Review ของ `PhraewaS` ใน [PR #86](https://github.com/PhraewaS/event-system/pull/86) วันที่ 25/11/2026 04:27:24 น. (UTC+7), บน a74a20f: รับข้อเสนอ defaults/NOT NULL, old-app upgrade test, compatible rollback และ gate evidence ทั้งหมด เนื่องจาก Deliverable 2 §§3.2/3.5/4.2 ต้องคง persistence, setup/migration และ release safety จริง การเพิ่มนี้ยังเป็น contract/test design ก่อน implementation ไม่ใช่ผลรัน feature ใหม่
 
 25/11/2026: `PhraewaS` ตรวจ425c630เวลา04:47:36และยืนยันว่า contract migration/rollback ครบ ก่อนแนบผลตั้ง protection เวลา14:06:16; อัปเดตหลักฐานตามจริงใน gate record แล้ว formal approval/contract acceptance ยังรอ review revision ล่าสุดและ CI ของรอบเพิ่มหลักฐาน
+
+## 8. Accepted contract และ F-05A implementation
+
+PR #86 ได้รับ PhraewaS APPROVED9477808 วันที่25/11/2026 16:13:03น. และ mergeเป็นbb5aeccเวลา16:14:08น. UTC+7 ข้อความ pending ใน proposal/revision records ก่อนหน้านี้คงตามลำดับประวัติ F-05A เริ่มจากฐานที่ยอมรับนี้ ผลปัจจุบันอยู่ใน [implementation/status matrix](F-05A-implementation.md); การรับ feature เข้า staging/main และ F-05B #85 ยัง pending

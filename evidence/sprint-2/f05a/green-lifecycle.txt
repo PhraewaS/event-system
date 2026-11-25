@@ -1,0 +1,18 @@
+
+ RUN  v5.0.5 C:/Users/natth/OneDrive/Documents/ChatGPT/SE/gather-sprint2-lifecycle
+
+ ✓ tests/registration-lifecycle.test.ts > S2-A-API-01 / primary RED: cancel releases exactly one place and quota and preserves own record 277ms
+ ✓ tests/registration-lifecycle.test.ts > S2-A-API-02 / repeated cancel is idempotent even after cutoff and with writes disabled 234ms
+ ✓ tests/registration-lifecycle.test.ts > S2-A-API-03 / active cancellation at or after deadline rejects without writes 155ms
+ ✓ tests/registration-lifecycle.test.ts > S2-A-API-04 / reactivation returns same ID with new activation and normal inserts stay 201 160ms
+ ✓ tests/registration-lifecycle.test.ts > S2-A-API-05 / active duplicate, closed, full and quota precedence with no rejected writes 451ms
+ ✓ tests/registration-lifecycle.test.ts > S2-A-API-06 / ACTIVE-only full aggregate, Thai date/person separation and grandfathered legacy 10492ms
+ ✓ tests/registration-lifecycle.test.ts > S2-A-API-07 / server authorization, CSRF and strict payload preserve data 288ms
+ ✓ tests/registration-lifecycle.test.ts > S2-A-API-08 / concurrent repeated cancel/reactivate and quota races through independent pools 425ms
+ ✓ tests/registration-lifecycle.test.ts > S2-A-API-09 / owner/public/own read models agree and disabled writes fail safely 290ms
+
+ Test Files  1 passed (1)
+      Tests  9 passed (9)
+   Start at  16:39:55
+   Duration  13.87s (tests 95%, import 4%, transform 1%)
+

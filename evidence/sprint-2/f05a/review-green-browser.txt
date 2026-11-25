@@ -1,0 +1,17 @@
+
+Running 8 tests using 1 worker
+
+(node:39916) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 [desktop] › tests\e2e\registration-lifecycle.spec.ts:21:1 › S2-A-UI-01 / cancel, reload, reactivate same row and reconcile owner/own/quota (3.3s)
+  ok 2 [desktop] › tests\e2e\registration-lifecycle.spec.ts:42:1 › S2-A-UI-02 / stale cancel crossing deadline shows rejection and leaves persisted ACTIVE state (1.4s)
+  ok 3 [desktop] › tests\e2e\registration-lifecycle.spec.ts:55:1 › S2-A-UI-03 / server eligibility survives a client clock ahead of the deadline (1.3s)
+  ok 4 [desktop] › tests\e2e\registration-lifecycle.spec.ts:63:1 › S2-A-UI-04 / late cancel response cannot change the URL after navigation (1.9s)
+(node:8224) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 5 [mobile] › tests\e2e\registration-lifecycle.spec.ts:21:1 › S2-A-UI-01 / cancel, reload, reactivate same row and reconcile owner/own/quota (3.3s)
+  ok 6 [mobile] › tests\e2e\registration-lifecycle.spec.ts:42:1 › S2-A-UI-02 / stale cancel crossing deadline shows rejection and leaves persisted ACTIVE state (1.5s)
+  ok 7 [mobile] › tests\e2e\registration-lifecycle.spec.ts:55:1 › S2-A-UI-03 / server eligibility survives a client clock ahead of the deadline (1.3s)
+  ok 8 [mobile] › tests\e2e\registration-lifecycle.spec.ts:63:1 › S2-A-UI-04 / late cancel response cannot change the URL after navigation (1.9s)
+
+  8 passed (18.9s)

@@ -1,0 +1,178 @@
+
+Running 4 tests using 1 worker
+
+(node:42068) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  1 [desktop] › tests\e2e\registration-lifecycle.spec.ts:55:1 › S2-A-UI-03 / server eligibility survives a client clock ahead of the deadline (7.1s)
+(node:11828) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  2 [desktop] › tests\e2e\registration-lifecycle.spec.ts:63:1 › S2-A-UI-04 / late cancel response cannot change the URL after navigation (7.8s)
+(node:27100) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  3 [mobile] › tests\e2e\registration-lifecycle.spec.ts:55:1 › S2-A-UI-03 / server eligibility survives a client clock ahead of the deadline (6.9s)
+(node:40228) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  4 [mobile] › tests\e2e\registration-lifecycle.spec.ts:63:1 › S2-A-UI-04 / late cancel response cannot change the URL after navigation (7.8s)
+
+
+  1) [desktop] › tests\e2e\registration-lifecycle.spec.ts:55:1 › S2-A-UI-03 / server eligibility survives a client clock ahead of the deadline 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('button', { name: 'Cancel registration', exact: true })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('button', { name: 'Cancel registration', exact: true }) with timeout 5000ms
+      - waiting for getByRole('button', { name: 'Cancel registration', exact: true })
+
+
+      57 |  await page.clock.setFixedTime(new Date(Date.now()+400*86400000));
+      58 |  await page.reload();
+    > 59 |  await expect(page.getByRole('button',{name:'Cancel registration',exact:true})).toBeVisible();
+         |                                                                                 ^
+      60 |  expect((await page.request.get('/api/registrations/mine')).status()).toBe(200);
+      61 | });
+      62 |
+        at C:\Users\natth\OneDrive\Documents\ChatGPT\SE\gather-sprint2-lifecycle\tests\e2e\registration-lifecycle.spec.ts:59:81
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    artifacts\playwright-results\registration-lifecycle-S2--86391-clock-ahead-of-the-deadline-desktop\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: artifacts\playwright-results\registration-lifecycle-S2--86391-clock-ahead-of-the-deadline-desktop\error-context.md
+
+    Error Context: artifacts\playwright-results\registration-lifecycle-S2--86391-clock-ahead-of-the-deadline-desktop\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    artifacts\playwright-results\registration-lifecycle-S2--86391-clock-ahead-of-the-deadline-desktop\trace.zip
+    Usage:
+
+        npx playwright show-trace artifacts\playwright-results\registration-lifecycle-S2--86391-clock-ahead-of-the-deadline-desktop\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [desktop] › tests\e2e\registration-lifecycle.spec.ts:63:1 › S2-A-UI-04 / late cancel response cannot change the URL after navigation 
+
+    Error: expect(page).toHaveURL(expected) failed
+
+    Expected pattern: /\/events$/
+    Received string:  "http://127.0.0.1:3212/my-registrations"
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toHaveURL" with timeout 5000ms
+        14 × locator resolved to <html lang="en">…</html>
+           - unexpected value "http://127.0.0.1:3212/my-registrations"
+
+
+      74 |   await page.getByRole('link',{name:'Explore events',exact:false}).click();await expect(page).toHaveURL(/\/events$/);
+      75 |   release();await finished;await response;await page.waitForLoadState('networkidle');
+    > 76 |   await expect(page).toHaveURL(/\/events$/);await expect(page.getByRole('heading',{name:'My registrations',exact:true})).toHaveCount(0);
+         |                      ^
+      77 |   expect((await pool.query('SELECT status FROM registrations WHERE event_id=$1',[id])).rows[0].status).toBe('CANCELLED');
+      78 |  }finally{release();}
+      79 | });
+        at C:\Users\natth\OneDrive\Documents\ChatGPT\SE\gather-sprint2-lifecycle\tests\e2e\registration-lifecycle.spec.ts:76:22
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    artifacts\playwright-results\registration-lifecycle-S2--e347c-ge-the-URL-after-navigation-desktop\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: artifacts\playwright-results\registration-lifecycle-S2--e347c-ge-the-URL-after-navigation-desktop\error-context.md
+
+    Error Context: artifacts\playwright-results\registration-lifecycle-S2--e347c-ge-the-URL-after-navigation-desktop\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    artifacts\playwright-results\registration-lifecycle-S2--e347c-ge-the-URL-after-navigation-desktop\trace.zip
+    Usage:
+
+        npx playwright show-trace artifacts\playwright-results\registration-lifecycle-S2--e347c-ge-the-URL-after-navigation-desktop\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [mobile] › tests\e2e\registration-lifecycle.spec.ts:55:1 › S2-A-UI-03 / server eligibility survives a client clock ahead of the deadline 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('button', { name: 'Cancel registration', exact: true })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('button', { name: 'Cancel registration', exact: true }) with timeout 5000ms
+      - waiting for getByRole('button', { name: 'Cancel registration', exact: true })
+
+
+      57 |  await page.clock.setFixedTime(new Date(Date.now()+400*86400000));
+      58 |  await page.reload();
+    > 59 |  await expect(page.getByRole('button',{name:'Cancel registration',exact:true})).toBeVisible();
+         |                                                                                 ^
+      60 |  expect((await page.request.get('/api/registrations/mine')).status()).toBe(200);
+      61 | });
+      62 |
+        at C:\Users\natth\OneDrive\Documents\ChatGPT\SE\gather-sprint2-lifecycle\tests\e2e\registration-lifecycle.spec.ts:59:81
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    artifacts\playwright-results\registration-lifecycle-S2--86391-clock-ahead-of-the-deadline-mobile\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: artifacts\playwright-results\registration-lifecycle-S2--86391-clock-ahead-of-the-deadline-mobile\error-context.md
+
+    Error Context: artifacts\playwright-results\registration-lifecycle-S2--86391-clock-ahead-of-the-deadline-mobile\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    artifacts\playwright-results\registration-lifecycle-S2--86391-clock-ahead-of-the-deadline-mobile\trace.zip
+    Usage:
+
+        npx playwright show-trace artifacts\playwright-results\registration-lifecycle-S2--86391-clock-ahead-of-the-deadline-mobile\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) [mobile] › tests\e2e\registration-lifecycle.spec.ts:63:1 › S2-A-UI-04 / late cancel response cannot change the URL after navigation 
+
+    Error: expect(page).toHaveURL(expected) failed
+
+    Expected pattern: /\/events$/
+    Received string:  "http://127.0.0.1:3212/my-registrations"
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toHaveURL" with timeout 5000ms
+        14 × locator resolved to <html lang="en">…</html>
+           - unexpected value "http://127.0.0.1:3212/my-registrations"
+
+
+      74 |   await page.getByRole('link',{name:'Explore events',exact:false}).click();await expect(page).toHaveURL(/\/events$/);
+      75 |   release();await finished;await response;await page.waitForLoadState('networkidle');
+    > 76 |   await expect(page).toHaveURL(/\/events$/);await expect(page.getByRole('heading',{name:'My registrations',exact:true})).toHaveCount(0);
+         |                      ^
+      77 |   expect((await pool.query('SELECT status FROM registrations WHERE event_id=$1',[id])).rows[0].status).toBe('CANCELLED');
+      78 |  }finally{release();}
+      79 | });
+        at C:\Users\natth\OneDrive\Documents\ChatGPT\SE\gather-sprint2-lifecycle\tests\e2e\registration-lifecycle.spec.ts:76:22
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    artifacts\playwright-results\registration-lifecycle-S2--e347c-ge-the-URL-after-navigation-mobile\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: artifacts\playwright-results\registration-lifecycle-S2--e347c-ge-the-URL-after-navigation-mobile\error-context.md
+
+    Error Context: artifacts\playwright-results\registration-lifecycle-S2--e347c-ge-the-URL-after-navigation-mobile\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    artifacts\playwright-results\registration-lifecycle-S2--e347c-ge-the-URL-after-navigation-mobile\trace.zip
+    Usage:
+
+        npx playwright show-trace artifacts\playwright-results\registration-lifecycle-S2--e347c-ge-the-URL-after-navigation-mobile\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4 failed
+    [desktop] › tests\e2e\registration-lifecycle.spec.ts:55:1 › S2-A-UI-03 / server eligibility survives a client clock ahead of the deadline 
+    [desktop] › tests\e2e\registration-lifecycle.spec.ts:63:1 › S2-A-UI-04 / late cancel response cannot change the URL after navigation 
+    [mobile] › tests\e2e\registration-lifecycle.spec.ts:55:1 › S2-A-UI-03 / server eligibility survives a client clock ahead of the deadline 
+    [mobile] › tests\e2e\registration-lifecycle.spec.ts:63:1 › S2-A-UI-04 / late cancel response cannot change the URL after navigation 

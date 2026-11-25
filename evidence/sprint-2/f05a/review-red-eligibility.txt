@@ -1,0 +1,43 @@
+
+ RUN  v5.0.5 C:/Users/natth/OneDrive/Documents/ChatGPT/SE/gather-sprint2-lifecycle
+
+ × tests/registration-lifecycle.test.ts > S2-A-API-10 / server cancellation eligibility follows DB clock, state and write gate 245ms
+   → expected undefined to be true // Object.is equality
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-01 / primary RED: cancel releases exactly one place and quota and preserves own record
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-02 / repeated cancel is idempotent even after cutoff and with writes disabled
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-03 / active cancellation at or after deadline rejects without writes
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-04 / reactivation returns same ID with new activation and normal inserts stay 201
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-05 / active duplicate, closed, full and quota precedence with no rejected writes
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-06 / ACTIVE-only full aggregate, Thai date/person separation and grandfathered legacy
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-07 / server authorization, CSRF and strict payload preserve data
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-08 / concurrent repeated cancel/reactivate and quota races through independent pools
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-03b / cancellation reads database clock after actual event lock wait
+ ↓ tests/registration-lifecycle.test.ts > S2-A-API-09 / owner/public/own read models agree and disabled writes fail safely
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/registration-lifecycle.test.ts > S2-A-API-10 / server cancellation eligibility follows DB clock, state and write gate
+AssertionError: expected undefined to be true // Object.is equality
+
+- Expected:
+true
+
++ Received:
+undefined
+
+ ❯ tests/registration-lifecycle.test.ts:59:44
+     57|  const p=await actor();const e=await event();const r=(await post(p,e.i…
+     58|  const own=()=>p.agent.get(`/api/registrations/${r.id}`);
+     59|  expect((await own()).body.data.canCancel).toBe(true);
+       |                                            ^
+     60|  const off=await actor('participant@example.test',disabled);
+     61|  expect((await off.agent.get('/api/registrations/mine')).body.data[0].…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 10 skipped (11)
+   Start at  22:25:32
+   Duration  1.42s (tests 49%, import 46%, transform 5%, worker 1%)
+

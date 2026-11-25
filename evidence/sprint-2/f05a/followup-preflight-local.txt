@@ -1,0 +1,128 @@
+BEGIN
+ server_version |           database            | session_user  | current_user  | read_only 
+----------------+-------------------------------+---------------+---------------+-----------
+ 17.11          | gather_sprint2_lifecycle_test | s2_test_owner | s2_test_owner | on
+(1 row)
+
+    rolname    | rolcanlogin | rolsuper | rolcreaterole | rolcreatedb | rolreplication | rolbypassrls 
+---------------+-------------+----------+---------------+-------------+----------------+--------------
+ s2_test_owner | t           | t        | t             | t           | t              | t
+(1 row)
+
+ old_role_or_ancestor 
+----------------------
+ s2_test_owner
+(1 row)
+
+ operator_role |   old_role    | operator_superuser | operator_createrole | direct_admin_option_on_old_role | direct_admin_option_on_cloudsqlsuperuser | operator_member_of_old_role | operator_read_all_stats | operator_signal_backend | operator_terminate_function_execute 
+---------------+---------------+--------------------+---------------------+---------------------------------+------------------------------------------+-----------------------------+-------------------------+-------------------------+-------------------------------------
+ s2_test_owner | s2_test_owner | t                  | t                   | f                               | f                                        | t                           | t                       | t                       | t
+(1 row)
+
+                  datname                   |     owner     
+--------------------------------------------+---------------
+ postgres                                   | s2_test_owner
+ gather_sprint2_lifecycle_test              | s2_test_owner
+ template1                                  | s2_test_owner
+ template0                                  | s2_test_owner
+ gather_sprint2_lifecycle_test_upgrade_test | s2_test_owner
+(5 rows)
+
+       schema       |                 relation                  | relkind 
+--------------------+-------------------------------------------+---------
+ information_schema | _pg_foreign_data_wrappers                 | v
+ information_schema | _pg_foreign_servers                       | v
+ information_schema | _pg_foreign_table_columns                 | v
+ information_schema | _pg_foreign_tables                        | v
+ information_schema | _pg_user_mappings                         | v
+ information_schema | administrable_role_authorizations         | v
+ information_schema | applicable_roles                          | v
+ information_schema | attributes                                | v
+ information_schema | character_sets                            | v
+ information_schema | check_constraint_routine_usage            | v
+ information_schema | check_constraints                         | v
+ information_schema | collation_character_set_applicability     | v
+ information_schema | collations                                | v
+ information_schema | column_column_usage                       | v
+ information_schema | column_domain_usage                       | v
+ information_schema | column_options                            | v
+ information_schema | column_privileges                         | v
+ information_schema | column_udt_usage                          | v
+ information_schema | columns                                   | v
+ information_schema | constraint_column_usage                   | v
+ information_schema | constraint_table_usage                    | v
+ information_schema | data_type_privileges                      | v
+ information_schema | domain_constraints                        | v
+ information_schema | domain_udt_usage                          | v
+ information_schema | domains                                   | v
+ information_schema | element_types                             | v
+ information_schema | enabled_roles                             | v
+ information_schema | foreign_data_wrapper_options              | v
+ information_schema | foreign_data_wrappers                     | v
+ information_schema | foreign_server_options                    | v
+ information_schema | foreign_servers                           | v
+ information_schema | foreign_table_options                     | v
+ information_schema | foreign_tables                            | v
+ information_schema | information_schema_catalog_name           | v
+ information_schema | key_column_usage                          | v
+ information_schema | parameters                                | v
+ information_schema | referential_constraints                   | v
+ information_schema | role_column_grants                        | v
+ information_schema | role_routine_grants                       | v
+ information_schema | role_table_grants                         | v
+ information_schema | role_udt_grants                           | v
+ information_schema | role_usage_grants                         | v
+ information_schema | routine_column_usage                      | v
+ information_schema | routine_privileges                        | v
+ information_schema | routine_routine_usage                     | v
+ information_schema | routine_sequence_usage                    | v
+ information_schema | routine_table_usage                       | v
+ information_schema | routines                                  | v
+ information_schema | schemata                                  | v
+ information_schema | sequences                                 | v
+ information_schema | sql_features                              | r
+ information_schema | sql_implementation_info                   | r
+ information_schema | sql_parts                                 | r
+ information_schema | sql_sizing                                | r
+ information_schema | table_constraints                         | v
+ information_schema | table_privileges                          | v
+ information_schema | tables                                    | v
+ information_schema | transforms                                | v
+ information_schema | triggered_update_columns                  | v
+ information_schema | triggers                                  | v
+ information_schema | udt_privileges                            | v
+ information_schema | usage_privileges                          | v
+ information_schema | user_defined_types                        | v
+ information_schema | user_mapping_options                      | v
+ information_schema | user_mappings                             | v
+ information_schema | view_column_usage                         | v
+ information_schema | view_routine_usage                        | v
+ information_schema | view_table_usage                          | v
+ information_schema | views                                     | v
+ public             | events                                    | r
+ public             | events_organizer_created                  | i
+ public             | events_pkey                               | i
+ public             | login_rate_limits                         | r
+ public             | login_rate_limits_expiry                  | i
+ public             | login_rate_limits_pkey                    | i
+ public             | registrations                             | r
+ public             | registrations_event                       | i
+ public             | registrations_participant_id_event_id_key | i
+ public             | registrations_pkey                        | i
+ public             | schema_migrations                         | r
+ public             | schema_migrations_pkey                    | i
+ public             | session                                   | r
+ public             | session_expire                            | i
+ public             | session_pkey                              | i
+ public             | users                                     | r
+ public             | users_email_key                           | i
+ public             | users_pkey                                | i
+(87 rows)
+
+    usename    |            datname            | state  | sessions 
+---------------+-------------------------------+--------+----------
+ s2_test_owner | gather_sprint2_lifecycle_test | active |        1
+ s2_test_owner |                               |        |        1
+(2 rows)
+
+COMMIT

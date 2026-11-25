@@ -1,6 +1,10 @@
 # F-05A — ยกเลิกและกลับมาลงทะเบียน
 
-25 พฤศจิกายน 2026 · **Proposal v2 / แก้ตาม review #86 รอ PhraewaS ตรวจซ้ำก่อน code** · Developer `guluJa`; reviewer `PhraewaS`; งาน F-05 เดิมใน [#8](https://github.com/PhraewaS/event-system/issues/8), capacity แยก [#85](https://github.com/PhraewaS/event-system/issues/85)
+> Acceptance record: PhraewaS APPROVED contract9477808 ใน PR #86 วันที่25/11/2026 16:13:03น. UTC+7; mergeเข้าsprint2-stagingเป็นbb5aeccเวลา16:14:08 ก่อน test-first e5cf5c1 และ implementation a5bed71 ข้อความ proposal/planned ด้านล่างคง snapshot ก่อนเริ่ม code; ผล implementation แยกใน [evidence/status](../sprints/F-05A-implementation.md)
+
+25 พฤศจิกายน 2026 · **Contract v2 accepted in #86; v2.1 clarifications ตาม review #87 รอตรวจ implementation** · Developer `guluJa`; reviewer `PhraewaS`; งาน F-05 เดิมใน [#8](https://github.com/PhraewaS/event-system/issues/8), capacity แยก [#85](https://github.com/PhraewaS/event-system/issues/85)
+
+v2.1 คง business rules/AC เดิม และขยายหลักฐานตาม review #87: server-computed `canCancel`, stale-navigation protection, unique disposable DB ต่อ upgrade run และ capacity/roster API checks ทั้งสองรุ่น; cutover ใช้การ retire DB login และ terminate sessions ตาม [runbook](../../deploy/lifecycle-release.md) แทนการอ้าง request timeout ว่า writer จบแล้ว เก็บ contract v2 ก่อนแก้ไว้ในประวัติ PR #86
 
 FR-06; BR-01–06/10/11; NFR-01–05. ฐานและลำดับงาน: [Sprint 2 plan](../sprints/sprint-2.md). Dependencies: F-01–04 และ Lab7 CR-L7-01 ที่ main e2b9842
 
@@ -35,12 +39,12 @@ Defaults ทำให้ SQL INSERT ของรุ่นเดิมยัง�
 
 1. เพิ่ม config ที่ไม่ใช่ secret `REGISTRATION_LIFECYCLE_WRITES_ENABLED` (true/false; default false) ใน implementation ภายหลัง PR contract นี้ เพื่อ gate เฉพาะ cancel/reactivation writes; normal new registration และ reads ยังใช้ได้
 2. ทำ migration แบบ additive ก่อนสลับแอป ระหว่างนี้ต้องยังไม่มี CANCELLED และ lifecycle writes ปิดอยู่ ทั้ง API รุ่น e2b9842 และรุ่นใหม่ที่ปิด gate ต้องจองได้บน upgraded DB โดยไม่กรอก columns ใหม่
-3. Deploy **state-aware revision** ที่ทุก count/read/write ใช้ ACTIVE ถูกต้อง แต่ gate ยัง false เก็บ SHA/digest/revision และผลตรวจเป็น compatible rollback target จากนั้นส่ง traffic ให้รุ่น compatible 100%, เอา traffic/tag routes ของรุ่นก่อน state-aware ออก และรอพ้น request timeout ที่กำหนดจริงของ revision เก่าก่อนเปิด gate ห้ามเปิดจากการเห็น traffic 100% เพียงอย่างเดียว
+3. Deploy **state-aware revision** ที่ทุก count/read/write ใช้ ACTIVE ถูกต้อง แต่ gate ยัง false เก็บ SHA/digest/revision และผลตรวจเป็น compatible rollback target ใช้ replacement DB login/secret version ที่ revision เก่าไม่มี จากนั้นส่ง traffic ให้รุ่น compatible 100%, เอา traffic/tag routes เก่าออก แล้ว retire ทุก old runtime DB login (NOLOGIN), terminate sessions และพิสูจน์ old credentials reconnect ไม่ได้ตาม runbook ก่อนเปิด gate; timeout/traffic เพียงอย่างเดียวไม่ยืนยันว่า writer เก่าจบ
 4. ผ่าน coexistence/count/access checks แล้วจึงเปิด gate ผ่าน controlled release/config update และบันทึก revision ใหม่/ค่า config หาก gate ปิด: cancel ACTIVE และ reactivation คืน 503 REGISTRATION_CHANGES_DISABLED โดยไม่เขียน; UI แสดงว่ายังไม่พร้อมและไม่แสดงผลสำเร็จ repeated cancel ของ CANCELLED ที่ตรวจสิทธิ์แล้วคง 200 state เดิมเพราะไม่เขียนข้อมูล
 5. **หลังเปิด lifecycle ครั้งแรก หรือมี CANCELLED แล้ว ห้าม rollback ไป e2b9842 หรือ image ก่อน state-aware** แม้ปัจจุบันจะไม่มี CANCELLED เหลือ ให้ใช้เฉพาะ compatible target ที่เคยตรวจบน upgraded DB พร้อม CANCELLED; ปิด lifecycle writes ระหว่างกู้ระบบ แต่คง ACTIVE-only counts/reads และข้อมูลทุก row
 6. Release/rollback preflight ต้องตรวจ approved SHA+digest และหลักฐาน compatibility ก่อนส่ง traffic; target ไม่มีหลักฐานให้ fail closed แล้ว roll forward ด้วยรุ่น compatible ใหม่ ไม่ลง database migration ย้อนกลับ ไม่ reset/seed และไม่เปลี่ยน CANCELLED กลับ ACTIVE เพื่อให้โค้ดเก่าอ่านได้ ตัว release script ปัจจุบันยังไม่มี compatibility gate นี้ ต้อง implement/verify เป็นส่วนหนึ่งของ F-05A ก่อน release
 
-Acceptance tests ของ cancel/reactivate ตั้ง gate=true อย่างชัดเจน; coexistence และ disabled-path tests ตั้ง false การปิด gateไม่หยุด writer ที่ทำงานค้างทันที ต้องรอ request เดิมจบก่อนตรวจ snapshot/เปิดใช้งานขั้นถัดไป
+Acceptance tests ของ cancel/reactivate ตั้ง gate=true อย่างชัดเจน; coexistence และ disabled-path tests ตั้ง false การปิด gateไม่หยุด writer ที่ทำงานค้างทันที ต้องผ่าน database fence ก่อนตรวจ snapshot/เปิดใช้งานขั้นถัดไป ห้ามเปิด LOGIN คืนให้ old runtime หลัง activation
 
 ### 2.2 STS ของ compatibility (ขยาย S2-A-DB-01 / AC S2-A-01)
 
@@ -48,6 +52,8 @@ Acceptance tests ของ cancel/reactivate ตั้ง gate=true อย่า
 - **DB-01b old/new coexistence:** ใช้ actual API จาก immutable e2b9842 และ state-aware API gate=false บน DB ที่ upgrade แล้ว (ยังไม่มี CANCELLED) ให้แต่ละรุ่น POST รายการใหม่จริง ตรวจ 201, default columns, quota/capacity/roster ตรงกันและไม่มี NOT NULL failure ไม่ใช้ mock-only หรือ INSERT จำลองอย่างเดียวแทน API รุ่นเดิม
 - **DB-01c rollback data:** สร้าง ACTIVE/CANCELLED ที่รู้ผลในรุ่นใหม่; เปลี่ยน app/pool เป็น approved compatible target แล้วตรวจ IDs/states/cancelledAt คงเดิม public/owner counts และ quota นับ ACTIVE เท่านั้น own-list ยังเห็น CANCELLED ของตน backend role/ownership ยังบังคับใช้
 - **S2-A-DEPLOY-01:** offline release/traffic stub ทดสอบว่า incompatible/unverified target ถูกปฏิเสธก่อนเปลี่ยน service/traffic; compatible rollback ไม่ migrate/seed/down schema และ record SHA/digest/config ตรงกัน; ตรวจ gate=false คืน503/no write สำหรับ active cancel/reactivation, repeated-cancel200 และ normal registration ยังทำงาน
+- **S2-A-DEPLOY-02/03:** local PostgreSQL กับ synthetic old/new login roles; หลัง fence old in-flight transaction commit ไม่ได้, session=0, reconnect ถูกปฏิเสธ และ new login ยังใช้ได้; ถ้า old/new ใช้ role เดียวกันต้องปฏิเสธก่อนเปลี่ยน role
+- Upgrade suite สร้าง DB ใหม่ชื่อสุ่มต่อ run; reset/drop ได้เฉพาะ DB ที่ run นั้น CREATE สำเร็จ รวม legacy extraction directory แยกกัน จึงไม่ชน run อื่น
 - ก่อน production acceptance เก็บ actual release/config/traffic binding และ selected post-deploy compatibility/persistence checks แยกจาก offline tests; ณ proposal นี้ทั้งหมดยัง planned/not run
 
 อ้างอิงกลไก: [PostgreSQL 17 ALTER TABLE/defaults](https://www.postgresql.org/docs/17/ddl-alter.html), [Cloud Run traffic/revision rollback](https://docs.cloud.google.com/run/docs/rollouts-rollbacks-traffic-migration). การเลือก lifecycle gate และ compatible target เป็นการออกแบบของทีม ไม่ใช่การรับรอง compatibility โดย Cloud Run
@@ -71,7 +77,7 @@ Acceptance tests ของ cancel/reactivate ตั้ง gate=true อย่า
 
 การ cancel/register/reactivate ของคนเดียวต่าง event serialize ด้วย Participant lock; capacity update ของ F-05B lock Event เท่านั้น จึงไม่ย้อนลำดับหรือล็อก Participant หลัง Event อ่าน count จาก DB ไม่เก็บ mutable seat/quota counter
 
-UI My registrations/detail: ACTIVE มี Cancel เมื่อ eligible, CANCELLED แสดงสถานะและทางกลับไปลงทะเบียน; ห้ามแสดง CANCELLED เป็น Confirmed Event Detail ใช้ ACTIVE state แทนการเช็กแค่ว่ามี row อยู่ Loading/error/retry/conflict ต้องอ่าน state/count/quota ใหม่หลัง mutation และคง session-generation guards ของ Lab7 ตรวจที่ 390×844 และ 1440×1000
+UI My registrations/detail: server ส่ง `canCancel` จาก ACTIVE + DB clock ก่อนdeadline + lifecycle gate; UI อิงค่านี้ ไม่ใช้เวลาเครื่องผู้ใช้ตัดสิน และ backend ตรวจใหม่ภายใต้ lock ทุกครั้งเพราะ eligibility อาจเก่าได้ CANCELLED แสดงสถานะและทางกลับไปลงทะเบียน; ห้ามแสดง CANCELLED เป็น Confirmed Event Detail ใช้ ACTIVE state แทนการเช็กแค่ว่ามี row อยู่ Loading/error/retry/conflict ต้องอ่าน state/count/quota ใหม่หลัง mutation และคง session-generation guards ของ Lab7; ผล mutation ที่กลับหลัง unmount/ย้าย URL ต้องไม่ replace URL หรือแสดง feedback ในหน้าใหม่ ตรวจ client clock skew และ delayed cancel response ที่ 390×844 และ 1440×1000 (API-10/UI-03/UI-04)
 
 ## 5. AC และ STS ก่อน implementation
 

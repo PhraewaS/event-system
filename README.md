@@ -1,8 +1,14 @@
-# Gather — Event registration (Sprint 1)
+# Gather — Event registration
 
-## Sprint 2 planning — 25 November 2026
+## Sprint 2 F-05A — implementation awaiting review
 
-Current main baseline is `e2b9842` after Lab7 daily-quota release #84. [Sprint 2 plan](docs/sprints/sprint-2.md) separates the existing F-05 scope into [F-05A cancellation/reactivation](docs/features/F-05A-registration-lifecycle.md) and [F-05B owner capacity management](docs/features/F-05B-event-capacity.md). These are **proposed contracts awaiting teammate review, not implemented features**. The plan defines ACTIVE-only counts and the Lab7-compatible lock order, superseding the older future-design event-first proposal. Sprint 2 uses `sprint2-staging`; the dated Sprint 1 release records below remain historical evidence.
+Baseline for this work is released main `e2b9842` (Lab7); contract PR #86 was approved by PhraewaS at9477808 and merged into `sprint2-staging` at `bb5aecc` before implementation. This feature branch implements **F-05A cancellation/reactivation**, additive migration003, ACTIVE-only seats/quota/rosters, and compatibility-controlled release. [Implementation/status evidence](docs/sprints/F-05A-implementation.md) maps the reviewed contract to real tests. **Review, staging acceptance, main release and GCP checks remain pending.** F-05B capacity management (#85) and F-06 attendance (#9) are not implemented here.
+
+Normal releases keep lifecycle writes disabled until the [cutover/rollback runbook](deploy/lifecycle-release.md) is completed, including retiring old DB logins/sessions rather than treating request timeout as proof of completion. `.env.example` documents the default-false gate; the dedicated browser test server explicitly enables it. Compatibility tests create a unique disposable `s2_upgrade_*_test` database per run and drop only the database that run created; the isolated local/CI test role needs CREATEDB. DB-fence tests additionally create synthetic login roles/tables and require CREATEROLE plus authority to terminate those test-role sessions (the dedicated local/CI PostgreSQL bootstrap test user has this authority). Never grant these privileges to the application runtime or point destructive test suites at the application database. Participant cancellation buttons use server `canCancel`, and delayed cancel responses are guarded after navigation.
+
+## Historical Sprint 1 / cloud records
+
+The dated snapshots below retain their original test counts, release references and process findings; they are not results of this F-05A branch. Current feature evidence is linked above.
 
 Gather is a React → Express → PostgreSQL event registration app. Organizers publish capacity-limited events and inspect owned rosters; Participants reserve places and view private registrations. This branch has 47 unit/API/DB/client tests and 12 desktop/mobile browser cases. Hosted PR #39 CI passed 47/47 and 12/12 at 7ea91c9; the reviewer's separate local browser run passed 11 with one Desktop INT-UI-01 timeout, detailed below.
 

@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { thaiEventDay } from "./event-day";
 import {
   api,
@@ -481,7 +481,7 @@ function EventDetail({
       <Notice error>{result.error || "Event could not be loaded."}</Notice>
     );
   const { event, registrations } = result.value;
-  const registered = registrations.some((r) => r.event.id === id);
+  const registered = registrations.some((r) => r.event.id === id && r.status === "ACTIVE");
   async function register() {
     setBusy(true);
     setError("");
@@ -587,10 +587,29 @@ function EventDetail({
   );
 }
 function MyRegistrations({ navigate }: { navigate: Navigate }) {
+  const generation = useRef(0);
+  useEffect(() => { generation.current++; return () => { generation.current++; }; }, []);
+  const [revision,setRevision] = useState(0);
+  const [busy,setBusy] = useState<string | null>(null);
+  const [feedback,setFeedback] = useState("");
+  const [changeError,setChangeError] = useState("");
   const { value, loading, error } = useResource(
     () => collection<Registration>("/registrations/mine"),
-    "mine",
+    `mine:${revision}`,
   );
+  async function cancel(id:string) {
+    const requestGeneration = generation.current;
+    const requestUrl = window.location.href;
+    const isCurrent = () => requestGeneration === generation.current && requestUrl === window.location.href;
+    setBusy(id);setChangeError("");setFeedback("");
+    try {
+      await api(`/registrations/${id}/cancel`,{method:"POST",body:"{}"});
+      if (!isCurrent()) return;
+      window.history.replaceState({},"","/my-registrations");
+      setFeedback("Registration cancelled. Your place has been released.");
+    } catch(err) {if (isCurrent()) setChangeError(message(err));}
+    finally {if (requestGeneration === generation.current) {setBusy(null);setRevision(v=>v+1);}}
+  }
   return (
     <>
       <Heading eyebrow="YOUR PLANS, ALL TOGETHER" title="My registrations">
@@ -601,6 +620,8 @@ function MyRegistrations({ navigate }: { navigate: Navigate }) {
       {window.location.search.includes("confirmed=") && (
         <Notice>Your place is confirmed. See you there!</Notice>
       )}
+      {feedback && <Notice>{feedback}</Notice>}
+      {changeError && <Notice error>{changeError}</Notice>}
       {loading ? (
         <Loading />
       ) : error ? (
@@ -618,7 +639,7 @@ function MyRegistrations({ navigate }: { navigate: Navigate }) {
                 </span>
               </div>
               <div className="registration-info">
-                <span className="badge">Confirmed</span>
+                <span className={`badge ${r.status === "CANCELLED" ? "muted" : ""}`}>{r.status === "CANCELLED" ? "Cancelled" : "Confirmed"}</span>
                 <h2>
                   <Link to={`/events/${r.event.id}`} navigate={navigate}>
                     {r.event.title}
@@ -629,6 +650,12 @@ function MyRegistrations({ navigate }: { navigate: Navigate }) {
                 </p>
                 <p className="muted-text">{r.event.location}</p>
                 <small className="registration-id">Registration {r.id}</small>
+                {r.canCancel && (
+                  <button type="button" className="button secondary" disabled={busy !== null} onClick={()=>cancel(r.id)}>
+                    {busy === r.id ? "Cancelling…" : "Cancel registration"}
+                  </button>
+                )}
+                {r.status === "CANCELLED" && <p className="muted-text">Your place is no longer reserved. Open the event to register again if a place and daily quota are available.</p>}
               </div>
               <Link
                 className="text-link"
