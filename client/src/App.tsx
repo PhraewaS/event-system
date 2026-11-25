@@ -851,8 +851,8 @@ function Publish({ navigate }: { navigate: Navigate }) {
           </h2>
           <p>Your event becomes visible as soon as you publish.</p>
           <p>
-            Choose your capacity carefully. Published events and capacity cannot
-            be edited in this version.
+            You can change capacity from your event's guest list before registration
+            closes. Capacity cannot be lower than the number of active registrations.
           </p>
           <p>
             Each participant can reserve one place. Registration automatically
@@ -863,12 +863,39 @@ function Publish({ navigate }: { navigate: Navigate }) {
     </>
   );
 }
+function CapacityForm({event,onResult}:{event:Event;onResult:(error:string)=>void}) {
+  const [capacity,setCapacity]=useState(String(event.capacity));
+  const [submitting,setSubmitting]=useState(false);
+  const generation=useRef(0);
+  useEffect(()=>{generation.current++;return()=>{generation.current++;};},[]);
+  async function submit(e:FormEvent<HTMLFormElement>){
+    e.preventDefault();const current=generation.current;const url=window.location.href;
+    const isCurrent=()=>current===generation.current&&window.location.href===url;
+    setSubmitting(true);
+    try{
+      await api<Event>(`/events/${event.id}/capacity`,{method:'PATCH',body:JSON.stringify({capacity:Number(capacity)})});
+      if(isCurrent())onResult('');
+    }catch(error){if(isCurrent())onResult(message(error));}
+    finally{if(isCurrent())setSubmitting(false);}
+  }
+  return <form className="capacity-form" aria-label="Change event capacity" onSubmit={submit}>
+    <h2>Event capacity</h2>
+    <p>Choose 1–1,000,000 places, with at least {event.registeredCount} for current active registrations. Cancelled registrations do not use a place.</p>
+    <label htmlFor="event-capacity">Total capacity</label>
+    <input id="event-capacity" name="capacity" type="number" min="1" max="1000000" step="1" required value={capacity}
+      disabled={submitting||!event.capacityChangeOpen} onChange={e=>setCapacity(e.target.value)} />
+    {!event.capacityChangeOpen&&<p>Capacity changes for this event have closed.</p>}
+    <button className="button" type="submit" disabled={submitting||!event.capacityChangeOpen}>{submitting?'Saving…':'Save capacity'}</button>
+  </form>;
+}
 function Roster({ id, navigate }: { id: string; navigate: Navigate }) {
+  const [revision,setRevision]=useState(0);
+  const [feedback,setFeedback]=useState<{eventId:string;error:boolean;text:string}|null>(null);
   const { value, loading, error } = useResource(async () => {
     // Check private ownership first; public event details alone grant no roster access.
     const roster = await collection<RosterEntry>(`/events/${id}/registrations`);
     return { event: await api<Event>(`/events/${id}`), roster };
-  }, id);
+  }, `${id}:${revision}`);
   if (loading) return <Loading />;
   if (error || !value)
     return <Notice error>{error || "Unable to load registrations."}</Notice>;
@@ -903,6 +930,11 @@ function Roster({ id, navigate }: { id: string; navigate: Navigate }) {
           <span>Total capacity</span>
         </div>
       </div>
+      {feedback?.eventId===id&&<Notice error={feedback.error}>{feedback.text}</Notice>}
+      <CapacityForm key={`${id}:${revision}`} event={value.event} onResult={error=>{
+        setFeedback({eventId:id,error:!!error,text:error||'Capacity updated. Registration counts have been refreshed.'});
+        setRevision(v=>v+1);
+      }} />
       <div className="section-heading">
         <h2>Registrations</h2>
         <span className="muted-text">

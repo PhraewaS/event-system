@@ -17,6 +17,7 @@ export type Event = {
   registeredCount: number;
   remainingPlaces: number;
   registrationOpen: boolean;
+  capacityChangeOpen: boolean;
 };
 export type Registration = {
   id: string;
