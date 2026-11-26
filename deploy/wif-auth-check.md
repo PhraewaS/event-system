@@ -6,17 +6,38 @@ or the historical-deployer retirement procedure in `lifecycle-release.md`.
 ## Review and release sequence
 
 1. Review this change in a feature PR into `sprint2-staging`, then a release PR
-   into `main`. No Cloud authentication is attempted by the PR checks.
-2. The provider currently permits execution SHA
+   into `main`. No Cloud authentication is attempted by the PR checks. Merging
+   into main can create a normal push-triggered Deploy demo run; keep its new
+   execution SHA blocked until the permission fence below is complete.
+2. **Before adding any new execution SHA to the WIF allowlist**, preserve the
+   image/revision and writes=false state, freeze deployments, and complete the
+   historical-deployer permission fence from `lifecycle-release.md`. Revoke the
+   original deployer's resource mutation and impersonation paths at every
+   applicable level, including routes that can obtain another privileged
+   identity. Cancel queued runs, drain or terminate in-progress jobs/runners,
+   and account for already-issued credentials and their remaining lifetime.
+   Include the push run created by the release merge. After permission
+   propagation, retain actual evidence that the old deployer no longer has
+   effective mutation authority and that no pending job or usable credential
+   holder can resume a normal deployment. Saving a policy or cancelling a run
+   alone is insufficient. Do not disable the runtime `gather-runner` account.
+
+   The `gather-deployer-v2` account must have no Cloud Run mutation, job
+   execution, registry write, Secret Manager, Cloud SQL, or runtime-account
+   impersonation permissions at this stage. If either identity fence or the
+   pending-job checks remain unverified, stop and keep the new SHA blocked.
+3. **Only after step 2 has passed with evidence**, approve the reviewed full
+   main execution SHA in the provider condition. The provider initially permits
+   execution SHA
    `2d042455cf4e81793e0ba2103c9ed6572b676a91` only. A new main SHA will therefore
    not authenticate until its workflow has been reviewed and the operator
    explicitly approves that full execution SHA in the provider condition.
    Do not loosen the condition to all main commits to make a run pass.
-3. Preserve the image/revision and writes=false state. Freeze deployments and
-   complete the historical-deployer permission fence from the runbook before
-   executing source-authentication tests. The `gather-deployer-v2` account must
-   have no Cloud Run mutation, job execution, registry write, Secret Manager,
-   Cloud SQL, or runtime-account impersonation permissions at this stage.
+   **The same SHA also authorizes the normal push/rerun deployment source:**
+   the provider condition does not distinguish `verify_wif_only` from ordinary
+   deployment. Keep the permission fence and deployment freeze in place after
+   updating the allowlist; do not resume or rerun a normal deployment for this
+   authentication-only check.
 4. With explicit operator approval, allow the repository's reviewed federated
    identity to impersonate **only** `gather-deployer-v2` using
    `roles/iam.workloadIdentityUser` on that account. This is an IAM access change,
