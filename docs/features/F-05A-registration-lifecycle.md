@@ -8,6 +8,8 @@ v2.1 คง business rules/AC เดิม และขยายหลักฐ�
 
 FR-06; BR-01–06/10/11; NFR-01–05. ฐานและลำดับงาน: [Sprint 2 plan](../sprints/sprint-2.md). Dependencies: F-01–04 และ Lab7 CR-L7-01 ที่ main e2b9842
 
+**27/11/2026 · Proposed amendment CP-v1 (รอ review ก่อน implementation):** เพิ่ม [Cloud SQL credential-retirement contract/AC/STS](F-05A-cloudsql-credential-retirement.md) สำหรับกรณี SQL operator ยังไม่มีอำนาจทำ strict NOLOGIN fence คง business/API/data AC เดิม ทางเลือกนี้แยกการเพิกถอน credential ออกจากการปิด LOGIN attribute ไม่แทนผล strict fence และยังใช้เปิด lifecycle ไม่ได้
+
 ## 1. กฎและ workflow
 
 1. Participant ยกเลิกได้เฉพาะ ACTIVE registration ของตน เมื่อ database time **น้อยกว่า registration_deadline**; ใช้เวลาหลังได้ locks ไม่ใช้เวลาใน browser/เวลามาถึง request
@@ -29,7 +31,7 @@ FR-06; BR-01–06/10/11; NFR-01–05. ฐานและลำดับงาน
 
 - Backfill rows เดิมเป็น ACTIVE และ registered_at=created_at; คง id, created_at, participant_id, event_id และ UNIQUE(participant_id,event_id)
 - CHECK ให้ ACTIVE มี cancelled_at=NULL และ CANCELLED มี cancelled_at ไม่เป็น NULL; initial/activation ตั้ง registered_at จาก DB clock; cancel ตั้ง cancelled_at ครั้งแรก ส่วน reactivation เคลียร์ cancelled_at
-- ห้ามแก้ migration ที่ใช้แล้ว, reset/seed ทับ Cloud SQL หรือเปลี่ยนรหัสบัญชีเดิม
+- ห้ามแก้ migration ที่ใช้แล้วหรือ reset/seed ทับ Cloud SQL; migration ไม่เปลี่ยนรหัสบัญชีเดิม การเพิกถอน credential ตาม CP-v1 เป็น cutover แยกที่ยังรอ review/implementation และต้องมีอนุมัติเปลี่ยนระบบโดยเฉพาะ
 - ตรวจ upgrade ฐานที่มีข้อมูลสังเคราะห์เดิม รวม legacy >2; เปิด app/API pool ใหม่แล้วอ่าน IDs/states/counts ได้เดิม
 - ไม่เพิ่มประวัติทุก transition เป็น subsystem ใหม่; created_at คือการสร้างครั้งแรก, registered_at คือ activation ล่าสุด, cancelled_at คือ cancellation ล่าสุดของ state ปัจจุบัน
 
@@ -45,6 +47,8 @@ Defaults ทำให้ SQL INSERT ของรุ่นเดิมยัง�
 6. Release/rollback preflight ต้องตรวจ approved SHA+digest และหลักฐาน compatibility ก่อนส่ง traffic; target ไม่มีหลักฐานให้ fail closed แล้ว roll forward ด้วยรุ่น compatible ใหม่ ไม่ลง database migration ย้อนกลับ ไม่ reset/seed และไม่เปลี่ยน CANCELLED กลับ ACTIVE เพื่อให้โค้ดเก่าอ่านได้ ตัว release script ปัจจุบันยังไม่มี compatibility gate นี้ ต้อง implement/verify เป็นส่วนหนึ่งของ F-05A ก่อน release
 
 Acceptance tests ของ cancel/reactivate ตั้ง gate=true อย่างชัดเจน; coexistence และ disabled-path tests ตั้ง false การปิด gateไม่หยุด writer ที่ทำงานค้างทันที ต้องผ่าน database fence ก่อนตรวจ snapshot/เปิดใช้งานขั้นถัดไป ห้ามเปิด LOGIN คืนให้ old runtime หลัง activation
+
+เส้นทาง NOLOGIN ข้างต้นยังเป็น baseline ที่ release guard รองรับ CP-v1 เสนอ **credential fence** ที่ต้องตัด old credential/secret/session paths และพิสูจน์ replacement/persistence ห้ามใช้ password rotation หรือ SQLSTATE 28P01 แทน `retiredLoginDisabled=true`/SQLSTATE 28000 ดูขอบเขตและสถานะใน amendment
 
 ### 2.2 STS ของ compatibility (ขยาย S2-A-DB-01 / AC S2-A-01)
 
