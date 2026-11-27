@@ -24,4 +24,3 @@ CP-v1 runtime tests: NOT RUN; test vectors are design only. No cloud/database ca
 
 CP-01 through CP-21 runtime tests / Cloud SQL migration / cutover / activation: NOT RUN.
 Migration profile and CP-aware positive gate are proposed contracts, not implemented or provisioned.
-
