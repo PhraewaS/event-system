@@ -1,0 +1,10 @@
+2026-11-27 Asia/Bangkok; accepted contract base1407833; no real Cloud/DB actions.
+python -X utf8 deploy/tests/test_cloudsql_credential_gate.py
+1 test, 1 failed: AssertionError (ValueError, KeyError) not raised.
+Existing release verifier accepted CP method with legacy boolean/URL confirmations and no proof bundle.
+
+node node_modules/vitest/vitest.mjs run tests/migration-owner-profile.test.ts --reporter=verbose
+1 test, 1 failed: expected SET LOCAL ROLE "gather" immediately after BEGIN,
+received SELECT pg_advisory_xact_lock(71420261).
+Both tests executed existing implementation successfully and failed behavior assertions,
+not imports, compilation, unavailable database or environment setup.
