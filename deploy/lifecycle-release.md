@@ -11,6 +11,8 @@
 
 ## Database fence ก่อน activation (แก้ตาม PR #87)
 
+**Implementation update after accepted PR #93:** [CP-v1 operator components/trust boundary](cloudsql-credential-retirement.md) และ [ผล local/mocked tests](../docs/sprints/cloudsql-credential-retirement-implementation.md) เพิ่มแล้วใน implementation branch ยังรอ independent implementation review/integration ไม่มี actual Cloud SQL fence/activation; proposed text ด้านล่างเก็บ design history ไม่ใช้เอกสาร mergeแทนproofจริง Workflow Deploy demo/GitHub variables/SHA allowlist ยังไม่ถูกเปลี่ยนให้เรียก CP โดยอัตโนมัติ
+
 **CP-v1 proposed amendment 27/11/2026:** [contract/AC](../docs/features/F-05A-cloudsql-credential-retirement.md) และ [STS](../docs/tests/cloudsql-credential-retirement-sts.md) เสนอ management-plane credential retirement กรณี SQL authority ไม่ครบ ยังไม่ accepted/implemented และไม่ใช้ยืนยัน strict NOLOGIN fence ด้านล่าง ห้ามติ๊ก DB-fence confirmation จากเพียง password rotation
 
 ผู้ดูแลทำในช่วง cutover ที่ตกลงไว้หลัง reviewed release เท่านั้น คำสั่งนี้ตั้งใจยุติ transaction ของ runtime เก่า จึงอาจทำให้ request เดิมล้มเหลวและต้อง retry ในรุ่นใหม่ ไม่ใช่ zero-downtime guarantee

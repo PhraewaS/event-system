@@ -1,5 +1,7 @@
 # CP-v1 STS — credential fence ก่อน lifecycle activation
 
+> Accepted test-design snapshot จาก PR #93 (94e99a3 → merge1407833) แถว Planned/not run เป็นสถานะก่อน implementation; [ผล execution ปัจจุบัน](../sprints/cloudsql-credential-retirement-implementation.md) แยก local/mocked execution ออกจาก actual Cloud acceptance ไม่ใช้21vectorsเป็นจำนวนtestsผ่านโดยอัตโนมัติ
+
 27/11/2026 · [Contract/AC](../features/F-05A-cloudsql-credential-retirement.md) · Issue #8 · Owner `guluJa` / independent reviewer `PhraewaS`
 
 **Test design ก่อน implementation: CP-01–CP-21 ยัง not run ทั้งหมด** JSON vectors เป็นข้อมูลเตรียม tests ไม่ใช่ automated execution results การตรวจ parse/traceability ของไฟล์นี้ไม่ใช่ GREEN ของ credential fence เพิ่ม CP-17–21 ตาม review #93 บน c7931d6 โดยยังไม่เขียน CP runtime implementation

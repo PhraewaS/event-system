@@ -1,0 +1,12 @@
+{
+  "tested_runtime_commit": "5c14d86",
+  "scope": "local synthetic/offline only; no actual cloud acceptance",
+  "sha256": {
+    "deploy/verify_credential_fence.py": "f6301d1bddc86427b562dd6b490c7524dc5ad68e070fbf69d7edaa305612d5b7",
+    "deploy/verify_lifecycle_release.py": "50d205a392e95e1fd3312827fa81826895ae734ccee7b0ce6e4ad96a6b773f69",
+    "deploy/cloudsql-credential-retirement.mjs": "fb0d3797537222f8edbdcc3c10b29fa8434f3a41925963cf56c9c52057e7b80d",
+    "deploy/credential-fence-postgres.mjs": "0967ef313cecbb22af7dc6711563a8b8a55cc654b872074274df096b909569fb",
+    "server/src/migrate.ts": "96b8b6b0d470e35bde26d48a7d942e0ad1467022e829f1461c3b3c0bde6e5c32",
+    "server/scripts/migrate.ts": "14240825019d48d1891b7eb7ad292613e29e499f628d7b0fbd92e5426762838c"
+  }
+}

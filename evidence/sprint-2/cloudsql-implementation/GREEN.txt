@@ -1,0 +1,34 @@
+2026-11-27 Asia/Bangkok
+Accepted contract: PR93 head94e99a3 / merge1407833
+Meaningful RED: a753e91 (2 behavior assertions failed, no setup/import failure)
+Tested runtime source: 5c14d86
+
+BUILD (actual command): npm run build
+Server/client TypeScript and Vite: PASS.
+
+NODE/API/POSTGRESQL (actual command): node node_modules/vitest/vitest.mjs run --reporter=verbose
+Dedicated local PostgreSQL17 on loopback, disposable *_test databases/roles; no Cloud SQL.
+Test Files 19 passed (19)
+Tests 143 passed (143), 0 failed, 0 skipped
+Includes27 new tests for CP coordinator/management mocks/migration-owner/local DB fence.
+Full output: full-regression.txt
+
+PYTHON (actual command): python -X utf8 -m unittest discover -s deploy/tests -p 'test_*.py' -v
+PyYAML6.0.3 and Git Bash used on Windows; offline/mocked requests only.
+Ran38 tests, OK;0failed,0skipped.
+Includes14 new CP proof/release-context tests and existing6release/12smoke/6WIF checks.
+Positive CP activation is a validator DECISION with zero cloud calls, not actual activation.
+
+BROWSER (actual command): node node_modules/@playwright/test/cli.js test
+Localhost server/dedicated local synthetic browser DB, Chromium1248.
+42 passed (desktop+mobile),0failed,0skipped;1.7m.
+Full output: browser-regression.txt
+
+SHELL: bash -n deploy/deploy.sh deploy/teardown.sh deploy/release.sh
+deploy/tests/test_deploy_stub.sh, test_teardown_stub.sh, test_release_stub.sh: PASS.
+All gcloud calls in these checks are suite-generated stubs; no real GCP resource operations.
+
+NOT EXECUTED: actual Cloud SQL role/secret/user changes, production migrations/session termination,
+IAM changes, GitHub variable or SHA allowlist changes, deployment, lifecycle activation.
+Local Docker build: not available (Docker absent); hosted CI & Docker Build pending.
+Real deployment/cutover/operator evidence and independent implementation review remain pending.

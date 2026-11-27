@@ -1,5 +1,7 @@
 # F-05A / CP-v1 — Cloud SQL credential retirement
 
+> **Accepted contract:** PhraewaS APPROVED94e99a3 ใน [review #93](https://github.com/PhraewaS/event-system/pull/93#pullrequestreview-6088047900) วันที่27/11/2026 19:20:59น. UTC+7; mergeเข้าsprint2-stagingเป็น1407833เวลา19:21:06 ก่อน REDa753e91 และ implementation5c14d86 ข้อความ proposed/planned ด้านล่างเป็น accepted design snapshot ไม่แก้ประวัติย้อนหลัง ผลปัจจุบันอยู่ใน [implementation/AC→tests](../sprints/cloudsql-credential-retirement-implementation.md); actual Cloud cutover/activation ยัง pending
+
 27 พฤศจิกายน 2026 · Issue [#8](https://github.com/PhraewaS/event-system/issues/8) · Author/owner `guluJa` · Reviewer `PhraewaS` (รอ review จริง)
 
 **Proposed contract/test design ก่อน implementation; ไม่ใช่ผล cloud fence และไม่อนุญาต activation**

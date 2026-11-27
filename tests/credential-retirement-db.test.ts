@@ -116,6 +116,13 @@ test('CP-07..12 / password fence aborts in-flight writer across two DBs; data/ow
     const p=await actor('participant@example.test');const event='20000000-0000-4000-8000-000000000001';
     const registered=(await p.agent.post(`/api/events/${event}/registrations`).set('X-CSRF-Token',p.token).send({}).expect(201)).body.data;
     expect((await p.agent.get('/api/registrations/mine').expect(200)).body.data.some((r:any)=>r.id===registered.id)).toBe(true);
+    const eventView=(await request(app).get(`/api/events/${event}`).expect(200)).body.data;
+    expect(eventView).toMatchObject({registeredCount:1,remainingPlaces:23});
+    const day=new Date(Date.parse(eventView.startsAt)+7*3600000).toISOString().slice(0,10);
+    expect((await p.agent.get(`/api/registrations/quota?date=${day}`).expect(200)).body.data.registeredCount).toBe(1);
+    const persisted=new Pool({connectionString:login(fresh)});
+    try{expect((await persisted.query('SELECT id,status FROM registrations WHERE id=$1',[registered.id])).rows[0]).toEqual({id:registered.id,status:'ACTIVE'});}
+    finally{await persisted.end();}
     const owner=await actor('organizer@example.test');expect((await owner.agent.get(`/api/events/${event}/registrations`).expect(200)).body.data).toHaveLength(1);
     await p.agent.get(`/api/events/${event}/registrations`).expect(403);
     await request(app).get('/api/registrations/mine').expect(401);
