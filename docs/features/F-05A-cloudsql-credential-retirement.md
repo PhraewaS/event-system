@@ -3,6 +3,7 @@
 27 พฤศจิกายน 2026 · Issue [#8](https://github.com/PhraewaS/event-system/issues/8) · Author/owner `guluJa` · Reviewer `PhraewaS` (รอ review จริง)
 
 **Proposed contract/test design ก่อน implementation; ไม่ใช่ผล cloud fence และไม่อนุญาต activation**
+Revision ตาม [review #93](https://github.com/PhraewaS/event-system/pull/93#pullrequestreview-6087897099) บน c7931d6: รับทั้ง migration authority และ positive/mismatched activation cases; ยังรอ review revision นี้
 ฐานออกแบบ: sprint2-staging `ee6e679801d8a53bc93522f44d366dba4e95d7cc`; main ที่ fetch ได้ `50529ea365b607c39db4e3f1fa802898c8e5331b`
 
 ## 1. เหตุผลและผลกระทบ
@@ -46,6 +47,34 @@ Permission denied, operation failure, unknown readback, secret leak, role/path �
 
 Rollback ใช้เฉพาะ compatible state-aware target กับ replacement credentials ที่ตรวจแล้ว ไม่คืน old password/LOGIN/privileges/secret access ไม่ reset/seed/restore ฐานร่วมอัตโนมัติ
 
+### 3.1 Migration identity กับ objects ที่ gather ยังเป็นเจ้าของ
+
+`GRANT ALL ON TABLE` หรือ DML grants ไม่ให้สิทธิ์ ALTER TABLE เท่ากับเจ้าของ จึงต้องระบุ owner-authority path แยกจาก runtime ใช้แนวทางต่อไปนี้เป็น **proposed controlled migration profile** ไม่ใช่หลักฐานว่า Cloud SQL ตั้งสิทธิ์ให้แล้ว:
+
+| Principal / object | สิทธิ์และขอบเขตที่ต้อง review/readback |
+| --- | --- |
+| `gather_runtime_v2` | CONNECT ฐาน gather, USAGE schema public และ DML เฉพาะ application/session/rate-limit tables ที่ API ใช้; ไม่มี CREATE schema/owner-role membership/SET ROLE gather และไม่อ่าน migrator secret |
+| `gather_migrator_v2` | Login แยกและ direct attributes NOSUPERUSER/NOCREATEROLE/NOCREATEDB; CONNECT ฐาน gather; ไม่มี cloudsqlsuperuser โดยตรง ใช้ pinned secret ที่เฉพาะ reviewed migration job/identity เข้าถึงได้ |
+| Controlled owner path | อนุญาต membership ของ `gather` ให้ migrator เฉพาะ administrative migration identity พร้อม SET=true, ADMIN=false (ตรวจทั้ง direct/indirect grants); บันทึก INHERIT ตามจริง ถ้า true ต้อง review owner-object privileges ที่ใช้ได้ก่อน SET ด้วย ไม่สมมติว่า Cloud SQL assign-roles ตั้ง INHERIT=false ให้ ไม่มี owner membership ให้ runtime |
+| Migration transaction | session_user ต้องเป็น migrator ใหม่ และบน client เดียวหลัง BEGIN ใช้ SET LOCAL ROLE gather ก่อน ledger/DDL/DML; current_user ระหว่าง migration เป็น gather, จบ transaction กลับ migrator; future runner ต้องรองรับ profile นี้อย่างชัดเจน ไม่เปิด SQL role name จาก API/request |
+| Schema / existing objects | ยืนยัน gather มี USAGE/CREATE บน public ที่ต้องใช้แม้ถอน cloudsqlsuperuser แล้ว; owner path ใช้ ALTER registrations/constraints/indexes และ SELECT/INSERT schema_migrations ตาม runner; owner OIDs ของ objects เดิมไม่เปลี่ยน objects ใหม่ใน transaction เป็นของ gather |
+
+เหตุผลที่เลือก owner-role path: คง ownership เดิมตาม CP-AC-05 และให้ migration003 ซึ่งมี ALTER TABLE/backfill ทำงานได้ ไม่ใช่แค่เชื่อมต่อ DB ได้ อย่างไรก็ตาม SET ROLE gather อาจใช้ attributes ที่ gather ยังมี เช่น CREATEROLE ได้ จึงต้องรายงานเป็น **approved privileged migration path** ไม่อ้างว่ามีเพียง DML/เป็น least-privilege runtime ถ้า reviewer/operator ไม่ยอมรับ actual inheritance/SET path นี้ หรือรับรอง ADMIN=false/SET=true ด้วยสิทธิ์ที่รองรับไม่ได้ ให้คง migration/cutover blocked ไม่โอน ownership/drop objects หรือ grant runtime แทน
+
+SQL grantor ต้องมี authority จริงสำหรับ memberships และ schema ACLs; IAM user-management permission ไม่ยืนยัน SQL grant options การเปลี่ยน memberships ผ่าน Cloud SQL ต้องตรวจผล pg_auth_members จริง ไม่มีการ execute grant/role change ใน PR นี้ หลัง revoke cloudsqlsuperuser ต้องตรวจ profile ซ้ำเฉพาะสิทธิ์ที่เปลี่ยน ก่อน run migration; ถ้าถอน owner membership นอก maintenance window ต้องบันทึกว่ารอบ migration ถัดไปถูก block จนอนุมัติ/regrant ไม่ปล่อย job ลองขยายสิทธิ์เอง
+
+ตรวจ implementation ของ `server/src/migrate.ts` แล้ว: runner ใช้ BEGIN/advisory lock, CREATE TABLE IF NOT EXISTS schema_migrations, SELECT checksums, execute unapplied SQL/INSERT ledger และ COMMIT/ROLLBACK ปัจจุบันยังไม่มี SET LOCAL ROLE profile การเพิ่มรองรับนี้เป็น implementation ภายหลัง accepted contract ไม่แก้ runner ใน PR นี้ Cloud migration003 ที่ apply แล้วห้าม apply ซ้ำเพื่อโชว์ DDL; positive DDL test ใช้ disposable snapshot001/002 และจริง migration003 ส่วน rerun บน ledger001–003 ต้อง no-op/checksum ตรง
+
+### 3.2 Positive activation decision และ binding ที่ต้องตรงกัน
+
+Future CP-aware validator ต้องมี **positive path**: เมื่อ CP-AC-01–07/10 ผ่านจริง, contract/implementation/test evidence accepted, independent reviewer ยืนยัน **immutable proof content/hash** เดียวกัน และมี explicit activation approval จึงคืน decision `allow_activation` สำหรับ request ที่ผูกกับระบบที่ตรวจเท่านั้น เป็นผลการตัดสินของ future gate ไม่ใช่การอนุญาตให้ PR เอกสารนี้เปิด lifecycle
+
+Proof, fresh readback และ intended deployment request ต้องตรงกันครบ: project ID, instance connection name, database, old/runtime/migrator role names+OIDs, service/job resource names+runtime service accounts, pre-activation gate=false revision, approved image SHA/digest และ secret resources+**numeric versions** ที่ service/job ใช้ ไม่มี latest alias หรือแค่ชื่อ secret โดยไม่ระบุรุ่น Unknown/missing/mismatched instance/database/role/identity/image/version ให้ reject ก่อน service mutation แม้ URL/checkbox/review ครบ
+
+Revision ที่ bind คือ candidate ที่ตรวจตอน gate=false; activation สร้าง revision ใหม่ได้เฉพาะจาก request ที่ตรวจนี้โดยคง image/credentials/identities เดิมและเปลี่ยน lifecycle flag ที่อนุมัติ แล้วตรวจ/บันทึก revision ใหม่หลัง deploy ไม่บังคับให้ชื่อ revision หลัง deploy เท่ากับชื่อก่อน deploy ต้องคุม freeze และทวน readback ก่อนส่ง request; ถ้ามี config/credential change หลัง proof หรือ review ไม่ตรง proof hash ให้หยุดและเก็บหลักฐานส่วนที่เปลี่ยนใหม่ ไม่ใช้การอนุมัติครั้งเก่าครอบรุ่นใหม่
+
+หลักฐานต้องรับรอง migration authority/controlled privileged path ตาม §3.1 ด้วย หากยังไม่ยืนยันให้ reject แม้ authentication ของ replacement ผ่านแล้ว กฎเหล่านี้ต้อง implement/ทดสอบแบบ offline และ local ก่อนเสนอ Cloud activation ไม่เพิ่ม workflow inputs, GitHub variables หรือ SHA allowlist ใน PR นี้
+
 ## 4. Acceptance criteria
 
 | AC | Observable outcome | STS |
@@ -57,17 +86,18 @@ Rollback ใช้เฉพาะ compatible state-aware target กับ replac
 | CP-AC-05 | Owner OID/tables/rows/registration IDs/states/migration ledger คงเดิม; flags/memberships แสดงจริง; ไม่เรียก password rejection ว่า NOLOGIN | CP-10, CP-11 |
 | CP-AC-06 | Replacement reconnect/register/read/session/own/owner/count/quota/persistence ผ่าน; visitor/wrong-role/foreign ownership ถูกปฏิเสธ ไม่มี data leak | CP-12 |
 | CP-AC-07 | Failure คง writes=false; rollback เฉพาะ compatible target/new credential ไม่คืน old credential/access และไม่ reset/seed | CP-13 |
-| CP-AC-08 | Proof ไม่ครบ/ไม่ได้ review/ยังไม่มี CP-aware gate ห้าม activation; LOGIN=true ต้องไม่ออก retiredLoginDisabled=true และ 28P01 ไม่ใช่ 28000 | CP-14, CP-15 |
+| CP-AC-08 | Proof ไม่ครบ/ไม่ได้ review/ยังไม่มี CP-aware gate ห้าม activation; LOGIN=true ไม่อ้าง retiredLoginDisabled และ 28P01 ไม่ใช่ 28000; future gate ให้ allow_activation เฉพาะ approved proof/hash ที่ bind ตรง request/readback ตาม §3.2 และ reject instance/secret-version mismatch | CP-14, CP-15, CP-19, CP-20, CP-21 |
 | CP-AC-09 | Contract PR ไม่เปลี่ยน app/workflow/SQL/IAM/flags; strict guards ยังอยู่ ผล design validation/offline regression ไม่ใช่ cloud fence PASS | CP-16 |
+| CP-AC-10 | Migrator ใช้ approved owner path ตาม §3.1 รันจริง migration003 บน synthetic001/002 ได้, ledger/ownership/data ถูกและ rerun no-op; DML-only/ไม่มี SET authority ให้ fail42501 พร้อม rollback/ledgerไม่เพิ่ม โดย runtime ไม่ได้ owner/DDL authority | CP-17, CP-18 |
 
 ## 5. STS / Definition of Done
 
-[STS CP-01–CP-16](../tests/cloudsql-credential-retirement-sts.md) และ [machine-readable test vectors](../tests/cloudsql-credential-retirement-cases.json) เป็น test design ไม่มีผล runtime execution ของ CP-v1; implementation/test runner ใหม่ต้องรอ contract review
+[STS CP-01–CP-21](../tests/cloudsql-credential-retirement-sts.md) และ [machine-readable test vectors](../tests/cloudsql-credential-retirement-cases.json) เป็น test design ไม่มีผล runtime execution ของ CP-v1; implementation/test runner ใหม่ต้องรอ contract review
 
 - [ ] PhraewaS review contract/STS ระบุข้อสงสัย/ผลพิจารณา และ accepted commit/date จริง
 - [ ] ก่อน code เก็บ test-design history; implementation ถัดไปมี RED/GREEN ไม่ใช้ setup failure แทน RED
 - [ ] Local synthetic integration/mocked API/inherited regression ผ่าน ระบุ actual pass/fail/skip/SHA
-- [ ] ก่อน actual mutation มีอนุมัติแยก แล้วเก็บ CP-AC-01–08/operator authority/secret isolation proof และ independent review; ส่วนไม่ได้ทำต้อง pending
+- [ ] ก่อน actual mutation มีอนุมัติแยก แล้วเก็บ CP-AC-01–08/10/operator authority/secret isolation/migration-profile proof และ independent review; ส่วนไม่ได้ทำต้อง pending
 - [ ] ก่อน activation มี CP-aware gate accepted และ tested; จากนั้นจึงขออนุมัติ activation และตรวจ cancel/reactivate บนรุ่นจริง
 
 ## 6. สถานะและ traceability
@@ -91,3 +121,4 @@ Deliverable 2 §3.2 ต้องเก็บ contract/test design ก่อน i
 - [users.update](https://docs.cloud.google.com/sql/docs/postgres/admin-api/rest/v1/users/update): ไม่ใช่ NOLOGIN/ADMIN OPTION API
 - [PostgreSQL 17 ALTER ROLE](https://www.postgresql.org/docs/17/sql-alterrole.html): SQL authority/attributes
 - [Backend termination](https://www.postgresql.org/docs/17/functions-admin.html#FUNCTIONS-ADMIN-SIGNAL): session permissions
+- [Object ownership/DDL](https://www.postgresql.org/docs/17/ddl-priv.html) และ [Role membership](https://www.postgresql.org/docs/17/role-membership.html): DML grants ไม่ใช่ ownership; SET ROLE เปลี่ยน effective privileges/object owner และสามารถใช้ special attributes ของ target role

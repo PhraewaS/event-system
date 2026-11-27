@@ -4,6 +4,21 @@
 
 Base `sprint2-staging` ee6e679801d8a53bc93522f44d366dba4e95d7cc มี source tree ตรง main50529ea ณ ตอน fetch; ไม่ทำงานโดยตรงบน staging/main
 
+## ผลปัจจุบันหลังแก้ review #93 — 27/11/2026
+
+[PhraewaS ขอแก้บน c7931d6](https://github.com/PhraewaS/event-system/pull/93#pullrequestreview-6087897099) เวลา19:09:12น. UTC+7 รับทั้งสองข้อ เนื่องจาก Deliverable 2 §3.2 ต้องมี permissions/negative cases/expected outcomes ชัดก่อน implementation และ §§3.4–3.5 ต้องผูก verification กับรุ่น/ระบบจริง:
+
+| Review request | การแก้ / สถานะ |
+| --- | --- |
+| สิทธิ์ migrator กับตารางที่ gather เป็นเจ้าของและ success/failure tests | contract §3.1 ระบุ controlled owner role/SET LOCAL ROLE, required schema ACL, runtime restrictions และ residual privilege; CP-AC-10 → CP-17/18 ทดสอบ actual003 บน synthetic001/002 กับ42501/rollback; **ยัง planned ไม่ได้ provision หรือรัน DB** |
+| Positive activation และ instance/secret-version mismatch | contract §3.2 / CP-AC-08 → CP-19/20/21 ผูก proof/hash/review/readback/request กับ exact target; positive gate decision แบบ offline ไม่ deploy; **ยัง planned ไม่มี CP-aware implementation** |
+
+ผลตรวจ revision เอกสาร: existing fake-gcloud release regression **6 passed/0 failed/0 skipped**; JSON21cases→10AC, relative links20จุด resolve; activation fixture/mismatch vectors structurally consistent; existing5guard/workflow filesไม่เปลี่ยน; `git diff --check` ผ่าน ไม่มี application/SQL/Cloud/IAM mutation, deploy หรือ activation
+
+[Transcript การตรวจรอบ review](../../evidence/sprint-2/cloudsql-contract/review93-offline-validation.txt) ไม่ใช้6testsเดิมหรือdesign consistencyเป็นผล21CPtestsผ่าน ต้องรอ peer review ของ revisionใหม่/CIและ accepted contract ก่อน implementation
+
+## ผลแรกบน c7931d6 — เก็บตามประวัติ
+
 | ตรวจ | ผลจริง | ขอบเขต |
 | --- | --- | --- |
 | `python -X utf8 deploy/tests/test_lifecycle_release.py` | 6 passed / 0 failed / 0 skipped | existing offline fake-gcloud guards เท่านั้น รวม activation test ที่เป็น stub ไม่ใช่การเปิดระบบจริง |

@@ -1,0 +1,27 @@
+Date: 2026-11-27 (Asia/Bangkok)
+PR: #93 review 6087897099, correcting c7931d6
+Scope: documentation and CP-v1 test design only; no application/workflow/SQL changes.
+
+Command: python -X utf8 deploy/tests/test_lifecycle_release.py
+Existing offline regression with suite-generated fake gcloud; no real cloud calls.
+test_activation_without_cutover_confirmation_rejected (__main__.ReleaseGate.test_activation_without_cutover_confirmation_rejected) ... ok
+test_db_fence_confirmation_requires_evidence (__main__.ReleaseGate.test_db_fence_confirmation_requires_evidence) ... ok
+test_timeout_drain_without_db_fence_cannot_activate (__main__.ReleaseGate.test_timeout_drain_without_db_fence_cannot_activate) ... ok
+test_unverified_rollback_rejected_before_mutation (__main__.ReleaseGate.test_unverified_rollback_rejected_before_mutation) ... ok
+test_verified_explicit_activation_reuses_image (__main__.ReleaseGate.test_verified_explicit_activation_reuses_image) ... ok
+test_verified_rollback_disables_writes_and_never_migrates (__main__.ReleaseGate.test_verified_rollback_disables_writes_and_never_migrates) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 4.976s
+
+OK
+
+Separate local design consistency check (not runtime CP tests):
+Design consistency: 21 unique test vectors -> 10 AC; 20 local links resolved.
+Positive activation design and mismatched instance/secret-version vectors: structurally consistent (not executed).
+Release/workflow/fence-script byte comparison against staging: unchanged (5 files).
+CP-v1 runtime tests: NOT RUN; test vectors are design only. No cloud/database calls.
+
+CP-01 through CP-21 runtime tests / Cloud SQL migration / cutover / activation: NOT RUN.
+Migration profile and CP-aware positive gate are proposed contracts, not implemented or provisioned.
+
