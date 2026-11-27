@@ -106,6 +106,8 @@ PR #86 ได้รับ PhraewaS APPROVED9477808 วันที่25/11/2026 
 
 ## 10. Current status after PR #88 / release review #89
 
+**27/11/2026 deployment-contract proposal (ไม่ rewrite snapshot ด้านล่าง):** [CP-v1 contract/AC/STS](../features/F-05A-cloudsql-credential-retirement.md) เสนอ Cloud SQL management-plane credential retirement สำหรับ #8 ฐาน sprint2-staging ee6e679; main ที่ fetch ได้ 50529ea ยังต้องคง cloud fence/activation acceptance เป็น pending CP-v1 ยังไม่ accepted/implemented และไม่ทำให้ F-05A/F-05B หรือ Deliverable 2 complete การเปลี่ยนรอบนี้ไม่มี schema/app/workflow/GCP mutation ใช้ชื่อ GitHub `guluJa`/`PhraewaS` สำหรับ author/reviewer และเก็บ contract review ก่อน implementation ของทางเลือกใหม่
+
 26/11/2026 00:32:07น. UTC+7: PhraewaS APPROVED8c543cf ก่อน PR #88 mergeเข้าsprint2-stagingเป็น86963e3เวลา00:32:15น. [Staging integration CI45665807924](https://github.com/PhraewaS/event-system/actions/runs/45665807924) ผ่าน116 unit/API/DB/client tests,42 browser executions,6 offline lifecycle release testsและ Compose/Docker จากแหล่งรวมจริง มิใช่ใช้ผลfeature branchแทนintegration
 
 | Feature / release | Current accepted source / evidence | Remaining gates |

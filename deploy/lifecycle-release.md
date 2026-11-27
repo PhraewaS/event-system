@@ -11,6 +11,8 @@
 
 ## Database fence ก่อน activation (แก้ตาม PR #87)
 
+**CP-v1 proposed amendment 27/11/2026:** [contract/AC](../docs/features/F-05A-cloudsql-credential-retirement.md) และ [STS](../docs/tests/cloudsql-credential-retirement-sts.md) เสนอ management-plane credential retirement กรณี SQL authority ไม่ครบ ยังไม่ accepted/implemented และไม่ใช้ยืนยัน strict NOLOGIN fence ด้านล่าง ห้ามติ๊ก DB-fence confirmation จากเพียง password rotation
+
 ผู้ดูแลทำในช่วง cutover ที่ตกลงไว้หลัง reviewed release เท่านั้น คำสั่งนี้ตั้งใจยุติ transaction ของ runtime เก่า จึงอาจทำให้ request เดิมล้มเหลวและต้อง retry ในรุ่นใหม่ ไม่ใช่ zero-downtime guarantee
 
 1. ทำ inventory ของ pre-state-aware revisions และ jobs/writers ทุกตัว ระบุ **DB login role และ Secret Manager version** ที่ใช้จริง โดยไม่คัดลอก secret payload ลงหลักฐาน ต้องไม่มี writer เก่าที่ถือ credential ของ replacement role; หากยืนยัน mapping ไม่ได้ให้คง writes=false
@@ -68,6 +70,28 @@ SQL นี้ใช้ catalog SELECTs ภายใน `BEGIN READ ONLY` เท�
 4. ลอง connection ใหม่ด้วย credential เก่าที่เคยยืนยันว่าใช้ได้ก่อน cutover ต้องถูกปฏิเสธเพราะ NOLOGIN (SQLSTATE28000; network error/ผิดรหัสไม่ใช่หลักฐาน) และตรวจ replacement connection/API/count/quota/persistence ยังผ่าน เก็บผลแต่ละข้อพร้อม operator/time/revision/secret-version mapping โดยไม่ใส่ค่าลับเป็น manual fence proof ที่เทียบเท่าเงื่อนไขสคริปต์ หากไม่ครบห้ามยืนยัน activation
 
 คง old role เป็น NOLOGIN เพื่อรักษา object ownership/history ไม่ต้อง DROP ROLE หลัง fence เส้นทางนี้ไม่เรียก ordinary-role script ซ้ำ เพราะสคริปต์ตั้งใจต้องเห็น old credential ที่ยัง login ได้ก่อนลงมือ ไม่แอบอ้างผล manual Cloud SQL เป็น local script output
+
+### Proposed CP-v1: Cloud SQL credential retirement — ยังใช้ activate ไม่ได้
+
+Cloud SQL รองรับ reset built-in password และ replace/remove memberships ผ่าน user management โดยไม่ต้องรู้รหัสเดิม แต่ไม่รับรองว่า LOGIN/CREATEROLE/CREATEDB เปลี่ยนหรือได้ ADMIN OPTION ดู [Google user management](https://docs.cloud.google.com/sql/docs/postgres/create-manage-users) และ [users.update](https://docs.cloud.google.com/sql/docs/postgres/admin-api/rest/v1/users/update)
+
+ลำดับสำหรับ review ก่อน implementation และก่อนขออนุมัติ mutation:
+
+1. Freeze writes/deploy ใน window ที่บังคับได้ เก็บ backup/baseline/old-writer/auth/privileged-path inventory; gate=false ไม่หยุด normal registration
+2. เตรียม replacement runtime/migrator และ isolated pinned secrets; พิสูจน์ old identities/revisions/jobs/impersonation เข้าไม่ถึง new credential shared runner ที่ยังอ่าน new secret ได้ทำให้หยุด
+   Migration authority ต้องเป็น [controlled owner profile ตาม contract §3.1](../docs/features/F-05A-cloudsql-credential-retirement.md#31-migration-identity-กับ-objects-ที่-gather-ยังเป็นเจ้าของ): runtime ไม่มี owner membership; migrator แยก login/secret ใช้ SET LOCAL ROLE gather บน transaction client เดียวโดย membership SET=true/ADMIN=false บันทึกและ review INHERIT ตามจริง รวม required schema ACL ที่ตรวจหลังถอน cloudsqlsuperuserแล้ว คง object owner เดิม การ SET เป็น gather อาจใช้ privileged attributes ของ gather จึงเป็น approved administrative path ต้อง review/inventory ไม่ใช่ ordinary runtime profile หาก provision/readback options หรือ DDL authority ไม่ครบให้หยุด ไม่แก้ด้วย DML grants อย่างเดียว ต้องทดสอบ actual003 บน synthetic001/002 และ failure42501 (CP-17/18) ก่อน actual cutover; runner ปัจจุบันยังไม่มี profileนี้
+3. หลังอนุมัติ deploy ย้าย service/jobs ไป replacement ที่ผ่าน normal journey/session/count/quota และระงับ old traffic/tags/job executions
+4. หลังอนุมัติ DB fence จึง reset password ผ่าน Cloud SQL เป็นค่าสุ่มควบคุมที่ old workloads ไม่รู้ ไม่ retain old password ไม่ส่งค่าใหม่เข้า old shared latest secret; ถอน privileged memberships ตามแผน รอ operation/readback หากล้มเหลวให้หยุด
+5. SQL operator อิสระที่มีสิทธิ์จริง terminate old sessions ทุก DB จนศูนย์ พิสูจน์ in-flight old write ไม่ commit และ old credential positive control ก่อน fence/negative หลัง fence พร้อม replacement reconnect เก็บ SQLSTATE จริง
+6. ตรวจ owner OID/data/ledger/flags/memberships/auth/SET ROLE paths; flags ที่ยัง true ต้องรายงานจริง unknown/uncontrolled privileged paths ให้หยุด ไม่รายงานว่า privileged-role retirement ผ่าน
+7. Independent review actual CP proof และ CP-aware implementation/tests ต้อง accepted ก่อนเสนอ activation CP-v1 ไม่ได้ถูกยอมรับโดย boolean+URL ของ guard เดิมอัตโนมัติ
+   Future gate ต้องมี positive allow_activation เมื่อ proof/explicit approval/independent review ของ immutable content hashครบ และ target tuple ตรง fresh readback/intended request: project/instance/database/roles+OIDs/service/job/service accounts/pre-activation revision/approved SHA+digest/per-workload secret resources+numeric versions Instance หรือ secret version ผิด/unknown/latest ให้ rejectก่อน service mutation แม้ URL/checkboxครบ (CP-19–21) Activationสร้าง revisionใหม่ได้โดยคง verifiedimage/credentials/identitiesและเปลี่ยนเฉพาะ flagที่อนุมัติ ต้องตรวจrevisionใหม่ภายหลัง ไม่ถือว่า contract PR นี้เปิด gateแล้ว
+
+**Proof semantics:** เสนอ `legacyCredentialRejected`, `retiredSessionCount`, `replacementConnectionReady`, `replacementSecretIsolationVerified` พร้อม actual flags/memberships ห้ามออก `retiredLoginDisabled=true` เมื่อ LOGIN ยัง true หรือแทน password rejection 28P01 ว่าเป็น NOLOGIN 28000 ขณะนี้ release validator รองรับ strict fence เดิมเท่านั้น จึงคง activation blocked แม้ merge เอกสาร CP-v1 แล้ว
+
+**Failure/rollback:** คง writes=false/freeze ตามแผน ใช้เฉพาะ compatible state-aware target/new credential ที่ตรวจแล้ว ไม่คืน old password/LOGIN/memberships/secret access และไม่ reset/seed/restore อัตโนมัติ หากยังต้องการ NOLOGIN/NOCREATEROLE ให้ใช้ operator/provider-supported route ที่ยืนยันได้ ทางเลือกนี้ไม่ bypass ordinary-role script guard
+
+ดู AC/STS สำหรับ negative cases/inputs/expected results เคส CP-v1 จริงยัง not run ไม่มี production mutation commands หรือ CP activation implementation ใน PR contract นี้
 
 ## Historical Deploy rerun control ก่อน activation — review #89
 

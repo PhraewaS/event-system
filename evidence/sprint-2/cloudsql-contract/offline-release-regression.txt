@@ -1,0 +1,22 @@
+Date: 2026-11-27 (Asia/Bangkok)
+Scope: documentation working tree based on sprint2-staging ee6e679801d8a53bc93522f44d366dba4e95d7cc
+Command: python -X utf8 deploy/tests/test_lifecycle_release.py
+Runtime: bundled Python; Git Bash; suite-generated fake gcloud only
+No real GCP command, database connection, deployment or lifecycle change.
+
+test_activation_without_cutover_confirmation_rejected (__main__.ReleaseGate.test_activation_without_cutover_confirmation_rejected) ... ok
+test_db_fence_confirmation_requires_evidence (__main__.ReleaseGate.test_db_fence_confirmation_requires_evidence) ... ok
+test_timeout_drain_without_db_fence_cannot_activate (__main__.ReleaseGate.test_timeout_drain_without_db_fence_cannot_activate) ... ok
+test_unverified_rollback_rejected_before_mutation (__main__.ReleaseGate.test_unverified_rollback_rejected_before_mutation) ... ok
+test_verified_explicit_activation_reuses_image (__main__.ReleaseGate.test_verified_explicit_activation_reuses_image) ... ok
+test_verified_rollback_disables_writes_and_never_migrates (__main__.ReleaseGate.test_verified_rollback_disables_writes_and_never_migrates) ... ok
+
+Ran 6 tests in 4.325s
+OK
+Exit code: 0
+
+Separate design consistency check:
+16 unique planned test vectors -> 9 AC; 18 local Markdown links resolved.
+Existing release validator/fence script/release script/deploy workflow/CI workflow unchanged against staging.
+CP-v1 runtime execution: NOT RUN (test design only; no RED/GREEN claim).
+Cloud SQL mutation / cutover / replacement acceptance / activation: NOT RUN.
