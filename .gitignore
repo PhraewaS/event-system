@@ -9,6 +9,8 @@ test-results/
 playwright-report/
 *.log
 .local/
+__pycache__/
+*.pyc
 
 # Windows folder metadata
 [Dd]esktop.ini
