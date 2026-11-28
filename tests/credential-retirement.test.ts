@@ -42,6 +42,17 @@ test('CP-02 / management instance mismatch stops before adapter calls',async()=>
   const s=scenario();s.expected.instance='wrong-instance';
   await expect(retireCredentials(s)).rejects.toThrow('management target binding');expect(s.calls).toEqual([]);
 });
+test('review94 / SQL profiles on another instance reject before reset even with matching database and role names',async()=>{
+  const s=scenario();Object.assign(s.database,{verifyInstance:async()=>false});
+  Object.assign(s.management,{readInstance:async()=>({name:'cp-test',project:'cp-fixture-project',connectionName:'cp-fixture-project:asia-southeast1:cp-test',databaseVersion:'POSTGRES_17'})});
+  await expect(retireCredentials(s)).rejects.toThrow('instance binding');
+  expect(s.calls).not.toContain('rotate');expect(s.calls).not.toContain('revoke');expect(s.calls).not.toContain('terminate');
+});
+test('review94 / operator without session termination authority stops before reset or membership change',async()=>{
+  const s=scenario();Object.assign(s.database,{sessionTerminationAuthority:async()=>false});
+  await expect(retireCredentials(s)).rejects.toThrow('session termination authority');
+  expect(s.calls).not.toContain('rotate');expect(s.calls).not.toContain('revoke');expect(s.calls).not.toContain('terminate');
+});
 test('CP-06 / failed reset never revokes/terminates or leaks API payload',async()=>{
   const s=scenario();s.management.rotatePassword=async()=>{throw new Error('PRIVATE_PASSWORD_AND_URL');};
   await expect(retireCredentials(s)).rejects.toThrow('password rotation');expect(s.calls).toEqual(['inspect']);

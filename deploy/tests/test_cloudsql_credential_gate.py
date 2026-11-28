@@ -14,7 +14,7 @@ from test_credential_proof import fixture
 
 
 class CredentialGateIntegration(unittest.TestCase):
-    def test_CP19_release_context_accepts_matching_proof_and_rejects_different_project(self):
+    def test_review94_valid_CP_proof_is_still_blocked_by_release_until_live_config_verification(self):
         bundle, trust = fixture(datetime.now(timezone.utc))
         target=bundle['request']
         with tempfile.TemporaryDirectory() as folder:
@@ -33,7 +33,7 @@ class CredentialGateIntegration(unittest.TestCase):
                 'CP_ACTIVATION_APPROVED':'true','PROJECT_ID':target['project'],'REGION':'asia-southeast1',
                 'SERVICE_NAME':'cp-fixture','MIGRATE_JOB_NAME':'cp-migrate'}
             with patch.dict(os.environ,env,clear=True):
-                verify()
+                with self.assertRaises(ValueError):verify()
                 os.environ['PROJECT_ID']='different-project'
                 with self.assertRaises(ValueError):verify()
 
