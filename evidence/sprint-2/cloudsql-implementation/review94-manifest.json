@@ -1,0 +1,16 @@
+{
+  "review": "6091877352",
+  "red_commit": "5f99f78",
+  "tested_runtime_commit": "2193c11",
+  "local_full_tests": 149,
+  "offline_python_tests": 39,
+  "production_operations": false,
+  "CP_release_mode": "blocked_offline_only",
+  "runtime_sha256_normalized_lf": {
+    "deploy/cloudsql-credential-retirement.mjs": "646a763287060cde67b91ee452998b80dc531e045852e6191b7d4cd1f9264271",
+    "deploy/credential-fence-postgres.mjs": "aa2d3d76d24a09cd572bcc6226602632d361d7077ca170fee103c979e96b8ace",
+    "deploy/release.sh": "ab67f412504907b74c4f93b546d2a6534e48671081a87f55001d3e3969aaffe8",
+    "deploy/verify_lifecycle_release.py": "fe6e15f17f0e70bab673b836bb1f6e865bb30aa8d0985841f60bdb4c5d2b12e2",
+    "deploy/verify_credential_fence.py": "3f610f05291b6f6e5f70a8227475da3067a8018856226aee90bc427d1b25ac7d"
+  }
+}

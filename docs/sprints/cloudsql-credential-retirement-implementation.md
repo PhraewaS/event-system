@@ -1,5 +1,7 @@
 # CP-v1 implementation / acceptance status — Issue #8
 
+> **Current after review #94 (28/11/2026):** [3corrections/tests/status](cloudsql-review94.md) supersede the initial79154f3snapshot below. SQLinstancebindingและsignal-authorityต้องผ่านก่อนmutation CPproofเป็นoffline-only; release.shบล็อกCPก่อนgcloudแม้proofครบ จึงยังไม่มีliveCPactivationintegration/Cloudacceptance ข้อมูล143/38/42ด้านล่างเป็นhistoricalrunไม่ใช้รับรองheadใหม่อัตโนมัติ
+
 27 พฤศจิกายน 2026 · Author `guluJa` · Reviewer `PhraewaS` (implementation review pending)
 
 **Scope:** implemented/tested บน local synthetic PostgreSQL17 และ mocked/offline adapters เท่านั้น ไม่ได้เปลี่ยน Cloud SQL/IAM/secrets/variables/SHA allowlist ไม่ deploy/เปิด lifecycle และยังไม่ปิด #8/#85

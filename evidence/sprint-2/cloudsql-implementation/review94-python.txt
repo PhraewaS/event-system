@@ -1,0 +1,78 @@
+test_cp_method_without_proof_bundle_is_blocked (test_cloudsql_credential_gate.CredentialGateIntegration.test_cp_method_without_proof_bundle_is_blocked) ... ok
+test_review94_valid_CP_proof_is_still_blocked_by_release_until_live_config_verification (test_cloudsql_credential_gate.CredentialGateIntegration.test_review94_valid_CP_proof_is_still_blocked_by_release_until_live_config_verification) ... ok
+test_CP01_06_11_12_every_missing_failed_unknown_attestation_blocks (test_credential_proof.ProofPolicy.test_CP01_06_11_12_every_missing_failed_unknown_attestation_blocks) ... ok
+test_CP02_roles_and_operator_cannot_alias (test_credential_proof.ProofPolicy.test_CP02_roles_and_operator_cannot_alias) ... ok
+test_CP08_sessions_must_be_exact_integer_zero (test_credential_proof.ProofPolicy.test_CP08_sessions_must_be_exact_integer_zero) ... ok
+test_CP09_rejection_needs_positive_control_and_exact_password_sqlstate (test_credential_proof.ProofPolicy.test_CP09_rejection_needs_positive_control_and_exact_password_sqlstate) ... ok
+test_CP11_15_flags_cannot_be_forged_or_privileged_memberships_hidden (test_credential_proof.ProofPolicy.test_CP11_15_flags_cannot_be_forged_or_privileged_memberships_hidden) ... ok
+test_CP14_review_hash_approval_implementation_and_freshness_are_mandatory (test_credential_proof.ProofPolicy.test_CP14_review_hash_approval_implementation_and_freshness_are_mandatory) ... ok
+test_CP15_editing_approved_proof_invalidates_hash (test_credential_proof.ProofPolicy.test_CP15_editing_approved_proof_invalidates_hash) ... ok
+test_CP19_complete_reviewed_bound_proof_allows_decision_without_claiming_nologin (test_credential_proof.ProofPolicy.test_CP19_complete_reviewed_bound_proof_allows_decision_without_claiming_nologin) ... ok
+test_CP20_every_target_component_mismatch_blocks_even_with_valid_review (test_credential_proof.ProofPolicy.test_CP20_every_target_component_mismatch_blocks_even_with_valid_review) ... ok
+test_CP21_runtime_and_migrator_versions_reject_latest_missing_wrong_resource (test_credential_proof.ProofPolicy.test_CP21_runtime_and_migrator_versions_reject_latest_missing_wrong_resource) ... ok
+test_migration_profile_must_be_independently_reviewed_not_admin (test_credential_proof.ProofPolicy.test_migration_profile_must_be_independently_reviewed_not_admin) ... ok
+test_parser_rejects_duplicate_keys_and_nonfinite_numbers (test_credential_proof.ProofPolicy.test_parser_rejects_duplicate_keys_and_nonfinite_numbers) ... ok
+test_activation_without_cutover_confirmation_rejected (test_lifecycle_release.ReleaseGate.test_activation_without_cutover_confirmation_rejected) ... ok
+test_db_fence_confirmation_requires_evidence (test_lifecycle_release.ReleaseGate.test_db_fence_confirmation_requires_evidence) ... ok
+test_review94_cp_activation_with_full_legacy_confirmations_stops_before_any_gcloud_call (test_lifecycle_release.ReleaseGate.test_review94_cp_activation_with_full_legacy_confirmations_stops_before_any_gcloud_call) ... ok
+test_timeout_drain_without_db_fence_cannot_activate (test_lifecycle_release.ReleaseGate.test_timeout_drain_without_db_fence_cannot_activate) ... ok
+test_unverified_rollback_rejected_before_mutation (test_lifecycle_release.ReleaseGate.test_unverified_rollback_rejected_before_mutation) ... ok
+test_verified_explicit_activation_reuses_image (test_lifecycle_release.ReleaseGate.test_verified_explicit_activation_reuses_image) ... ok
+test_verified_rollback_disables_writes_and_never_migrates (test_lifecycle_release.ReleaseGate.test_verified_rollback_disables_writes_and_never_migrates) ... ok
+test_credentials_are_rejected_before_network (test_smoke.SmokeTests.test_credentials_are_rejected_before_network) ... ok
+test_db_disconnected_fails_even_with_http_success (test_smoke.SmokeTests.test_db_disconnected_fails_even_with_http_success) ... ok
+test_empty_javascript_is_rejected (test_smoke.SmokeTests.test_empty_javascript_is_rejected) ... ok
+test_events_error_shape_fails (test_smoke.SmokeTests.test_events_error_shape_fails) ... ok
+test_external_asset_is_rejected_before_fetch (test_smoke.SmokeTests.test_external_asset_is_rejected_before_fetch) ... ok
+test_gather_shapes_empty_events_and_read_only_paths (test_smoke.SmokeTests.test_gather_shapes_empty_events_and_read_only_paths) ... ok
+test_html_fallback_at_javascript_url_is_rejected (test_smoke.SmokeTests.test_html_fallback_at_javascript_url_is_rejected) ... ok
+test_javascript_mime_types_with_charset_are_accepted (test_smoke.SmokeTests.test_javascript_mime_types_with_charset_are_accepted) ... ok
+test_network_failure_has_bounded_attempts (test_smoke.SmokeTests.test_network_failure_has_bounded_attempts) ... ok
+test_nonempty_javascript_with_wrong_content_type_is_rejected (test_smoke.SmokeTests.test_nonempty_javascript_with_wrong_content_type_is_rejected) ... ok
+test_old_example_health_shape_is_rejected (test_smoke.SmokeTests.test_old_example_health_shape_is_rejected) ... ok
+test_unbuilt_html_is_rejected (test_smoke.SmokeTests.test_unbuilt_html_is_rejected) ... ok
+test_actual_shell_guard_rejects_mixed_activation_requests (test_wif_workflow.WifWorkflowIsolation.test_actual_shell_guard_rejects_mixed_activation_requests) ... ok
+test_dispatch_does_not_require_image_for_authentication (test_wif_workflow.WifWorkflowIsolation.test_dispatch_does_not_require_image_for_authentication) ... ok
+test_existing_release_routes_preserved (test_wif_workflow.WifWorkflowIsolation.test_existing_release_routes_preserved) ... ok
+test_manual_verify_never_routes_to_deploy (test_wif_workflow.WifWorkflowIsolation.test_manual_verify_never_routes_to_deploy) ... ok
+test_verify_job_has_only_validation_authentication_and_summary (test_wif_workflow.WifWorkflowIsolation.test_verify_job_has_only_validation_authentication_and_summary) ... ok
+test_verify_job_only_runs_for_explicit_main_dispatch (test_wif_workflow.WifWorkflowIsolation.test_verify_job_only_runs_for_explicit_main_dispatch) ... ok
+
+----------------------------------------------------------------------
+Ran 39 tests in 10.802s
+
+OK
+PASS /api/health
+PASS /api/health
+PASS /api/ready
+PASS /
+PASS /api/health
+PASS /api/ready
+PASS /
+PASS /assets/app.js
+PASS /api/health
+PASS /api/ready
+PASS /
+PASS /api/health
+PASS /api/ready
+PASS /
+PASS /assets/app.js
+PASS /api/events
+PASS /api/health
+PASS /api/ready
+PASS /
+PASS /api/health
+PASS /api/ready
+PASS /
+PASS /assets/app.js
+PASS /api/events
+PASS /api/health
+PASS /api/ready
+PASS /
+PASS /assets/app.js
+PASS /api/events
+PASS /api/health
+PASS /api/ready
+PASS /
+PASS /api/health
+PASS /api/ready

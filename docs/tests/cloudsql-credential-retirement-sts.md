@@ -1,5 +1,7 @@
 # CP-v1 STS — credential fence ก่อน lifecycle activation
 
+> Review #94เพิ่มregression: sameDB/rolesบนคนละinstanceและrawTCPunboundต้องหยุดก่อนreset; SQLoperatorไม่มีsession-signalauthorityต้องไม่เปลี่ยนpassword/membership; validCPproofยังต้องถูกrelease.shปฏิเสธก่อนgcloud รวมกรณีไม่ระบุmethodแต่ส่งCPevidence CP-19positiveเป็นofflinecomparisonเท่านั้น ไม่มีliveconfigreaderจึงยังใช้activateไม่ได้ [ผลปัจจุบัน](../sprints/cloudsql-credential-retirement-implementation.md)
+
 > Accepted test-design snapshot จาก PR #93 (94e99a3 → merge1407833) แถว Planned/not run เป็นสถานะก่อน implementation; [ผล execution ปัจจุบัน](../sprints/cloudsql-credential-retirement-implementation.md) แยก local/mocked execution ออกจาก actual Cloud acceptance ไม่ใช้21vectorsเป็นจำนวนtestsผ่านโดยอัตโนมัติ
 
 27/11/2026 · [Contract/AC](../features/F-05A-cloudsql-credential-retirement.md) · Issue #8 · Owner `guluJa` / independent reviewer `PhraewaS`

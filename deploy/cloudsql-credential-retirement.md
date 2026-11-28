@@ -1,12 +1,15 @@
 # CP-v1 implementation — operator preparation, not Cloud acceptance
 
+> **Current scope after review #94 (28/11/2026): CP proof validation is offline-only. Both release.sh and the release verifier reject CP activation even with valid proof. No live service/job configuration reader is implemented; CP-AC-08 cloud activation remains pending.** Earlier implementation evidence is retained in the status record; this restriction supersedes the initial opt-in release integration.
+
 Issue #8 · accepted contract [PR #93](https://github.com/PhraewaS/event-system/pull/93), head94e99a3, merge1407833 (27/11/2026 19:21:06 UTC+7)
 
 ## Components and execution boundaries
 
 - `cloudsql-credential-retirement.mjs`: explicit operator library. `retireCredentials` checks approval/window/freeze/inventory/secret isolation/disabled lifecycle, instance+role binding, actual identities and positive control before management calls. Orders reset → completed receipt → membership replacement → completed receipt/readback → terminate all old sessions → password rejection28P01 → replacement and preserved baseline. Failure never restores old credentials or enables lifecycle.
 - `cloudSqlUserManagement`: fixed Google SQL Admin API endpoint; injected token/password providers only. No ambient credentials, CLI auto-run, token/password logging or credential files. Imports do not call APIs. It replaces memberships using query parameters and waits for DONE; HTTP/operation errors stop execution. A direct adapter is a capability for the explicitly approved operator, not an authorization grant.
-- `credential-fence-postgres.mjs`: explicit private profiles on the same DB endpoint, independent operator/old/runtime/migrator identities, owner SET/schema ACL checks, old sessions across all DBs and reconnect checks. Snapshots retain owner OIDs/schema/ledger and aggregate SHA256 hashes/counts of tables; private row contents never leave SQL in the snapshot. It does not authenticate to Google or prove instance provenance from a proxy URL.
+- `credential-fence-postgres.mjs`: `cloudSqlConnectorInspection` binds every SQL connection to one fixed instanceConnectionName through a caller-supplied official Google Cloud SQL Connector. Profiles contain user/password/database only; host/URL/stream/options overrides are rejected. Before reset, fresh Admin API instance metadata must match this connector binding. Plain URL/TCP/proxy inspection cannot assert a Cloud instance and cannot terminate sessions; no boolean override enables it. The caller owns/trusts the official connector/auth lifecycle; tests supply an explicitly labelled local double, not Google authentication evidence.
+- SQL preflight reads operator/function/target privileges before reset and rechecks before subsequent mutations: EXECUTE on pg_terminate_backend plus effective pg_signal_backend or target-role privileges, respecting the superuser-target restriction and independent current/session identity. It does not probe by terminating a backend. Zero sessions alone is not authority proof. Snapshots retain owner OIDs/schema/ledger and aggregate hashes/counts without collecting private row content.
 - `server/src/migrate.ts`: optional `ownerRole` executes `SET LOCAL ROLE` after BEGIN on the same client before lock/ledger/DDL. CLI reads operator-only `MIGRATION_OWNER_ROLE`; unset preserves existing behavior. It validates the identifier and never grants memberships. Missing SET/schema rights fails with PostgreSQL42501 and rollback; ordinary web runtime does not select this profile.
 - `verify_credential_fence.py`: offline proof policy only. Requires independently pinned proof hash/accepted implementation/reviewer/explicit decision approval, fresh reviewed proof/readback, all prerequisite attestations and exact request binding. Reports a gate decision with zero cloud operations, not a deployment result.
 
@@ -18,9 +21,9 @@ The approved hash/reviewer/implementation SHA must come from the independent acc
 
 Proof verifiedAt must be at most15minutes old; readback at most5minutes old, after review; all timestamps include timezones and lie in the active approved maintenance window. A changed target/config/secret version requires new evidence/review. Method/flags remain truthful: credential rejection28P01 does not imply NOLOGIN28000; LOGIN/CREATEROLE/CREATEDB may still be true and the privileged migration path must be reviewed.
 
-## Release integration remains opt-in and blocked by default
+## Release CP activation is unconditionally blocked pending live configuration verification
 
-Existing strict fence remains the default method. CP validation is selected only by explicit `LIFECYCLE_DB_FENCE_METHOD=CLOUDSQL_CREDENTIAL_RETIREMENT_V1` in a future approved operator release context, with:
+Existing strict fence remains the default method. The following CP environment names are reserved evidence inputs from the initial implementation; their presence is **not** a way to enable activation:
 
 | Operator-supplied input | Meaning |
 | --- | --- |
@@ -30,9 +33,13 @@ Existing strict fence remains the default method. CP validation is selected only
 | CP_APPROVED_REVIEWER | Independently verified approved reviewer |
 | CP_ACTIVATION_APPROVED | Must explicitly be true for an activation decision |
 
-`verify_lifecycle_release.py` also requires existing image/cutover/DB-fence confirmations and checks the bundle against PROJECT_ID/REGION/service/job/image SHA+digest of the intended release. CP mode without proof cannot use legacy boolean+URL alone. The state-aware candidate revision/roles/identities/secrets must equal fresh readback/intended request; a new post-activation revision is verified separately after a later approved deployment.
+`release.sh` rejects CP method/evidence inputs before any gcloud call, including requests with ACTIVATE_LIFECYCLE=false; `verify_lifecycle_release.py` separately rejects them too. Omitting the method while supplying CP evidence does not fall back to the legacy strict path. Fully valid/reviewed offline JSON is still insufficient. The standalone verifier retains its proposed positive comparison decision but returns scope=OFFLINE_ATTESTATION_COMPARISON_ONLY, liveConfigurationVerified=false and releaseActivationAllowed=false. It never authenticates to GCP or updates a service.
 
 The current GitHub Deploy demo workflow is unchanged: no CP artifact downloading, new inputs/variables, SHA approval or activation dispatch is installed automatically. Do not manufacture a strict DB-fence confirmation to substitute for missing CP evidence. Wiring a real reviewed proof and fresh readback into an actual cloud release is a later controlled operator step requiring explicit authorization; this branch does not constitute that authorization.
+
+Before CP activation can be implemented, add independent authoritative live reads of the actual service/job revision, image, identity, instance mapping and pinned secret versions; compare those with proof and intended mutation before sending it. This remains deferred per review #94, not marked complete. Do not remove the hard stop based only on passing offline tests.
+
+References: [Google Cloud SQL Connector](https://docs.cloud.google.com/sql/docs/postgres/connect-connectors), [PostgreSQL17 backend signaling permissions](https://www.postgresql.org/docs/17/functions-admin.html#FUNCTIONS-ADMIN-SIGNAL). No connector dependency or ambient credential discovery is added to the application runtime; the explicit operator integration supplies the trusted connector.
 
 ## Before any real use
 
