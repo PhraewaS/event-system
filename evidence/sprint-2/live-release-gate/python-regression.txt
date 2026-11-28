@@ -23,13 +23,19 @@ test_actual_catalog_bindings_and_reviewed_owner_profile_are_observed (test_live_
 test_admin_api_instance_mismatch_prevents_any_sql_connection (test_live_release_client.SqlObservation.test_admin_api_instance_mismatch_prevents_any_sql_connection) ... ok
 test_observation_reports_changed_oid_and_sessions_instead_of_copying_expected_values (test_live_release_client.SqlObservation.test_observation_reports_changed_oid_and_sessions_instead_of_copying_expected_values) ... ok
 test_runtime_owner_or_indirect_privilege_and_migration_admin_paths_reject (test_live_release_client.SqlObservation.test_runtime_owner_or_indirect_privilege_and_migration_admin_paths_reject) ... ok
+test_LG07_expired_authorization_after_token_fetch_never_sends_patch (test_live_release_client.TransportBoundary.test_LG07_expired_authorization_after_token_fetch_never_sends_patch) ... ok
 test_activation_uses_one_etag_patch_preserves_configuration_and_verifies_revision (test_live_release_client.TransportBoundary.test_activation_uses_one_etag_patch_preserves_configuration_and_verifies_revision) ... ok
 test_api_error_returns_no_sensitive_response_text (test_live_release_client.TransportBoundary.test_api_error_returns_no_sensitive_response_text) ... ok
 test_client_cannot_switch_instance_or_project (test_live_release_client.TransportBoundary.test_client_cannot_switch_instance_or_project) ... ok
+test_lost_sql_barrier_is_not_reported_as_safe_recovery (test_live_release_client.TransportBoundary.test_lost_sql_barrier_is_not_reported_as_safe_recovery) ... Activation outcome unverified. Holding the database write barrier; retain external maintenance and restore verified compatible lifecycle-disabled service. Read retries only; do not terminate this operator process.
+CRITICAL: database write barrier lost. Outcome is unknown; preserve external maintenance and do not reopen writes.
+ok
 test_non_target_secret_payload_and_old_shared_secret_reject_before_token (test_live_release_client.TransportBoundary.test_non_target_secret_payload_and_old_shared_secret_reject_before_token) ... ok
 test_private_profile_cannot_override_instance_host_database_or_role (test_live_release_client.TransportBoundary.test_private_profile_cannot_override_instance_host_database_or_role) ... ok
 test_service_etag_drift_cannot_patch (test_live_release_client.TransportBoundary.test_service_etag_drift_cannot_patch) ... ok
 test_unbound_or_non_target_resources_and_mutation_methods_reject_before_token (test_live_release_client.TransportBoundary.test_unbound_or_non_target_resources_and_mutation_methods_reject_before_token) ... ok
+test_uncertain_outcome_keeps_barrier_and_retries_only_reads_until_disabled (test_live_release_client.TransportBoundary.test_uncertain_outcome_keeps_barrier_and_retries_only_reads_until_disabled) ... Activation outcome unverified. Holding the database write barrier; retain external maintenance and restore verified compatible lifecycle-disabled service. Read retries only; do not terminate this operator process.
+ok
 test_LG06_share_barrier_blocks_writer_but_permits_reads_and_releases (test_live_release_db.LocalDatabaseBarrier.test_LG06_share_barrier_blocks_writer_but_permits_reads_and_releases) ... ok
 test_LG07_exception_releases_every_table_lock_without_data_changes (test_live_release_db.LocalDatabaseBarrier.test_LG07_exception_releases_every_table_lock_without_data_changes) ... ok
 test_LG01_valid_live_check_only_never_freezes_or_mutates (test_live_release_gate.LiveReleaseGate.test_LG01_valid_live_check_only_never_freezes_or_mutates) ... ok
@@ -68,7 +74,7 @@ test_verify_job_has_only_validation_authentication_and_summary (test_wif_workflo
 test_verify_job_only_runs_for_explicit_main_dispatch (test_wif_workflow.WifWorkflowIsolation.test_verify_job_only_runs_for_explicit_main_dispatch) ... ok
 
 ----------------------------------------------------------------------
-Ran 68 tests in 17.999s
+Ran 71 tests in 15.216s
 
 OK
 PASS /api/health

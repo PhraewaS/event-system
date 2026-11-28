@@ -4,15 +4,16 @@ Design: 5df7cfb
 Meaningful RED tests: 45e1f13 against offline baseline d7084b6
 RED: 4 failed behavioral assertions / 0 setup-import errors (2 tests with subcases).
 An earlier scaffold signature error was fixed before this captured RED; it is not counted as TDD evidence.
-Tested runtime source: 8be0713901ca7ed72979b033ad67d129b1c3601a
+Tested Python runtime source: f499787bc23a1e44f9eea0601ace621e74115293
 
 Python command: python -X utf8 -m unittest discover -s deploy/tests -p 'test_*.py' -v
-Result: 68 passed, 0 failed, 0 skipped. Raw output: python-regression.txt
+Result: 71 passed, 0 failed, 0 skipped. Raw output: python-regression.txt
 PyYAML6.0.3, pg8000 1.31.6, Git Bash. Dedicated local PostgreSQL17 on loopback.
-Includes 29 new tests: coordinator/trust/clock/source/SQL drift; transport/private profiles;
+Includes 32 new tests: coordinator/trust/clock/source/SQL drift; transport/private profiles;
 metadata-only inspection; shell dispatch; two real transaction SHARE-barrier tests.
 These are Cloud capability doubles/local SQL substitutes, not Google authentication or Cloud SQL evidence.
 
+Node suite source: 8be0713901ca7ed72979b033ad67d129b1c3601a; Node/app files unchanged by subsequent Python-only hardening.
 Node command: node node_modules/vitest/vitest.mjs run --reporter=verbose
 Environment: NODE_ENV=test; TEST_DATABASE_URL selects a dedicated local *_test DB with synthetic credentials.
 Result: 223 passed, 0 failed, 0 skipped in21files. Raw output: node-regression.txt
@@ -37,3 +38,7 @@ Not executed in this implementation request:
 No application UI changed; browser regression was not repeated for this operator-only change.
 No proof fixture/positive booleans constitute real approval or satisfy missing actual fence evidence.
 Issue #8 stays open. No claim of Sprint2/Deliverable2 completion.
+
+Evidence logs preserve content; line endings/trailing whitespace normalized to UTF-8 LF for stable repository checksums.
+
+Uncertain PATCH/postcheck and normal interrupt scenarios preserve the barrier until compatible lifecycle-disabled state is observed. Recovery retries reads only; lost SQL/process state remains an explicit critical unknown requiring external maintenance. Pre-send proof/source/window is revalidated after token retrieval. These recovery tests use doubles/local SQL only.

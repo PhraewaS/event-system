@@ -235,4 +235,3 @@ Disposable upgrade database: s2_upgrade_44568_9e6fe4c6b3814828a1bc79a3b0570506_t
 
     Isolate  21 workers spawned · ~188ms startup each (spawn + environment, per file)
              at least ~3.76s faster with isolate: false — reuses workers across files instead of one per file
-
