@@ -1,5 +1,7 @@
 # F-05A — ยกเลิกและกลับมาลงทะเบียน
 
+> CP-v1 deployment-contract amendment acceptedใน PR #93 (1407833); [local/mocked implementation และสถานะactualcloud](../sprints/cloudsql-credential-retirement-implementation.md) ไม่เปลี่ยน business AC เดิม และยังไม่ยืนยันCloudcutover/activation
+
 > Acceptance record: PhraewaS APPROVED contract9477808 ใน PR #86 วันที่25/11/2026 16:13:03น. UTC+7; mergeเข้าsprint2-stagingเป็นbb5aeccเวลา16:14:08 ก่อน test-first e5cf5c1 และ implementation a5bed71 ข้อความ proposal/planned ด้านล่างคง snapshot ก่อนเริ่ม code; ผล implementation แยกใน [evidence/status](../sprints/F-05A-implementation.md)
 
 25 พฤศจิกายน 2026 · **Contract v2 accepted in #86; v2.1 clarifications ตาม review #87 รอตรวจ implementation** · Developer `guluJa`; reviewer `PhraewaS`; งาน F-05 เดิมใน [#8](https://github.com/PhraewaS/event-system/issues/8), capacity แยก [#85](https://github.com/PhraewaS/event-system/issues/85)

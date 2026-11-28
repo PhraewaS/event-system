@@ -5,10 +5,19 @@ import { pathToFileURL } from "node:url";
 import type { Pool } from "pg";
 import { createPool } from "./db.js";
 
-export async function migrate(pool: Pool) {
+export interface MigrationOptions { ownerRole?: string }
+
+export async function migrate(pool: Pool, options: MigrationOptions = {}) {
+  if (options.ownerRole !== undefined && !/^[a-z_][a-z0-9_]{0,62}$/.test(options.ownerRole)) {
+    throw new Error('Invalid operator-configured migration owner role.');
+  }
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
+    if (options.ownerRole !== undefined) {
+      // Static operator configuration only, never an API field. Same transaction/client.
+      await client.query(`SET LOCAL ROLE "${options.ownerRole}"`);
+    }
     await client.query("SELECT pg_advisory_xact_lock(71420261)");
     await client.query(
       "CREATE TABLE IF NOT EXISTS schema_migrations (name text PRIMARY KEY, checksum text NOT NULL, applied_at timestamptz NOT NULL DEFAULT now())",
@@ -49,7 +58,7 @@ if (
 ) {
   const pool = createPool();
   try {
-    await migrate(pool);
+    await migrate(pool, process.env.MIGRATION_OWNER_ROLE ? {ownerRole: process.env.MIGRATION_OWNER_ROLE} : {});
     console.log("Migrations applied successfully.");
   } finally {
     await pool.end();

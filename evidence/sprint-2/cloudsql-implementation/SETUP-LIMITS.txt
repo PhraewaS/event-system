@@ -1,0 +1,10 @@
+Local setup failures, not meaningful RED and not product test evidence:
+- pg_ctl under restricted Windows token could not start the disposable cluster.
+  Started postgres directly with a hidden process on 127.0.0.1:55471 instead.
+- Initial offline all-Python discovery lacked PyYAML; sandbox saw incomplete package files.
+  Installed CI-pinned PyYAML6.0.3 in workspace and used correct Git Bash PATH.
+  Subsequent offline discovery:38 tests passed,0failed,0skipped.
+- Initial browser run had no Chromium1248 (only1234 was present), so browser fixtures failed to launch.
+  Installed required Chromium in workspace and stopped only the identified stale local test run/server.
+  Port3100 conflict on first restart was setup only. No assertions changed or retries added.
+No GCP/production database, credentials, IAM, GitHub variables or lifecycle changes.

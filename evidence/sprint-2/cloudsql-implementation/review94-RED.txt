@@ -1,0 +1,8 @@
+2026-11-28 Asia/Bangkok; source79154f3; review6091877352.
+No real Cloud/production DB actions; mocked operations only.
+Vitest credential-retirement.test.ts:21 passed,2failed.
+- Different SQL instance with same database/role names: resolved facts instead of rejecting.
+- Missing operator session-termination authority: resolved facts instead of rejecting.
+Python test_cloudsql_credential_gate.py:1passed,1failed.
+- Valid offline CP proof still allowed release verification: ValueError not raised.
+All three RED failures are runtime behavior assertions, not setup/import errors.

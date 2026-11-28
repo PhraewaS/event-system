@@ -51,6 +51,15 @@ export ROLLBACK ACTIVATE_LIFECYCLE
 [[ "$ROLLBACK" == true || "$ROLLBACK" == false ]] || { echo 'Invalid rollback mode.' >&2; exit 1; }
 [[ "$ACTIVATE_LIFECYCLE" == true || "$ACTIVATE_LIFECYCLE" == false ]] || { echo 'Invalid activation mode.' >&2; exit 1; }
 
+# CP proof comparison is offline only. No authoritative live service/job reader
+# is installed yet; do not permit even a fully approved JSON bundle to activate.
+if [[ "${LIFECYCLE_DB_FENCE_METHOD:-}" == CLOUDSQL_CREDENTIAL_RETIREMENT_V1 ||
+    -n "${CP_FENCE_BUNDLE_PATH:-}" || -n "${CP_APPROVED_PROOF_SHA256:-}" || -n "${CP_ACCEPTED_IMPLEMENTATION_SHA:-}" ||
+    -n "${CP_APPROVED_REVIEWER:-}" || "${CP_ACTIVATION_APPROVED:-}" == true ]]; then
+  echo 'CP-v1 activation is blocked: offline proof is not live configuration verification.' >&2
+  exit 1
+fi
+
 # ------------------------------------------------------------------------------
 # 2. Find the image and pin it by digest
 #    CHANGE ME: `gather/gather` = <Artifact Registry repo>/<image name>.

@@ -1,5 +1,7 @@
 # CP-v1 contract branch — validation / pending work
 
+> Historical validation ของ contract PR #93 ซึ่ง acceptedแล้วเป็น1407833; ข้อความnot run/plannedด้านล่างบันทึกก่อนimplementation ดู [ผล implementation ปัจจุบัน](cloudsql-credential-retirement-implementation.md) สำหรับlocal/mocked execution โดย actual Cloud acceptance ยัง pending
+
 27 พฤศจิกายน 2026 · `guluJa` · Issue #8 · branch `codex/sprint2-cloudsql-fence-contract`
 
 Base `sprint2-staging` ee6e679801d8a53bc93522f44d366dba4e95d7cc มี source tree ตรง main50529ea ณ ตอน fetch; ไม่ทำงานโดยตรงบน staging/main

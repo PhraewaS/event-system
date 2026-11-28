@@ -8,7 +8,7 @@ if (
 ) {
   const pool = createPool();
   try {
-    await migrate(pool);
+    await migrate(pool, process.env.MIGRATION_OWNER_ROLE ? {ownerRole: process.env.MIGRATION_OWNER_ROLE} : {});
     console.log("Migrations applied successfully.");
   } finally {
     await pool.end();
