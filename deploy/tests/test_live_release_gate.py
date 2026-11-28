@@ -18,6 +18,7 @@ class Client:
     def __init__(self,target):
         self.target=target;self.calls=[];self.cloud_changes={};self.sql_changes={};self.second_cloud_changes={}
         self.source={'sha':GATE_SHA,'clean':True};self.digest=target['image_digest'];self.frozen=True;self.patch_error=False;self.post_ok=True
+        self.mutation_may_have_started=False
     def execution_source(self):self.calls.append('source');return self.source
     def cloud_configuration(self,target):
         self.calls.append('cloud')
@@ -37,8 +38,12 @@ class Client:
         finally:self.calls.append('freeze-exit')
     def activate(self,target,observation):
         self.calls.append('activate')
+        self.mutation_may_have_started=True
         if self.patch_error:raise ValueError('CONDITIONAL_UPDATE_FAILED')
         return {'revision':target['service']+'/revisions/new-revision','verified':self.post_ok}
+    def wait_until_disabled(self,target):
+        if 'freeze-exit' in self.calls:raise AssertionError('Barrier was released before safe recovery')
+        self.calls.append('wait-disabled-confirmed')
 
 def inputs():
     bundle,trust=fixture()
@@ -117,6 +122,7 @@ class LiveReleaseGate(unittest.TestCase):
             with self.assertRaises(ValueError):evaluate_live_release(b,t,c,execute=True,clock=lambda:NOW)
             self.assertEqual(c.calls.count('activate'),1)
             self.assertEqual(c.calls[-1],'freeze-exit')
+            self.assertLess(c.calls.index('wait-disabled-confirmed'),c.calls.index('freeze-exit'))
 
     def test_saved_json_observation_cannot_replace_in_process_client(self):
         b,t,c=inputs()

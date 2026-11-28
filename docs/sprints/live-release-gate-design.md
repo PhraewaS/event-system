@@ -13,6 +13,7 @@ The current metadata reader and offline proof parser remain separate components.
 - The registry lookup verifies the approved SHA tag resolves to the approved immutable digest. It is a version mapping, not a claim of signed build provenance.
 - Check-only never acquires write-blocking locks, patches a service, executes a job or changes SQL/IAM/credentials.
 - A future separately approved execution holds SQL SHARE locks over the six existing application/ledger tables to prevent writes during the final recheck and conditional service update. Require the declared freeze/window, repeat all live checks, and update only the existing service's lifecycle flag and latest traffic using its observed etag. Preserve image, identities, volumes, other environment and secret versions. No build/migration/seed/job mutation, password reset or session termination capability exists in this client. Verify the resulting revision; unknown outcomes do not pass or silently retry.
+- If a PATCH may have started and its result/post-check is uncertain, retain the SQL barrier and retry reads only until the same compatible service is observably lifecycle-disabled. Never automatically release the barrier on an unknown mutation. Keep the transaction alive and verify its six locks. Process/SQL loss still requires independently maintained external maintenance; it is not safe recovery. An operator must perform any recovery mutation under its separate approval.
 
 ## Test design
 

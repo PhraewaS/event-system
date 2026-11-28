@@ -69,9 +69,18 @@ def evaluate_live_release(bundle, trust, client, *, execute=False, clock=None):
         final=observe()
         require(final['observed'] == initial['observed'] and final['configReviewHash'] == initial['configReviewHash'],
                 'Configuration changed between preflight and execution.')
-        outcome=client.activate(target,final)
-        require(outcome.get('verified') is True and isinstance(outcome.get('revision'),str)
-                and outcome['revision'].startswith(target['service']+'/revisions/'), 'Activation result unknown or mismatched.')
+        try:
+            outcome=client.activate(target,final)
+            require(outcome.get('verified') is True and isinstance(outcome.get('revision'),str)
+                    and outcome['revision'].startswith(target['service']+'/revisions/'), 'Activation result unknown or mismatched.')
+        except Exception:
+            # Never automatically release our data barrier merely because a
+            # PATCH timed out or a postcheck failed. The real client waits under
+            # the held locks for independently observable compatible gate=false.
+            # It retries reads only; a manual recovery remains the operator's job.
+            if getattr(client,'mutation_may_have_started',False):
+                client.wait_until_disabled(target)
+            raise
     return {**result,'decision':'activation_verified','activationExecuted':True,'revision':outcome['revision']}
 
 

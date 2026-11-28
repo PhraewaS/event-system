@@ -12,6 +12,7 @@ import logging
 import os
 import re
 import subprocess
+import sys
 import time
 import urllib.error
 import urllib.parse
@@ -32,6 +33,9 @@ class GoogleLiveReleaseClient:
     def __init__(self):
         self.connector=None
         self.target=None
+        self.mutation_may_have_started=False
+        self.freeze_cursor=None
+        self.baseline_service=None
         self.opener=urllib.request.build_opener(NoRedirect())
 
     def bind_target(self,target):
@@ -209,10 +213,61 @@ class GoogleLiveReleaseClient:
     def write_freeze(self,target):
         with self.connection(target,'migrator') as cur:
             cur.execute('BEGIN');cur.execute('SET LOCAL ROLE "'+target['roles']['old']['name']+'"')
+            cur.execute("SET LOCAL idle_in_transaction_session_timeout='0'")
             # Fixed existing objects only, no caller-controlled SQL identifiers.
             cur.execute('LOCK TABLE '+','.join('public.'+t for t in TABLES)+' IN SHARE MODE')
+            self.freeze_cursor=cur
             try:yield True
-            finally:cur.execute('ROLLBACK')
+            finally:
+                self.freeze_cursor=None
+                cur.execute('ROLLBACK')
+
+    def wait_until_disabled(self,target):
+        """Keep our barrier on an uncertain mutation; no automatic cloud writes.
+
+        Returns only after compatible false serving/template state is verified.
+        External maintenance MUST survive process/SQL failure. A lost SQL barrier
+        is a critical unknown outcome, not evidence of disabled lifecycle writes.
+        """
+        if self.freeze_cursor is None or self.baseline_service is None:
+            raise ValueError('Recovery barrier context missing; retain external maintenance.')
+        print('Activation outcome unverified. Holding the database write barrier; retain external maintenance and restore verified compatible lifecycle-disabled service. Read retries only; do not terminate this operator process.',file=sys.stderr)
+        baseline=copy.deepcopy(self.baseline_service['template']);baseline.pop('revision',None)
+        url='https://run.googleapis.com/v2/'+target['service']
+        while True:
+            # Keep the transaction active and establish that all six locks still
+            # exist. If the SQL connection is lost, external maintenance is the
+            # remaining guard and the program must not claim safe recovery.
+            try:
+                self.freeze_cursor.execute("SELECT count(DISTINCT c.relname) FROM pg_locks l JOIN pg_class c ON c.oid=l.relation JOIN pg_namespace n ON n.oid=c.relnamespace WHERE l.pid=pg_backend_pid() AND l.mode='ShareLock' AND l.granted AND n.nspname='public' AND c.relname IN ('events','login_rate_limits','registrations','schema_migrations','session','users')")
+                if self.freeze_cursor.fetchone()[0]!=len(TABLES):raise ValueError('Missing locks.')
+            except Exception:
+                print('CRITICAL: database write barrier lost. Outcome is unknown; preserve external maintenance and do not reopen writes.',file=sys.stderr)
+                raise ValueError('Database barrier lost; outcome unknown, retain external maintenance.') from None
+            try:
+                current=self.request(url)
+                template=copy.deepcopy(current.get('template',{}));template.pop('revision',None)
+                traffic=current.get('trafficStatuses',[])
+                canonical=lambda v:v if isinstance(v,str) and '/' in v else target['service']+'/revisions/'+str(v)
+                revision=canonical(current.get('latestReadyRevision'))
+                if (template==baseline and current.get('uid')==self.baseline_service.get('uid') and current.get('reconciling') is not True and
+                    isinstance(current.get('generation'),str) and bool(current['generation']) and
+                    current.get('generation')==current.get('observedGeneration') and
+                    current.get('terminalCondition',{}).get('state')=='CONDITION_SUCCEEDED' and
+                    canonical(current.get('latestCreatedRevision'))==revision and len(traffic)==1 and
+                    traffic[0].get('percent')==100 and not traffic[0].get('tag') and canonical(traffic[0].get('revision'))==revision):
+                    serving=self.request('https://run.googleapis.com/v2/'+revision)
+                    if (serving.get('containers')==baseline['containers'] and serving.get('serviceAccount')==baseline.get('serviceAccount') and
+                        serving.get('volumes')==baseline.get('volumes') and serving.get('reconciling') is not True and
+                        any(c.get('type')=='Ready' and c.get('state')=='CONDITION_SUCCEEDED' for c in serving.get('conditions',[]))):
+                        return
+            except KeyboardInterrupt:
+                # A normal interrupt must not silently remove a still-needed barrier.
+                continue
+            except Exception:
+                pass
+            try:time.sleep(2)
+            except KeyboardInterrupt:continue
 
     def activate(self,target,observation):
         self.bind_target(target)
@@ -226,6 +281,8 @@ class GoogleLiveReleaseClient:
         flags[0]['value']='true'
         body={'name':target['service'],'etag':service['etag'],'template':{'containers':containers,'revision':''},
               'traffic':[{'type':'TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST','percent':100}]}
+        self.baseline_service=copy.deepcopy(service)
+        self.mutation_may_have_started=True
         op=self.request(url+'?updateMask=template.containers%2Ctemplate.revision%2Ctraffic',method='PATCH',body=body)
         deadline=time.monotonic()+180
         while not op.get('done'):
@@ -244,8 +301,9 @@ class GoogleLiveReleaseClient:
         # setting may be silently replaced by the release operation.
         new_template=copy.deepcopy(current.get('template',{}));expected_template.pop('revision',None);new_template.pop('revision',None)
         traffic=current.get('trafficStatuses',[])
-        verified=(new_template==expected_template and revision_name(current.get('latestCreatedRevision'))==revision
+        verified=(new_template==expected_template and current.get('uid')==service.get('uid') and revision_name(current.get('latestCreatedRevision'))==revision
             and revision!=revision_name(service.get('latestReadyRevision')) and current.get('reconciling') is not True
+            and isinstance(current.get('generation'),str) and bool(current['generation'])
             and current.get('generation')==current.get('observedGeneration')
             and current.get('terminalCondition',{}).get('state')=='CONDITION_SUCCEEDED'
             and len(traffic)==1 and traffic[0].get('percent')==100 and revision_name(traffic[0].get('revision'))==revision and not traffic[0].get('tag'))

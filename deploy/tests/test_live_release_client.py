@@ -5,7 +5,7 @@ import sys
 import unittest
 from contextlib import contextmanager
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock,patch
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from live_release_client import GoogleLiveReleaseClient
 from test_credential_proof import fixture
@@ -13,6 +13,26 @@ from test_credential_proof import fixture
 def target():return fixture()[0]['request']
 
 class TransportBoundary(unittest.TestCase):
+    def test_uncertain_outcome_keeps_barrier_and_retries_only_reads_until_disabled(self):
+        t=target();c=GoogleLiveReleaseClient();c.bind_target(t)
+        template={'containers':[{'image':'approved','env':[{'name':'REGISTRATION_LIFECYCLE_WRITES_ENABLED','value':'false'}]}],
+                  'serviceAccount':t['runtime_service_account'],'volumes':[]}
+        c.baseline_service={'uid':'uid','template':copy.deepcopy(template)};c.freeze_cursor=Mock();c.freeze_cursor.fetchone.return_value=(6,)
+        false={'uid':'uid','template':template,'latestReadyRevision':t['service']+'/revisions/disabled','latestCreatedRevision':t['service']+'/revisions/disabled',
+               'generation':'3','observedGeneration':'3','terminalCondition':{'state':'CONDITION_SUCCEEDED'},
+               'trafficStatuses':[{'revision':'disabled','percent':100}]}
+        active=copy.deepcopy(false);active['template']['containers'][0]['env'][0]['value']='true'
+        serving={**copy.deepcopy(template),'conditions':[{'type':'Ready','state':'CONDITION_SUCCEEDED'}]}
+        c.request=Mock(side_effect=[active,false,serving])
+        with patch('live_release_client.time.sleep') as sleep:c.wait_until_disabled(t)
+        self.assertEqual(c.freeze_cursor.execute.call_count,2);self.assertEqual(sleep.call_count,1)
+        self.assertTrue(all(call.kwargs.get('method','GET')=='GET' for call in c.request.call_args_list))
+
+    def test_lost_sql_barrier_is_not_reported_as_safe_recovery(self):
+        c=GoogleLiveReleaseClient();c.freeze_cursor=Mock();c.freeze_cursor.fetchone.return_value=(0,)
+        c.baseline_service={'template':{}};c.request=Mock()
+        with self.assertRaisesRegex(ValueError,'barrier lost'):c.wait_until_disabled(target())
+        c.request.assert_not_called()
     def test_private_profile_cannot_override_instance_host_database_or_role(self):
         import base64,urllib.parse
         t=target();role=t['roles']['runtime']['name'];socket='/cloudsql/'+t['instance_connection_name']
@@ -50,7 +70,7 @@ class TransportBoundary(unittest.TestCase):
                 {'name':'REGISTRATION_LIFECYCLE_WRITES_ENABLED','value':'false'},{'name':'OTHER','value':'private-sentinel'}]}]}
         old={'etag':'etag','uid':'uid','template':copy.deepcopy(template),'latestReadyRevision':t['service']+'/revisions/old'}
         new_template=copy.deepcopy(template);new_template['revision']='new';new_template['containers'][0]['env'][1]['value']='true'
-        new={'template':new_template,'latestReadyRevision':t['service']+'/revisions/new','latestCreatedRevision':t['service']+'/revisions/new',
+        new={'uid':'uid','template':new_template,'latestReadyRevision':t['service']+'/revisions/new','latestCreatedRevision':t['service']+'/revisions/new',
              'generation':'2','observedGeneration':'2','terminalCondition':{'state':'CONDITION_SUCCEEDED'},
              'trafficStatuses':[{'revision':'new','percent':100}]}
         revision={**new_template,'conditions':[{'type':'Ready','state':'CONDITION_SUCCEEDED'}]}
