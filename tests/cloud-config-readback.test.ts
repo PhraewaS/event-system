@@ -87,3 +87,39 @@ test('RB-10 HTTP failure returns no raw response or bearer value',async()=>{
  const f=cloudFixture();const client=cloudConfigurationClient({expected:f.expected,tokenProvider:async()=>'NEVER_RETURN_THIS_SENTINEL',fetchImpl:async()=>{throw new Error('NEVER_RETURN_THIS_SENTINEL');}});
  const r=await collectCloudConfiguration({...f,client});expect(r.reasons).toEqual(['CLOUD_READ_FAILED']);expect(JSON.stringify(r)).not.toContain('NEVER_RETURN_THIS_SENTINEL');
 });
+
+// Review #95: behavior tests written before the corrective implementation.
+const profileAt=(f:ReturnType<typeof cloudFixture>,scope:string):any=>scope==='revision'?f.data.revision:scope==='template'?f.data.service.template:f.data.job.template.template;
+test.each(['revision','template','job'].flatMap(scope=>['missing','wrong-path','wrong-name','duplicate-path'].map(problem=>[scope,problem])))('RB-11 / %s rejects %s Cloud SQL mount',async(scope,problem)=>{
+ const f=cloudFixture();const c=profileAt(f,scope).containers[0];
+ if(problem==='missing')delete c.volumeMounts;
+ if(problem==='wrong-path')c.volumeMounts[0].mountPath='/not-cloudsql';
+ if(problem==='wrong-name')c.volumeMounts[0].name='not-cloudsql';
+ if(problem==='duplicate-path')c.volumeMounts.push({name:'other',mountPath:'/cloudsql'});
+ const r=await collectCloudConfiguration(f);expect(r.cloudFieldsMatch).toBe(false);expect(r.releaseActivationAllowed).toBe(false);
+});
+const finishedExecution=(f:ReturnType<typeof cloudFixture>,suffix:string)=>({name:`${f.expected.job}/executions/${suffix}`,uid:`uid-${suffix}`,createTime:'2026-11-28T07:00:00Z',completionTime:'2026-11-28T07:01:00Z'});
+test.each(['running','completed'])('RB-12 / new %s execution after first scan blocks readback',async(state)=>{
+ const f=cloudFixture();let scans=0;const old=finishedExecution(f,'old'),next=finishedExecution(f,'new');
+ (f.client as any).listExecutions=async()=>({executions:++scans===1?[old]:[old,state==='completed'?next:{...next,completionTime:undefined}]});
+ const r=await collectCloudConfiguration(f);expect(r.cloudFieldsMatch).toBe(false);expect(scans).toBe(2);expect(r.releaseActivationAllowed).toBe(false);
+});
+test('RB-12 / new completed execution on later final-scan page blocks readback',async()=>{
+ const f=cloudFixture();let scans=0;const old=finishedExecution(f,'old');
+ (f.client as any).listExecutions=async(token:string)=>{if(token)return {executions:[finishedExecution(f,'new')]};return ++scans===1?{executions:[old]}:{executions:[old],nextPageToken:'late-page'};};
+ expect((await collectCloudConfiguration(f)).cloudFieldsMatch).toBe(false);
+});
+test('RB-12 / unchanged etag but execution metadata changes blocks readback',async()=>{
+ const f=cloudFixture();const read=f.client.readJob;let reads=0;
+ f.client.readJob=async()=>{const job:any=await read();if(++reads>1){job.executionCount=1;job.latestCreatedExecution={...finishedExecution(f,'new'),completionStatus:'EXECUTION_SUCCEEDED'};}return job;};
+ const r=await collectCloudConfiguration(f);expect(r.cloudFieldsMatch).toBe(false);expect(r.releaseActivationAllowed).toBe(false);
+});
+test('RB-12 / executions read failure on final scan blocks and redacts error',async()=>{
+ const f=cloudFixture();let scans=0;(f.client as any).listExecutions=async()=>{if(++scans>1)throw new Error('NEVER_RETURN_THIS_SENTINEL');return {executions:[]};};
+ const r=await collectCloudConfiguration(f);expect(r.cloudFieldsMatch).toBe(false);expect(JSON.stringify(r)).not.toContain('NEVER_RETURN_THIS_SENTINEL');
+});
+test('RB-12 / stable completed history passes despite page-order changes',async()=>{
+ const f=cloudFixture();let scans=0;const a=finishedExecution(f,'first'),b=finishedExecution(f,'second');
+ (f.client as any).listExecutions=async(token:string)=>{if(!token)scans++;return {executions:[scans===1?(token?b:a):(token?a:b)],...(token?{}:{nextPageToken:'page2'})};};
+ const r=await collectCloudConfiguration(f);expect(r.cloudFieldsMatch).toBe(true);expect(r.releaseActivationAllowed).toBe(false);expect(scans).toBe(2);
+});

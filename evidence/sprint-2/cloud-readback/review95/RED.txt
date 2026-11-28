@@ -1,0 +1,197 @@
+
+ RUN  v5.0.5 C:/Users/natth/OneDrive/Documents/ChatGPT/SE/gather-sprint2-cloud-config-readback
+
+ ✓ tests/cloud-config-readback.test.ts > RB-01 / matching observations verify cloud fields without authorizing activation 7ms
+ ✓ tests/cloud-config-readback.test.ts > RB-02 serving digest fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-02 desired template digest fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-02 migration identity fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-02 attachment fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-02 actual secret version fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-03 split traffic fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-03 tagged route fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-03 revision drift fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-03 reconciling fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-03 generation lag fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-03 failed readiness fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-03 duplicate readiness fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-04 latest alias fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-04 disabled secret fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-04 literal DATABASE_URL fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-04 duplicate DATABASE_URL fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-04 lifecycle enabled fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-05 missing service fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-08 unknown project number fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-09 sidecar fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-09 command override fails closed and redacts private input 2ms
+ ✓ tests/cloud-config-readback.test.ts > RB-09 migration owner fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-09 malformed service account path fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-05 permission failure does not leak raw error 2ms
+ ✓ tests/cloud-config-readback.test.ts > RB-06 detects service changing between reads 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-06 detects job changing between reads 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-06 detects secret changing between reads 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-07 exhausts pages and finds active execution on second page 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-07 repeated pagination token blocks observation 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-08 accepts authoritative project-number resource names 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-05 elapsed read budget fails closed 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-10 HTTP adapter exposes only GET metadata requests and rejects payload access 3ms
+ ✓ tests/cloud-config-readback.test.ts > RB-10 HTTP failure returns no raw response or bearer value 1ms
+ × tests/cloud-config-readback.test.ts > RB-11 / revision rejects missing Cloud SQL mount 7ms
+   → expected true to be false // Object.is equality
+ × tests/cloud-config-readback.test.ts > RB-11 / revision rejects wrong-path Cloud SQL mount 2ms
+   → expected true to be false // Object.is equality
+ × tests/cloud-config-readback.test.ts > RB-11 / revision rejects wrong-name Cloud SQL mount 1ms
+   → expected true to be false // Object.is equality
+ × tests/cloud-config-readback.test.ts > RB-11 / revision rejects duplicate-path Cloud SQL mount 1ms
+   → expected true to be false // Object.is equality
+ × tests/cloud-config-readback.test.ts > RB-11 / template rejects missing Cloud SQL mount 2ms
+   → expected true to be false // Object.is equality
+ × tests/cloud-config-readback.test.ts > RB-11 / template rejects wrong-path Cloud SQL mount 1ms
+   → expected true to be false // Object.is equality
+ × tests/cloud-config-readback.test.ts > RB-11 / template rejects wrong-name Cloud SQL mount 1ms
+   → expected true to be false // Object.is equality
+ × tests/cloud-config-readback.test.ts > RB-11 / template rejects duplicate-path Cloud SQL mount 1ms
+   → expected true to be false // Object.is equality
+ × tests/cloud-config-readback.test.ts > RB-11 / job rejects missing Cloud SQL mount 1ms
+   → expected true to be false // Object.is equality
+ × tests/cloud-config-readback.test.ts > RB-11 / job rejects wrong-path Cloud SQL mount 1ms
+   → expected true to be false // Object.is equality
+ × tests/cloud-config-readback.test.ts > RB-11 / job rejects wrong-name Cloud SQL mount 1ms
+   → expected true to be false // Object.is equality
+ × tests/cloud-config-readback.test.ts > RB-11 / job rejects duplicate-path Cloud SQL mount 1ms
+   → expected true to be false // Object.is equality
+ × tests/cloud-config-readback.test.ts > RB-12 / new running execution after first scan blocks readback 1ms
+   → expected true to be false // Object.is equality
+ × tests/cloud-config-readback.test.ts > RB-12 / new completed execution after first scan blocks readback 2ms
+   → expected true to be false // Object.is equality
+ × tests/cloud-config-readback.test.ts > RB-12 / new completed execution on later final-scan page blocks readback 2ms
+   → expected true to be false // Object.is equality
+ × tests/cloud-config-readback.test.ts > RB-12 / unchanged etag but execution metadata changes blocks readback 1ms
+   → expected true to be false // Object.is equality
+ × tests/cloud-config-readback.test.ts > RB-12 / executions read failure on final scan blocks and redacts error 1ms
+   → expected true to be false // Object.is equality
+ × tests/cloud-config-readback.test.ts > RB-12 / stable completed history passes despite page-order changes 1ms
+   → expected 1 to be 2 // Object.is equality
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 18 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/cloud-config-readback.test.ts > RB-11 / revision rejects missing Cloud SQL mount
+ FAIL  tests/cloud-config-readback.test.ts > RB-11 / revision rejects wrong-path Cloud SQL mount
+ FAIL  tests/cloud-config-readback.test.ts > RB-11 / revision rejects wrong-name Cloud SQL mount
+ FAIL  tests/cloud-config-readback.test.ts > RB-11 / revision rejects duplicate-path Cloud SQL mount
+ FAIL  tests/cloud-config-readback.test.ts > RB-11 / template rejects missing Cloud SQL mount
+ FAIL  tests/cloud-config-readback.test.ts > RB-11 / template rejects wrong-path Cloud SQL mount
+ FAIL  tests/cloud-config-readback.test.ts > RB-11 / template rejects wrong-name Cloud SQL mount
+ FAIL  tests/cloud-config-readback.test.ts > RB-11 / template rejects duplicate-path Cloud SQL mount
+ FAIL  tests/cloud-config-readback.test.ts > RB-11 / job rejects missing Cloud SQL mount
+ FAIL  tests/cloud-config-readback.test.ts > RB-11 / job rejects wrong-path Cloud SQL mount
+ FAIL  tests/cloud-config-readback.test.ts > RB-11 / job rejects wrong-name Cloud SQL mount
+ FAIL  tests/cloud-config-readback.test.ts > RB-11 / job rejects duplicate-path Cloud SQL mount
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/cloud-config-readback.test.ts:99:72
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/18]⎯
+
+ FAIL  tests/cloud-config-readback.test.ts > RB-12 / new running execution after first scan blocks readback
+ FAIL  tests/cloud-config-readback.test.ts > RB-12 / new completed execution after first scan blocks readback
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/cloud-config-readback.test.ts:105:72
+    103|  const f=cloudFixture();let scans=0;const old=finishedExecution(f,'old…
+    104|  (f.client as any).listExecutions=async()=>({executions:++scans===1?[o…
+    105|  const r=await collectCloudConfiguration(f);expect(r.cloudFieldsMatch)…
+       |                                                                        ^
+    106| });
+    107| test('RB-12 / new completed execution on later final-scan page blocks …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/18]⎯
+
+ FAIL  tests/cloud-config-readback.test.ts > RB-12 / new completed execution on later final-scan page blocks readback
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/cloud-config-readback.test.ts:110:64
+    108|  const f=cloudFixture();let scans=0;const old=finishedExecution(f,'old…
+    109|  (f.client as any).listExecutions=async(token:string)=>{if(token)retur…
+    110|  expect((await collectCloudConfiguration(f)).cloudFieldsMatch).toBe(fa…
+       |                                                                ^
+    111| });
+    112| test('RB-12 / unchanged etag but execution metadata changes blocks rea…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/18]⎯
+
+ FAIL  tests/cloud-config-readback.test.ts > RB-12 / unchanged etag but execution metadata changes blocks readback
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/cloud-config-readback.test.ts:115:72
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/18]⎯
+
+ FAIL  tests/cloud-config-readback.test.ts > RB-12 / executions read failure on final scan blocks and redacts error
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/cloud-config-readback.test.ts:119:72
+    117| test('RB-12 / executions read failure on final scan blocks and redacts…
+    118|  const f=cloudFixture();let scans=0;(f.client as any).listExecutions=a…
+    119|  const r=await collectCloudConfiguration(f);expect(r.cloudFieldsMatch)…
+       |                                                                        ^
+    120| });
+    121| test('RB-12 / stable completed history passes despite page-order chang…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/18]⎯
+
+ FAIL  tests/cloud-config-readback.test.ts > RB-12 / stable completed history passes despite page-order changes
+AssertionError: expected 1 to be 2 // Object.is equality
+
+- Expected
++ Received
+
+- 2
++ 1
+
+ ❯ tests/cloud-config-readback.test.ts:124:144
+    122|  const f=cloudFixture();let scans=0;const a=finishedExecution(f,'first…
+    123|  (f.client as any).listExecutions=async(token:string)=>{if(!token)scan…
+    124|  const r=await collectCloudConfiguration(f);expect(r.cloudFieldsMatch)…
+       |                                                                                                                                                ^
+    125| });
+    126|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/18]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  18 failed | 34 passed (52)
+   Start at  15:43:41
+   Duration  435ms (tests 44%, transform 35%, import 15%, worker 6%)
