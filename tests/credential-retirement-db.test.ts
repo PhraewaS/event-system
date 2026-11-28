@@ -10,14 +10,14 @@ import {createApp} from '../server/src/app.js';
 // @ts-expect-error native operator modules
 import {retireCredentials} from '../deploy/cloudsql-credential-retirement.mjs';
 // @ts-expect-error native operator modules
-import {postgresFenceInspection} from '../deploy/credential-fence-postgres.mjs';
+import {postgresFenceInspection,cloudSqlConnectorInspection} from '../deploy/credential-fence-postgres.mjs';
 
 const target=new URL(process.env.TEST_DATABASE_URL!);
 if(!['127.0.0.1','localhost'].includes(target.hostname)||!target.pathname.endsWith('_test'))throw new Error('Disposable local *_test DB required');
 const adminUrl=new URL(target);adminUrl.pathname='/postgres';
 const admin=new Pool({connectionString:adminUrl.href});
 const suffix=randomUUID().replaceAll('-','').slice(0,18);
-const old=`cp_${suffix}_old`,fresh=`cp_${suffix}_runtime`,migrator=`cp_${suffix}_migrator`,priv=`cp_${suffix}_priv`;
+const old=`cp_${suffix}_old`,fresh=`cp_${suffix}_runtime`,migrator=`cp_${suffix}_migrator`,priv=`cp_${suffix}_priv`,operator=`cp_${suffix}_operator`;
 const oldPassword='cp-local-old-synthetic-only',newPassword='cp-local-replacement-synthetic-only';
 const q=(name:string)=>'"'+name.replaceAll('"','""')+'"';
 const ownedDbs:string[]=[];const ownedRoles:string[]=[];
@@ -28,7 +28,8 @@ const login=(role:string,password=role===old?oldPassword:newPassword,database=db
 beforeAll(async()=>{
   for(const [name,attrs] of [[old,`LOGIN CREATEROLE CREATEDB PASSWORD '${oldPassword}'`],
     [fresh,`LOGIN NOCREATEROLE NOCREATEDB PASSWORD '${newPassword}'`],
-    [migrator,`LOGIN NOCREATEROLE NOCREATEDB PASSWORD '${newPassword}'`],[priv,'NOLOGIN']] ){
+    [migrator,`LOGIN NOCREATEROLE NOCREATEDB PASSWORD '${newPassword}'`],[priv,'NOLOGIN'],
+    [operator,`LOGIN NOCREATEROLE NOCREATEDB PASSWORD '${newPassword}'`]] ){
     await admin.query(`CREATE ROLE ${q(name)} ${attrs}`);ownedRoles.push(name);
   }
 });
@@ -48,6 +49,20 @@ beforeEach(async()=>{
     GRANT SELECT,INSERT,UPDATE,DELETE ON users,events,registrations,session,login_rate_limits TO ${q(fresh)}`);
   inspect=postgresFenceInspection({adminUrl:base.href,oldUrl:login(old),newUrl:login(fresh),migratorUrl:login(migrator),ownerRole:old});
 });
+function boundInspection(asOperator=decodeURIComponent(adminUrl.username)){
+  // Test-only connector double. This proves ordering/real PostgreSQL behavior, NOT Google authentication.
+  const connector={getOptions:async({instanceConnectionName}:{instanceConnectionName:string})=>{
+    expect(instanceConnectionName).toBe('cp-local-fixture:asia-southeast1:cp-test');
+    return {host:target.hostname,port:Number(target.port)};
+  }};
+  const profile=(user:string)=>({user,database:db,password:user===decodeURIComponent(adminUrl.username)?decodeURIComponent(adminUrl.password):user===old?oldPassword:newPassword});
+  return cloudSqlConnectorInspection({connector,instanceConnectionName:'cp-local-fixture:asia-southeast1:cp-test',ownerRole:old,
+    profiles:{admin:profile(asOperator),old:profile(old),runtime:profile(fresh),migrator:profile(migrator)}});
+}
+function auth(){return {contractAccepted:true,changeApproved:true,freezeConfirmed:true,backupVerified:true,lifecycleWritesDisabled:true,
+  inventoryComplete:true,noUncontrolledPaths:true,oldRoutesDisabled:true,replacementSecretIsolationVerified:true,migrationProfileVerified:true,
+  windowStart:new Date(Date.now()-10000).toISOString(),windowEnd:new Date(Date.now()+60000).toISOString()};}
+const localInstance={name:'cp-test',project:'cp-local-fixture',connectionName:'cp-local-fixture:asia-southeast1:cp-test',databaseVersion:'POSTGRES_17'};
 afterEach(async()=>{await Promise.all([ownerPool?.end(),newPool?.end(),migrationPool?.end()]);});
 afterAll(async()=>{
   for(const name of ownedDbs)await admin.query(`DROP DATABASE ${q(name)} WITH (FORCE)`);
@@ -89,6 +104,23 @@ test('CP-18 / DML-only or denied SET authority cannot migrate; transaction/ledge
   expect((await migrationPool.query('SELECT current_user')).rows[0].current_user).toBe(migrator);
 });
 
+test('review94 / real unprivileged operator cannot signal old sessions; abort before password/membership changes',async()=>{
+  await migrate(migrationPool,{ownerRole:old});
+  await ownerPool.query(`GRANT CONNECT ON DATABASE ${q(db)} TO ${q(operator)}`);
+  const database=boundInspection(operator);
+  const expected={project:'cp-local-fixture',instance:'cp-test',oldRole:old,runtimeRole:fresh,migratorRole:migrator,operatorRole:operator,database:db,finalMemberships:[]};
+  expect(await database.sessionTerminationAuthority(expected)).toBe(false);
+  const mutations:string[]=[];
+  const management={resource:{project:'cp-local-fixture',instance:'cp-test'},readInstance:async()=>localInstance,
+    rotatePassword:async()=>{mutations.push('reset');return {status:'DONE'};},replaceMemberships:async()=>{mutations.push('membership');return {status:'DONE'};}};
+  await expect(retireCredentials({authorization:auth(),expected,management,database})).rejects.toThrow('session termination authority');
+  expect(mutations).toEqual([]);expect(await database.oldCredentialWorks()).toBe(true);
+  expect((await admin.query(`SELECT parent.rolname FROM pg_auth_members m JOIN pg_roles parent ON parent.oid=m.roleid JOIN pg_roles child ON child.oid=m.member WHERE child.rolname=$1`,[old])).rows.map(r=>r.rolname)).toContain(priv);
+  // Only the disposable test role is granted this fixture permission, never a real account.
+  await admin.query(`GRANT pg_signal_backend TO ${q(operator)}`);
+  expect(await database.sessionTerminationAuthority(expected)).toBe(true);
+});
+
 test('CP-07..12 / password fence aborts in-flight writer across two DBs; data/owner preserved and replacement API works',async()=>{
   await migrate(migrationPool,{ownerRole:old});await seed(ownerPool,'cp-local-app-synthetic-password');
   const second=`cp_${randomUUID().replaceAll('-','')}_test`;
@@ -104,9 +136,10 @@ test('CP-07..12 / password fence aborts in-flight writer across two DBs; data/ow
       windowStart:new Date(Date.now()-10000).toISOString(),windowEnd:new Date(Date.now()+60000).toISOString()};
     const expected={project:'cp-local-fixture',instance:'cp-test',oldRole:old,runtimeRole:fresh,migratorRole:migrator,operatorRole:decodeURIComponent(adminUrl.username),database:db,finalMemberships:[]};
     // Local synthetic SQL adapter simulates Cloud SQL's two management operations, never contacts GCP.
-    const management={resource:{project:'cp-local-fixture',instance:'cp-test'},rotatePassword:async()=>{await admin.query(`ALTER ROLE ${q(old)} PASSWORD 'cp-rotated-controlled-synthetic-only'`);return {name:'local-reset',status:'DONE'};},
+    const management={resource:{project:'cp-local-fixture',instance:'cp-test'},readInstance:async()=>localInstance,
+      rotatePassword:async()=>{await admin.query(`ALTER ROLE ${q(old)} PASSWORD 'cp-rotated-controlled-synthetic-only'`);return {name:'local-reset',status:'DONE'};},
       replaceMemberships:async()=>{await admin.query(`REVOKE ${q(priv)} FROM ${q(old)}`);return {name:'local-revoke',status:'DONE'};}};
-    const result=await retireCredentials({authorization,expected,management,database:inspect});
+    const result=await retireCredentials({authorization,expected,management,database:boundInspection()});
     expect(result).toMatchObject({retiredLoginDisabled:false,retiredSessionCount:0,oldCredentialSqlstate:'28P01',replacementConnectionReady:true,baselinePreserved:true});
     await expect(oldClient.query('COMMIT')).rejects.toThrow();await expect(other.query('SELECT 1')).rejects.toThrow();
     expect((await newPool.query('SELECT * FROM registrations')).rows).toEqual([]);

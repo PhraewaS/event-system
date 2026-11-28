@@ -7,16 +7,60 @@ const identifier = role => {
 };
 
 export function postgresFenceInspection({adminUrl, oldUrl, newUrl, migratorUrl, ownerRole}) {
-  const urls = [adminUrl,oldUrl,newUrl,migratorUrl].map(v => new URL(v));
-  if (urls.some(u => !['postgres:','postgresql:'].includes(u.protocol) || u.hostname !== urls[0].hostname ||
-      u.port !== urls[0].port || u.pathname !== urls[0].pathname)) throw new Error('Same database endpoint required.');
-  const owner = identifier(ownerRole);
-  const withClient = async (url, fn) => {
-    const client = new Client({connectionString:url,connectionTimeoutMillis:5000,statement_timeout:10000});
-    client.on('error',()=>{});
-    try { await client.connect(); return await fn(client); } finally { await client.end().catch(()=>{}); }
-  };
+  const profiles = [adminUrl,oldUrl,newUrl,migratorUrl];
+  // Compare driver's effective host/port/database, including URL query overrides.
+  const parameters=profiles.map(connectionString=>new Client({connectionString}).connectionParameters);
+  if(parameters.some(p=>p.host!==parameters[0].host || p.port!==parameters[0].port || p.database!==parameters[0].database))
+    throw new Error('Same effective database endpoint required.');
+  return inspection({profiles,usernames:parameters.map(p=>p.user),ownerRole,
+    withClient:(connectionString,fn)=>withPgClient({connectionString},fn),boundInstance:null});
+}
+
+/** Caller supplies an official Google Cloud SQL Connector; no ambient auth or new dependency.
+ * Every SQL connection is built from getOptions(fixed instanceConnectionName),
+ * never a caller URL/host/stream override. Test doubles must remain test-only.
+ */
+export function cloudSqlConnectorInspection({connector,instanceConnectionName,profiles,ownerRole}) {
+  if(typeof connector?.getOptions!=='function' || !/^[a-z][a-z0-9-]*:[a-z0-9-]+:[a-z][a-z0-9-]*$/.test(instanceConnectionName))
+    throw new Error('Explicit instance-bound Cloud SQL Connector required.');
+  if(!profiles || Object.keys(profiles).sort().join(',')!=='admin,migrator,old,runtime')throw new Error('Four private SQL profiles required.');
+  const ordered=['admin','old','runtime','migrator'].map(name=>{
+    const p=profiles[name];
+    if(!p || Object.keys(p).sort().join(',')!=='database,password,user' ||
+        ['database','password','user'].some(k=>typeof p[k]!=='string'||!p[k]))throw new Error('Profile host/URL/options overrides prohibited.');
+    return Object.freeze({...p});
+  });
+  if(ordered.some(p=>p.database!==ordered[0].database))throw new Error('Same database required.');
+  return inspection({profiles:ordered,usernames:ordered.map(p=>p.user),ownerRole,boundInstance:instanceConnectionName,
+    withClient:async(profile,fn)=>withPgClient({...await connector.getOptions({instanceConnectionName}),...profile},fn)});
+}
+
+async function withPgClient(config,fn){
+  const client=new Client({...config,connectionTimeoutMillis:5000,statement_timeout:10000});
+  client.on('error',()=>{});
+  try{await client.connect();return await fn(client);}finally{await client.end().catch(()=>{});}
+}
+
+function inspection({profiles,usernames,ownerRole,withClient,boundInstance}) {
+  const [adminUrl,oldUrl,newUrl,migratorUrl]=profiles;
+  const urls=usernames.map(username=>({username}));
+  const owner=identifier(ownerRole);
   return {
+    // TCP/proxy URLs prove no Cloud SQL instance identity, even if DB/roles match.
+    async verifyInstance(connectionName){return boundInstance!==null && boundInstance===connectionName;},
+    async sessionTerminationAuthority(expected){
+      return withClient(adminUrl,async admin=>{
+        const result=await admin.query(`SELECT session_user AS login,current_user AS effective,
+          op.rolsuper AS operator_super,target.rolsuper AS target_super,
+          has_function_privilege(current_user,'pg_catalog.pg_terminate_backend(integer,bigint)','EXECUTE') AS can_execute,
+          pg_has_role(current_user,target.oid,'USAGE') AS target_privileges,
+          pg_has_role(current_user,'pg_signal_backend','USAGE') AS signal_privileges
+          FROM pg_roles op CROSS JOIN pg_roles target WHERE op.rolname=current_user AND target.rolname=$1`,[expected.oldRole]);
+        const r=result.rows[0];
+        return Boolean(r && r.login===expected.operatorRole && r.effective===r.login && r.can_execute &&
+          (r.operator_super || (!r.target_super && (r.target_privileges || r.signal_privileges))));
+      });
+    },
     async inspect(expected) {
       return withClient(adminUrl, async admin => {
         const identity = (await admin.query('SELECT session_user AS role,current_database() AS db')).rows[0];
@@ -88,6 +132,7 @@ export function postgresFenceInspection({adminUrl, oldUrl, newUrl, migratorUrl, 
       });
     },
     async terminateOldSessions() {
+      if(boundInstance===null)throw new Error('Instance-bound connector required for session changes.');
       return withClient(adminUrl, async c => {
         const result = await c.query('SELECT pg_terminate_backend(pid) AS stopped FROM pg_stat_activity WHERE usename=$1 AND pid<>pg_backend_pid()', [urls[1].username]);
         if (result.rows.some(row=>row.stopped !== true)) throw new Error('Could not terminate old session.');

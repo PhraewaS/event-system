@@ -42,4 +42,17 @@ esac
  def test_db_fence_confirmation_requires_evidence(self):
   r=self.run_release(LIFECYCLE_APPROVED_IMAGES_JSON=self.approval(),ACTIVATE_LIFECYCLE='true',LIFECYCLE_CUTOVER_CONFIRMED='true',LIFECYCLE_CUTOVER_EVIDENCE='https://github.com/PhraewaS/event-system/issues/8#issuecomment-123',LIFECYCLE_DB_FENCE_CONFIRMED='true',LIFECYCLE_DB_FENCE_EVIDENCE='')
   self.assertNotEqual(r.returncode,0,r.stdout);self.assertNotIn('run services update',self.calls())
+ def test_review94_cp_activation_with_full_legacy_confirmations_stops_before_any_gcloud_call(self):
+  r=self.run_release(LIFECYCLE_APPROVED_IMAGES_JSON=self.approval(),ACTIVATE_LIFECYCLE='true',
+   LIFECYCLE_CUTOVER_CONFIRMED='true',LIFECYCLE_CUTOVER_EVIDENCE='https://github.com/PhraewaS/event-system/issues/8#issuecomment-123',
+   LIFECYCLE_DB_FENCE_CONFIRMED='true',LIFECYCLE_DB_FENCE_EVIDENCE='https://github.com/PhraewaS/event-system/issues/8#issuecomment-124',
+   LIFECYCLE_DB_FENCE_METHOD='CLOUDSQL_CREDENTIAL_RETIREMENT_V1')
+  self.assertNotEqual(r.returncode,0,r.stdout);self.assertEqual(self.calls(),'')
+  self.assertIn('offline proof',r.stderr)
+  r=self.run_release(ACTIVATE_LIFECYCLE='false',LIFECYCLE_DB_FENCE_METHOD='CLOUDSQL_CREDENTIAL_RETIREMENT_V1')
+  self.assertNotEqual(r.returncode,0,r.stdout);self.assertEqual(self.calls(),'')
+  # Omitting the method must not disguise CP evidence as the legacy strict path.
+  r=self.run_release(LIFECYCLE_APPROVED_IMAGES_JSON=self.approval(),ACTIVATE_LIFECYCLE='true',
+   LIFECYCLE_DB_FENCE_METHOD='',CP_FENCE_BUNDLE_PATH='synthetic-reviewed-proof.json')
+  self.assertNotEqual(r.returncode,0,r.stdout);self.assertEqual(self.calls(),'')
 if __name__=='__main__':unittest.main(verbosity=2)

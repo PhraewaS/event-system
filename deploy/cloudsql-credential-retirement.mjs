@@ -23,24 +23,36 @@ export async function retireCredentials({authorization, expected, management, da
       !Array.isArray(expected.finalMemberships) || expected.finalMemberships.includes('cloudsqlsuperuser')) fail('role inventory');
   let stage = 'preflight';
   try {
-    // Adapters inspect actual DB identities/profile. Their output is not a claim of GCP instance provenance.
+    stage = 'SQL/API instance binding';
+    const instance = await management.readInstance();
+    const connection = instance?.connectionName?.split(':');
+    if (instance?.project !== expected.project || instance?.name !== expected.instance ||
+        instance?.databaseVersion !== 'POSTGRES_17' || connection?.length !== 3 ||
+        connection[0] !== expected.project || connection[2] !== expected.instance ||
+        await database.verifyInstance(instance.connectionName) !== true) fail(stage);
+    stage = 'preflight';
     const before = await database.inspect(expected);
     if (before.database !== expected.database || before.operatorRole !== expected.operatorRole ||
         before.oldRole !== expected.oldRole || before.runtimeRole !== expected.runtimeRole ||
         before.migratorRole !== expected.migratorRole || before.profileVerified !== true) fail(stage);
+    const checkTermination = async () => {
+      stage = 'session termination authority';
+      if (await database.sessionTerminationAuthority(expected) !== true) fail(stage);
+    };
+    await checkTermination();
     stage = 'old credential positive control';
     if (await database.oldCredentialWorks() !== true) fail(stage);
     const baseline = await database.snapshot();
-    authorize(); stage = 'password rotation';
+    authorize(); await checkTermination(); stage = 'password rotation';
     const rotation = await management.rotatePassword(expected.oldRole);
     if (rotation?.status !== 'DONE' || rotation.error) fail(stage);
-    authorize(); stage = 'membership replacement';
+    authorize(); await checkTermination(); stage = 'membership replacement';
     const membership = await management.replaceMemberships(expected.oldRole, expected.finalMemberships);
     if (membership?.status !== 'DONE' || membership.error) fail(stage);
     stage = 'membership readback';
     const after = await database.inspect(expected);
     if (after.profileVerified !== true || JSON.stringify([...after.oldMemberships].sort()) !== JSON.stringify([...expected.finalMemberships].sort())) fail(stage);
-    authorize(); stage = 'session termination';
+    authorize(); await checkTermination(); stage = 'session termination';
     await database.terminateOldSessions();
     const until = clock() + timeoutMs;
     let sessions;
@@ -60,6 +72,7 @@ export async function retireCredentials({authorization, expected, management, da
     if (hash(baseline) !== hash(await database.snapshot())) fail(stage);
     return {method:'CLOUDSQL_CREDENTIAL_RETIREMENT_V1', status:'FACTS_ONLY_REQUIRES_PROOF_REVIEW',
       verifiedAt:new Date(clock()).toISOString(), database:expected.database,
+      instanceConnectionName:instance.connectionName, sessionTerminationAuthorityVerified:true,
       retiredRole:expected.oldRole, oldCredentialPositiveControl:true, oldCredentialSqlstate:'28P01',
       retiredSessionCount:sessions, oldRoleAttributes:after.oldRoleAttributes,
       retiredLoginDisabled:after.oldRoleAttributes.login === false,
@@ -98,6 +111,10 @@ export function cloudSqlUserManagement({project, instance, tokenProvider, passwo
   };
   return {
     resource:Object.freeze({project,instance}),
+    async readInstance() {
+      const metadata = await call(`${root}/instances/${instance}`, 'GET');
+      return {name:metadata.name,project:metadata.project,connectionName:metadata.connectionName,databaseVersion:metadata.databaseVersion};
+    },
     async rotatePassword(role) {
       // The caller supplies a newly generated controlled password privately, never the retired one.
       const password = await passwordProvider();

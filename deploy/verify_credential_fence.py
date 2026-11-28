@@ -140,7 +140,9 @@ def verify_bundle(bundle, *, approved_hash, accepted_implementation, reviewers,
     validate_target(request)
     require(target == readback['target'] == request, 'Instance/database/role/revision/image/identity/secret binding mismatch.')
     return {'decision': 'allow_activation', 'method': METHOD, 'proofHash': approved_hash,
-            'cloudOperations': 0, 'retiredLoginDisabled': not flags['login']}
+            'cloudOperations': 0, 'retiredLoginDisabled': not flags['login'],
+            'scope': 'OFFLINE_ATTESTATION_COMPARISON_ONLY', 'liveConfigurationVerified': False,
+            'releaseActivationAllowed': False}
 
 
 if __name__ == '__main__':

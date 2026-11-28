@@ -34,6 +34,10 @@ class CredentialGateIntegration(unittest.TestCase):
                 'SERVICE_NAME':'cp-fixture','MIGRATE_JOB_NAME':'cp-migrate'}
             with patch.dict(os.environ,env,clear=True):
                 with self.assertRaises(ValueError):verify()
+                os.environ['ACTIVATE_LIFECYCLE']='false'
+                with self.assertRaises(ValueError):verify()
+                del os.environ['LIFECYCLE_DB_FENCE_METHOD']
+                with self.assertRaises(ValueError):verify()
                 os.environ['PROJECT_ID']='different-project'
                 with self.assertRaises(ValueError):verify()
 

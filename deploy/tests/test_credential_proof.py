@@ -41,6 +41,9 @@ class ProofPolicy(unittest.TestCase):
         self.assertEqual(result['decision'], 'allow_activation')
         self.assertEqual(result['cloudOperations'], 0)
         self.assertIs(result['retiredLoginDisabled'], False)
+        self.assertIs(result['releaseActivationAllowed'], False)
+        self.assertIs(result['liveConfigurationVerified'], False)
+        self.assertEqual(result['scope'], 'OFFLINE_ATTESTATION_COMPARISON_ONLY')
 
     def reject_edit(self, edit, repin=True):
         bundle, trust = fixture()

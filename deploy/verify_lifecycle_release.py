@@ -1,7 +1,11 @@
 """Validate approved immutable state-aware image for manual reuse/activation."""
 import json,os,re,sys
-from verify_credential_fence import METHOD, load_json, verify_bundle
+from verify_credential_fence import METHOD
 def verify():
+ if (os.environ.get('LIFECYCLE_DB_FENCE_METHOD')==METHOD or
+     any(os.environ.get(k) for k in ('CP_FENCE_BUNDLE_PATH','CP_APPROVED_PROOF_SHA256','CP_ACCEPTED_IMPLEMENTATION_SHA','CP_APPROVED_REVIEWER')) or
+     os.environ.get('CP_ACTIVATION_APPROVED')=='true'):
+  raise ValueError('CP-v1 is offline-only until independent live configuration verification is implemented; release is blocked.')
  if os.environ.get('ROLLBACK','false')!='true':
   if os.environ.get('ACTIVATE_LIFECYCLE','false')!='false':raise ValueError('Activation requires explicit manual image reuse.')
   return
@@ -18,16 +22,6 @@ def verify():
    raise ValueError('Activation requires confirmed old-traffic drain and recorded cutover evidence.')
   if os.environ.get('LIFECYCLE_DB_FENCE_CONFIRMED')!='true' or not re.fullmatch(proof,os.environ.get('LIFECYCLE_DB_FENCE_EVIDENCE','')):
    raise ValueError('Activation requires retired database logins/sessions and recorded database-fence evidence; timeout alone is insufficient.')
-  if method==METHOD:
-   bundle=load_json(os.environ['CP_FENCE_BUNDLE_PATH'])
-   verify_bundle(bundle,approved_hash=os.environ['CP_APPROVED_PROOF_SHA256'],
-    accepted_implementation=os.environ['CP_ACCEPTED_IMPLEMENTATION_SHA'],
-    reviewers=[os.environ['CP_APPROVED_REVIEWER']],activation_approved=os.environ.get('CP_ACTIVATION_APPROVED')=='true')
-   target=bundle['request'];project=os.environ['PROJECT_ID'];region=os.environ['REGION']
-   if (target['project']!=project or target['instance_connection_name'].split(':')[1]!=region or
-       target['service']!=f"projects/{project}/locations/{region}/services/{os.environ.get('SERVICE_NAME','gather')}" or
-       target['job']!=f"projects/{project}/locations/{region}/jobs/{os.environ.get('MIGRATE_JOB_NAME','gather-migrate')}" or
-       target['image_sha']!=sha or target['image_digest']!=digest):raise ValueError('Release request differs from approved CP target.')
 if __name__=='__main__':
  try:verify()
  except (ValueError,KeyError,TypeError,OSError):print('Lifecycle release blocked: approval/evidence validation failed.',file=sys.stderr);sys.exit(1)
