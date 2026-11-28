@@ -36,9 +36,11 @@ class Client:
         self.calls.append('freeze-enter')
         try:yield self.frozen
         finally:self.calls.append('freeze-exit')
-    def activate(self,target,observation):
+    def activate(self,target,observation,*,authorize_now):
+        authorize_now()
         self.calls.append('activate')
         self.mutation_may_have_started=True
+        if self.patch_error=='interrupt':raise KeyboardInterrupt()
         if self.patch_error:raise ValueError('CONDITIONAL_UPDATE_FAILED')
         return {'revision':target['service']+'/revisions/new-revision','verified':self.post_ok}
     def wait_until_disabled(self,target):
@@ -117,9 +119,11 @@ class LiveReleaseGate(unittest.TestCase):
         self.assertNotIn('activate',c.calls)
 
     def test_LG08_conditional_failure_or_failed_postcheck_never_retries(self):
-        for flag in ('patch_error','post_ok'):
-            b,t,c=inputs();setattr(c,flag,flag=='patch_error')
-            with self.assertRaises(ValueError):evaluate_live_release(b,t,c,execute=True,clock=lambda:NOW)
+        for flag in ('patch_error','post_ok','interrupt'):
+            b,t,c=inputs()
+            if flag=='interrupt':c.patch_error='interrupt'
+            else:setattr(c,flag,flag=='patch_error')
+            with self.assertRaises((ValueError,KeyboardInterrupt)):evaluate_live_release(b,t,c,execute=True,clock=lambda:NOW)
             self.assertEqual(c.calls.count('activate'),1)
             self.assertEqual(c.calls[-1],'freeze-exit')
             self.assertLess(c.calls.index('wait-disabled-confirmed'),c.calls.index('freeze-exit'))

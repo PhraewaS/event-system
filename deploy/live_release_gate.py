@@ -56,6 +56,9 @@ def evaluate_live_release(bundle, trust, client, *, execute=False, clock=None):
         return cloud
 
     initial=observe()
+    def authorize_send():
+        validate_source()
+        verify_bundle(bundle, **proof_trust, now=clock())
     result={'decision':'live_preflight_verified','method':METHOD,'proofHash':trust['approved_hash'],
             'liveConfigurationVerified':True,'activationExecuted':False,'checkOnly':not execute,
             'acceptedGateSha':accepted_gate,'approvedConfigurationHash':config_hash,
@@ -70,16 +73,21 @@ def evaluate_live_release(bundle, trust, client, *, execute=False, clock=None):
         require(final['observed'] == initial['observed'] and final['configReviewHash'] == initial['configReviewHash'],
                 'Configuration changed between preflight and execution.')
         try:
-            outcome=client.activate(target,final)
+            outcome=client.activate(target,final,authorize_now=authorize_send)
             require(outcome.get('verified') is True and isinstance(outcome.get('revision'),str)
                     and outcome['revision'].startswith(target['service']+'/revisions/'), 'Activation result unknown or mismatched.')
-        except Exception:
+        except (Exception, KeyboardInterrupt):
             # Never automatically release our data barrier merely because a
             # PATCH timed out or a postcheck failed. The real client waits under
             # the held locks for independently observable compatible gate=false.
             # It retries reads only; a manual recovery remains the operator's job.
             if getattr(client,'mutation_may_have_started',False):
-                client.wait_until_disabled(target)
+                while True:
+                    try:
+                        client.wait_until_disabled(target)
+                        break
+                    except KeyboardInterrupt:
+                        continue
             raise
     return {**result,'decision':'activation_verified','activationExecuted':True,'revision':outcome['revision']}
 

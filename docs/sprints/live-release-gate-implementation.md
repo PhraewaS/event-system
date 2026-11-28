@@ -43,7 +43,7 @@ Design `5df7cfb` preceded meaningful RED `45e1f13`: four failed behavioral asser
 
 | Verification | Actual local result |
 | --- | --- |
-| LG-01–08/10 Python coordinator/transport/catalog/metadata-entry tests plus existing deployment tests | 70 passed, 0 failed, 0 skipped, including two actual local PostgreSQL barrier tests |
+| LG-01–08/10 Python coordinator/transport/catalog/metadata-entry tests plus existing deployment tests | 71 passed, 0 failed, 0 skipped, including two actual local PostgreSQL barrier tests |
 | LG-09 complete-config hashing/redaction + existing Node/API/DB tests | 223 passed, 0 failed, 0 skipped in 21 files |
 | Server/client TypeScript and Vite production build | Passed |
 | Shell syntax and offline deployment stubs | Recorded in GREEN evidence |

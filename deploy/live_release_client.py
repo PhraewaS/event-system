@@ -66,7 +66,7 @@ class GoogleLiveReleaseClient:
         dirty=self.command(['git','status','--porcelain','--untracked-files=all'])
         return {'sha':sha,'clean':not dirty}
 
-    def request(self,url,*,body=None,method='GET',secret_resource=None):
+    def request(self,url,*,body=None,method='GET',secret_resource=None,pre_send=None):
         if self.target is None:raise ValueError('Fixed target required before authentication.')
         t=self.target;region=t['instance_connection_name'].split(':')[1]
         run='https://run.googleapis.com/v2/'
@@ -87,6 +87,10 @@ class GoogleLiveReleaseClient:
         if not allowed:raise ValueError('Endpoint not allowed.')
         req=urllib.request.Request(url,data=None if body is None else json.dumps(body).encode('utf-8'),
             method=method,headers={'Authorization':'Bearer '+self.token(),'Content-Type':'application/json'})
+        if method=='PATCH':
+            if not callable(pre_send):raise ValueError('Fresh pre-send authorization required.')
+            pre_send()  # after token retrieval/metadata latency, immediately before sending
+            self.mutation_may_have_started=True
         try:
             with self.opener.open(req,timeout=25) as response:return json.load(response)
         except urllib.error.HTTPError as error:raise ValueError('Google operation rejected: HTTP '+str(error.code)) from None
@@ -269,7 +273,8 @@ class GoogleLiveReleaseClient:
             try:time.sleep(2)
             except KeyboardInterrupt:continue
 
-    def activate(self,target,observation):
+    def activate(self,target,observation,*,authorize_now):
+        if not callable(authorize_now):raise ValueError('Fresh execution authorization required.')
         self.bind_target(target)
         url='https://run.googleapis.com/v2/'+target['service']
         service=self.request(url)
@@ -282,8 +287,7 @@ class GoogleLiveReleaseClient:
         body={'name':target['service'],'etag':service['etag'],'template':{'containers':containers,'revision':''},
               'traffic':[{'type':'TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST','percent':100}]}
         self.baseline_service=copy.deepcopy(service)
-        self.mutation_may_have_started=True
-        op=self.request(url+'?updateMask=template.containers%2Ctemplate.revision%2Ctraffic',method='PATCH',body=body)
+        op=self.request(url+'?updateMask=template.containers%2Ctemplate.revision%2Ctraffic',method='PATCH',body=body,pre_send=authorize_now)
         deadline=time.monotonic()+180
         while not op.get('done'):
             name=op.get('name','')

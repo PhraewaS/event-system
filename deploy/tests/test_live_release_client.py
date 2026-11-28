@@ -13,6 +13,16 @@ from test_credential_proof import fixture
 def target():return fixture()[0]['request']
 
 class TransportBoundary(unittest.TestCase):
+    def test_LG07_expired_authorization_after_token_fetch_never_sends_patch(self):
+        t=target();c=GoogleLiveReleaseClient();c.bind_target(t);c.token=Mock(return_value='synthetic-token');c.opener.open=Mock()
+        body={'name':t['service'],'etag':'etag','template':{'revision':'','containers':[]},
+              'traffic':[{'type':'TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST','percent':100}]}
+        def expired():raise ValueError('Expired approval window')
+        with self.assertRaisesRegex(ValueError,'Expired'):
+            c.request('https://run.googleapis.com/v2/'+t['service']+'?updateMask=template.containers%2Ctemplate.revision%2Ctraffic',
+                method='PATCH',body=body,pre_send=expired)
+        c.token.assert_called_once();c.opener.open.assert_not_called();self.assertFalse(c.mutation_may_have_started)
+
     def test_uncertain_outcome_keeps_barrier_and_retries_only_reads_until_disabled(self):
         t=target();c=GoogleLiveReleaseClient();c.bind_target(t)
         template={'containers':[{'image':'approved','env':[{'name':'REGISTRATION_LIFECYCLE_WRITES_ENABLED','value':'false'}]}],
@@ -23,9 +33,9 @@ class TransportBoundary(unittest.TestCase):
                'trafficStatuses':[{'revision':'disabled','percent':100}]}
         active=copy.deepcopy(false);active['template']['containers'][0]['env'][0]['value']='true'
         serving={**copy.deepcopy(template),'conditions':[{'type':'Ready','state':'CONDITION_SUCCEEDED'}]}
-        c.request=Mock(side_effect=[active,false,serving])
+        c.request=Mock(side_effect=[KeyboardInterrupt(),active,false,serving])
         with patch('live_release_client.time.sleep') as sleep:c.wait_until_disabled(t)
-        self.assertEqual(c.freeze_cursor.execute.call_count,2);self.assertEqual(sleep.call_count,1)
+        self.assertEqual(c.freeze_cursor.execute.call_count,3);self.assertEqual(sleep.call_count,1)
         self.assertTrue(all(call.kwargs.get('method','GET')=='GET' for call in c.request.call_args_list))
 
     def test_lost_sql_barrier_is_not_reported_as_safe_recovery(self):
@@ -81,7 +91,7 @@ class TransportBoundary(unittest.TestCase):
             if '/revisions/' in url:return revision
             return gets.pop(0)
         c.request=request
-        result=c.activate(t,{'observed':{'serviceEtag':'etag','serviceUid':'uid'}})
+        result=c.activate(t,{'observed':{'serviceEtag':'etag','serviceUid':'uid'}},authorize_now=lambda:None)
         self.assertTrue(result['verified']);self.assertEqual(len(calls),4)
         patches=[(u,k) for u,k in calls if k.get('method')=='PATCH'];self.assertEqual(len(patches),1)
         url,kwargs=patches[0];body=kwargs['body']
@@ -91,7 +101,7 @@ class TransportBoundary(unittest.TestCase):
 
     def test_service_etag_drift_cannot_patch(self):
         c=GoogleLiveReleaseClient();c.request=Mock(return_value={'etag':'changed','uid':'uid'})
-        with self.assertRaises(ValueError):c.activate(target(),{'observed':{'serviceEtag':'expected','serviceUid':'uid'}})
+        with self.assertRaises(ValueError):c.activate(target(),{'observed':{'serviceEtag':'expected','serviceUid':'uid'}},authorize_now=lambda:None)
         self.assertEqual(c.request.call_count,1)
 
     def test_api_error_returns_no_sensitive_response_text(self):
