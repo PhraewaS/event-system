@@ -1,0 +1,77 @@
+
+ RUN  v5.0.5 C:/Users/natth/OneDrive/Documents/ChatGPT/SE/gather-sprint2-cloud-config-readback
+
+ ✓ tests/cloud-config-readback.test.ts > RB-01 / matching observations verify cloud fields without authorizing activation 7ms
+ ✓ tests/cloud-config-readback.test.ts > RB-02 serving digest fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-02 desired template digest fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-02 migration identity fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-02 attachment fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-02 actual secret version fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-03 split traffic fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-03 tagged route fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-03 revision drift fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-03 reconciling fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-03 generation lag fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-03 failed readiness fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-03 duplicate readiness fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-04 latest alias fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-04 disabled secret fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-04 literal DATABASE_URL fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-04 duplicate DATABASE_URL fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-04 lifecycle enabled fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-05 missing service fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-08 unknown project number fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-09 sidecar fails closed and redacts private input 2ms
+ ✓ tests/cloud-config-readback.test.ts > RB-09 command override fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-09 migration owner fails closed and redacts private input 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-09 malformed service account path fails closed and redacts private input 0ms
+ ✓ tests/cloud-config-readback.test.ts > RB-05 permission failure does not leak raw error 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-06 detects service changing between reads 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-06 detects job changing between reads 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-06 detects secret changing between reads 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-07 exhausts pages and finds active execution on second page 2ms
+ ✓ tests/cloud-config-readback.test.ts > RB-07 repeated pagination token blocks observation 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-08 accepts authoritative project-number resource names 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-05 elapsed read budget fails closed 0ms
+ ✓ tests/cloud-config-readback.test.ts > RB-10 HTTP adapter exposes only GET metadata requests and rejects payload access 2ms
+ ✓ tests/cloud-config-readback.test.ts > RB-10 HTTP failure returns no raw response or bearer value 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-11 / revision rejects missing Cloud SQL mount 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-11 / revision rejects wrong-path Cloud SQL mount 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-11 / revision rejects wrong-name Cloud SQL mount 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-11 / revision rejects duplicate-path Cloud SQL mount 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-11 / template rejects missing Cloud SQL mount 0ms
+ ✓ tests/cloud-config-readback.test.ts > RB-11 / template rejects wrong-path Cloud SQL mount 0ms
+ ✓ tests/cloud-config-readback.test.ts > RB-11 / template rejects wrong-name Cloud SQL mount 0ms
+ ✓ tests/cloud-config-readback.test.ts > RB-11 / template rejects duplicate-path Cloud SQL mount 0ms
+ ✓ tests/cloud-config-readback.test.ts > RB-11 / job rejects missing Cloud SQL mount 0ms
+ ✓ tests/cloud-config-readback.test.ts > RB-11 / job rejects wrong-path Cloud SQL mount 0ms
+ ✓ tests/cloud-config-readback.test.ts > RB-11 / job rejects wrong-name Cloud SQL mount 0ms
+ ✓ tests/cloud-config-readback.test.ts > RB-11 / job rejects duplicate-path Cloud SQL mount 0ms
+ ✓ tests/cloud-config-readback.test.ts > RB-12 / new running execution after first scan blocks readback 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-12 / new completed execution after first scan blocks readback 9ms
+ ✓ tests/cloud-config-readback.test.ts > RB-12 / new completed execution on later final-scan page blocks readback 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-12 / unchanged etag but execution metadata changes blocks readback 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-12 / executions read failure on final scan blocks and redacts error 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-12 / stable completed history passes despite page-order changes 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-12 / final job marker catches an execution starting after the last scan 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-11 / renamed volume passes when its mount is bound correctly 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-13 / latest status EXECUTION_RUNNING blocks even when executions stay empty 2ms
+ ✓ tests/cloud-config-readback.test.ts > RB-13 / latest status EXECUTION_PENDING blocks even when executions stay empty 2ms
+ ✓ tests/cloud-config-readback.test.ts > RB-13 / latest status COMPLETION_STATUS_UNSPECIFIED blocks even when executions stay empty 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-13 / latest status UNRECOGNIZED blocks even when executions stay empty 0ms
+ ✓ tests/cloud-config-readback.test.ts > RB-13 / latest status undefined blocks even when executions stay empty 0ms
+ ✓ tests/cloud-config-readback.test.ts > RB-13 / known terminal latest status EXECUTION_SUCCEEDED can pass without authorizing activation 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-13 / known terminal latest status EXECUTION_FAILED can pass without authorizing activation 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-13 / known terminal latest status EXECUTION_CANCELLED can pass without authorizing activation 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-13 / missing-reference in latest execution metadata fails closed 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-13 / missing-time in latest execution metadata fails closed 0ms
+ ✓ tests/cloud-config-readback.test.ts > RB-13 / missing-name in latest execution metadata fails closed 0ms
+ ✓ tests/cloud-config-readback.test.ts > RB-13 / invalid-time in latest execution metadata fails closed 0ms
+ ✓ tests/cloud-config-readback.test.ts > RB-13 / foreign-job in latest execution metadata fails closed 0ms
+ ✓ tests/cloud-config-readback.test.ts > RB-13 / latest active state on job read 2 is rejected directly 1ms
+ ✓ tests/cloud-config-readback.test.ts > RB-13 / latest active state on job read 3 is rejected directly 1ms
+
+ Test Files  1 passed (1)
+      Tests  69 passed (69)
+   Start at  16:08:03
+   Duration  392ms (tests 40%, transform 39%, import 16%, worker 5%)

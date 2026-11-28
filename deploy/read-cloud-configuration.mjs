@@ -49,11 +49,24 @@ export async function collectCloudConfiguration({expected,client,clock=Date.now}
     };
     const wantedRuntime=secretVersion(expected.runtime_secret_version),wantedMigrator=secretVersion(expected.migrator_secret_version);
     check(wantedRuntime.split('/versions/')[0]!==wantedMigrator.split('/versions/')[0],'SHARED_DATABASE_SECRET');
+    const requireInactiveLatestExecution=(job)=>{
+      const code='JOB_LATEST_EXECUTION_ACTIVE_OR_UNKNOWN';
+      const count=job.executionCount??0,latest=job.latestCreatedExecution;
+      check(Number.isSafeInteger(count)&&count>=0,code);
+      // Protobuf JSON may omit a zero count/reference for a job that has never run.
+      if(latest==null){check(count===0,code);return;}
+      check(count>0&&['EXECUTION_SUCCEEDED','EXECUTION_FAILED','EXECUTION_CANCELLED'].includes(latest.completionStatus)&&
+        nonempty(latest.name)&&nonempty(latest.completionTime)&&Number.isFinite(Date.parse(latest.completionTime)),code);
+      const name=canonical(latest.name);
+      check(new RegExp(`^${expected.job}/executions/[a-z][a-z0-9-]*$`).test(name),code);
+    };
     const stableResource=(value,wanted,kind)=>{
       check(value&&canonical(value.name)===wanted,`${kind}_IDENTITY_MISMATCH`);
       check(nonempty(value.etag)&&nonempty(value.uid)&&nonempty(value.generation)&&
         value.generation===value.observedGeneration&&value.reconciling!==true&&
         value.terminalCondition?.state==='CONDITION_SUCCEEDED',`${kind}_NOT_STABLE`);
+      // Job GET can expose a pending/running execution before list visibility catches up.
+      if(kind==='JOB')requireInactiveLatestExecution(value);
     };
     const service=await read(()=>client.readService());stableResource(service,expected.service,'SERVICE');
     check(Array.isArray(service.trafficStatuses)&&service.trafficStatuses.length===1&&

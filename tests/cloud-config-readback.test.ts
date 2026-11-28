@@ -128,7 +128,7 @@ test('RB-12 / final job marker catches an execution starting after the last scan
   if(++scans===2){(f.data.job as any).executionCount=1;(f.data.job as any).latestCreatedExecution={name:finishedExecution(f,'late').name,completionStatus:'EXECUTION_RUNNING'};}
   return {executions:[]};
  };
- const r=await collectCloudConfiguration(f);expect(r.reasons).toEqual(['JOB_EXECUTIONS_OR_CONFIG_CHANGED_DURING_READBACK']);expect(r.releaseActivationAllowed).toBe(false);
+ const r=await collectCloudConfiguration(f);expect(r.reasons).toEqual(['JOB_LATEST_EXECUTION_ACTIVE_OR_UNKNOWN']);expect(r.releaseActivationAllowed).toBe(false);
 });
 test('RB-11 / renamed volume passes when its mount is bound correctly',async()=>{
  const f=cloudFixture();for(const scope of ['revision','template','job']){
