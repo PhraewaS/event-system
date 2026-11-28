@@ -16,3 +16,13 @@ These are mocked API/transport checks. No real GCP reads, database operations, I
 This preserves Deliverable 2 §3.2 versioned test design/TDD/review and §3.4 actual-vs-pending traceability; the helper's tests do not establish Sprint 2 completion or deployed candidate acceptance.
 
 API field references: [Container volumeMounts](https://docs.cloud.google.com/run/docs/reference/rest/v2/Container), [Execution identity/status](https://docs.cloud.google.com/run/docs/reference/rest/v2/projects.locations.jobs.executions), [Job executionCount/latestCreatedExecution](https://docs.cloud.google.com/run/docs/reference/rest/v2/projects.locations.jobs).
+
+## Round 2 — latest execution status (review at 16:05:27 UTC+7)
+
+Accepted the remaining request: an unchanged Job GET marker with a RUNNING/PENDING latest execution must block even when executions.list returns empty. Comparing markers alone did not establish inactivity.
+
+- Design `60e0b70` / RB-13 preceded RED `2b0c93d`: 12 failed / 57 passed at runtime assertions, including both active statuses with empty lists.
+- Corrective runtime `bf130af` validates latestCreatedExecution independently on all three Job GET observations. Only known terminal status plus matching execution resource and valid completion time can establish an inactive latest marker. Missing reference with positive executionCount or unknown metadata fails closed; omitted zero-count/reference for a never-run job remains supported.
+- [Current GREEN](../../evidence/sprint-2/cloud-readback/review95-round2/GREEN.txt): 69 passed / 0 failed / 0 skipped. Tests cover RUNNING, PENDING, unknown/missing status, incomplete metadata, valid terminal states and late observations. [RED](../../evidence/sprint-2/cloud-readback/review95-round2/RED.txt) retained. Build passed; full regression/Docker is checked on the submitted PR head in CI.
+
+The earlier 54-case result above is historical. This change does not authorize activation or alter the contract's offline-only boundary. No real database change, deployment, lifecycle enablement or GCP mutation was performed.

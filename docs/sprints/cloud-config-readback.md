@@ -1,6 +1,6 @@
 # Cloud configuration readback — Issue #8
 
-> Current review #95 corrections: [mount binding and execution drift](cloud-config-review95.md). Current reader tests: 54 passed. The 34-case result below records the original PR revision.
+> Current review #95 corrections: [mount binding and execution drift](cloud-config-review95.md). Current reader tests: 69 passed after round 2 latest-execution status correction. The 34-case result below records the original PR revision.
 
 28 November 2026 · Author `guluJa` · reviewer requested: `PhraewaS`
 
