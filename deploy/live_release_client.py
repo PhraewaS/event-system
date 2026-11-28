@@ -6,6 +6,7 @@ and no password/user/session/IAM/job/traffic-fallback/build/seed capability.
 """
 import base64
 import copy
+import hashlib
 import json
 import logging
 import os
@@ -165,9 +166,24 @@ class GoogleLiveReleaseClient:
             profile=parent[0] if len(parent)==1 else None
             indirect_admin=any(e[0]==old and e[2] and e[1] in reachable(migrator) for e in edges)
             cur.execute("SELECT has_schema_privilege(%s,'public','CREATE')",(runtime,));runtime_create=cur.fetchone()[0]
+            rights={'users':('SELECT',),'schema_migrations':('SELECT',),
+                'events':('SELECT','INSERT','UPDATE'),'registrations':('SELECT','INSERT','UPDATE'),
+                'session':('SELECT','INSERT','UPDATE','DELETE'),'login_rate_limits':('SELECT','INSERT','UPDATE','DELETE')}
+            acl=["has_schema_privilege(current_user,'public','USAGE')"]
+            for table,grants in rights.items():
+                for privilege in ('SELECT','INSERT','UPDATE','DELETE'):
+                    acl.append(('' if privilege in grants else 'NOT ')+f"has_table_privilege(current_user,'public.{table}','{privilege}')")
+            acl.append("has_column_privilege(current_user,'public.users','id','UPDATE')")
+            for column in ('email','name','role','password_hash'):
+                acl.append(f"NOT has_column_privilege(current_user,'public.users','{column}','UPDATE')")
+            cur.execute('SELECT '+ ' AND '.join(acl));runtime_acl=cur.fetchone()[0]
+            cur.execute("SELECT c.relname,c.relowner FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relkind='r' ORDER BY c.relname")
+            owners=cur.fetchall()
+            owners_ok=(set(r[0] for r in owners)==set(TABLES) and all(r[1]==target['roles']['old']['oid'] for r in owners))
             cur.execute('SELECT count(*) FROM pg_stat_activity WHERE usesysid=%s',(target['roles']['old']['oid'],));sessions=cur.fetchone()[0]
             require_flags=all(flags[n][2] and not any(flags[n][3:]) for n in (runtime,migrator))
-            verified=(require_flags and old not in reachable(runtime) and 'cloudsqlsuperuser' not in reachable(runtime)
+            verified=(require_flags and flags[old][3] is False and flags[old][6] is False and runtime_acl is True and owners_ok
+                and old not in reachable(runtime) and 'cloudsqlsuperuser' not in reachable(runtime)
                 and 'cloudsqlsuperuser' not in reachable(migrator,old) and not runtime_create and profile is not None
                 and profile[2] is False and profile[4] is True and not indirect_admin)
             old_flags={'login':flags[old][2],'createrole':flags[old][5],'createdb':flags[old][4]}
@@ -180,6 +196,9 @@ class GoogleLiveReleaseClient:
             cur.execute('BEGIN READ ONLY');cur.execute('SET LOCAL ROLE "'+old+'"')
             cur.execute("SELECT current_user,has_schema_privilege(current_user,'public','USAGE'),has_schema_privilege(current_user,'public','CREATE')")
             owner=cur.fetchone();verified=verified and tuple(owner)==(old,True,True)
+            cur.execute('SELECT name,checksum FROM public.schema_migrations ORDER BY name');ledger=cur.fetchall()
+            expected_ledger=[(p.name,hashlib.sha256(p.read_bytes()).hexdigest()) for p in sorted((ROOT/'server/migrations').glob('*.sql'))]
+            verified=verified and [tuple(r) for r in ledger]==expected_ledger
             cur.execute('ROLLBACK')
         return {'instance':target['instance_connection_name'],'database':target['database'],'roles':roles,
             'replacementProfilesVerified':bool(verified),'oldSessionCount':sessions,'oldRoleAttributes':old_flags,

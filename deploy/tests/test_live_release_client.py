@@ -85,16 +85,23 @@ class TransportBoundary(unittest.TestCase):
 class SqlObservation(unittest.TestCase):
     """Catalog data doubles exercise actual role graph/profile parsing."""
     def prepare(self):
+        import hashlib
+        from live_release_client import ROOT,TABLES
         t=target();old=t['roles']['old']['name'];runtime=t['roles']['runtime']['name'];migrator=t['roles']['migrator']['name']
         state={'flags':[[old,t['roles']['old']['oid'],True,False,True,True,False,False],
                         [runtime,t['roles']['runtime']['oid'],True,False,False,False,False,False],
                         [migrator,t['roles']['migrator']['oid'],True,False,False,False,False,False]],
-               'edges':[(old,migrator,False,True,True)],'runtimeCreate':False,'sessions':0,'ownerReady':True}
+               'edges':[(old,migrator,False,True,True)],'runtimeCreate':False,'sessions':0,'ownerReady':True,'runtimeAcl':True,
+               'owners':[(table,t['roles']['old']['oid']) for table in TABLES],
+               'ledger':[(p.name,hashlib.sha256(p.read_bytes()).hexdigest()) for p in sorted((ROOT/'server/migrations').glob('*.sql'))]}
         class Cursor:
             def execute(self,sql,args=None):
                 if sql.startswith('SELECT rolname'):self.result=state['flags']
                 elif sql.startswith('SELECT p.rolname'):self.result=state['edges']
+                elif sql.startswith('SELECT has_schema_privilege(current_user'):self.result=[(state['runtimeAcl'],)]
                 elif sql.startswith('SELECT has_schema_privilege'):self.result=[(state['runtimeCreate'],)]
+                elif sql.startswith('SELECT c.relname'):self.result=state['owners']
+                elif sql.startswith('SELECT name,checksum'):self.result=state['ledger']
                 elif sql.startswith('SELECT count(*)'):self.result=[(state['sessions'],)]
                 elif sql.startswith('SELECT current_user'):self.result=[(old,True,state['ownerReady'])]
                 else:self.result=[]
@@ -114,7 +121,7 @@ class SqlObservation(unittest.TestCase):
         self.assertEqual(r['oldRoleAttributes'],{'login':True,'createrole':True,'createdb':True})
 
     def test_runtime_owner_or_indirect_privilege_and_migration_admin_paths_reject(self):
-        for kind in ('runtime-owner','runtime-super','migration-super','migration-admin','schema','owner-schema','login'):
+        for kind in ('runtime-owner','runtime-super','migration-super','migration-admin','schema','owner-schema','login','old-super','acl','table-owner','ledger'):
             with self.subTest(kind=kind):
                 t,s,c=self.prepare();o=t['roles']['old']['name'];r=t['roles']['runtime']['name'];m=t['roles']['migrator']['name']
                 if kind=='runtime-owner':s['edges'].append((o,r,False,False,True))
@@ -123,6 +130,10 @@ class SqlObservation(unittest.TestCase):
                 elif kind=='migration-admin':s['edges'] += [('intermediate',m,False,True,True),(o,'intermediate',True,False,True)]
                 elif kind=='schema':s['runtimeCreate']=True
                 elif kind=='owner-schema':s['ownerReady']=False
+                elif kind=='old-super':s['flags'][0][3]=True
+                elif kind=='acl':s['runtimeAcl']=False
+                elif kind=='table-owner':s['owners'][0]=(s['owners'][0][0],9999)
+                elif kind=='ledger':s['ledger'][0]=(s['ledger'][0][0],'different')
                 else:s['flags'][1][2]=False
                 self.assertFalse(c.sql_configuration(t)['replacementProfilesVerified'])
 
