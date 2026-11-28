@@ -7,7 +7,7 @@ export function cloudFixture(){
   const secret=(full:string)=>{const parts=full.split('/');return {secret:parts.slice(0,-2).join('/'),version:parts.at(-1)};};
   const image=`asia-southeast1-docker.pkg.dev/${expected.project}/gather/gather@${expected.image_digest}`;
   const profile=(job=false)=>({serviceAccount:job?expected.migrator_service_account:expected.runtime_service_account,
-    containers:[{image,command:job?['node']:[],args:job?['dist/server/migrate.js']:[],env:[
+    containers:[{image,command:job?['node']:[],args:job?['dist/server/migrate.js']:[],volumeMounts:[{name:'cloudsql',mountPath:'/cloudsql'}],env:[
       {name:'DATABASE_URL',valueSource:{secretKeyRef:secret(job?expected.migrator_secret_version:expected.runtime_secret_version)}},
       {name:job?'MIGRATION_OWNER_ROLE':'REGISTRATION_LIFECYCLE_WRITES_ENABLED',value:job?expected.roles.old.name:'false'},
       {name:'OTHER_PRIVATE_LITERAL',value:'NEVER_RETURN_THIS_SENTINEL'},
