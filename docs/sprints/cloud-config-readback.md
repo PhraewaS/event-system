@@ -1,5 +1,7 @@
 # Cloud configuration readback — Issue #8
 
+> Current review #95 corrections: [mount binding and execution drift](cloud-config-review95.md). Current reader tests: 54 passed. The 34-case result below records the original PR revision.
+
 28 November 2026 · Author `guluJa` · reviewer requested: `PhraewaS`
 
 PR #94 was approved at 14:57:00 and merged at 14:57:08 (UTC+7) on 28 November 2026. Accepted staging base: `173da9f021a7a39e733df934472cd9962f9d41e8`. [Staging CI 46123530365](https://github.com/PhraewaS/event-system/actions/runs/46123530365) succeeded. This branch prepares the deferred configuration observation component; it does not remove the release hard stop accepted in #94.
