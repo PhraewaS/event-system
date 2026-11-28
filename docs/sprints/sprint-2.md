@@ -124,3 +124,5 @@ PR #86 ได้รับ PhraewaS APPROVED9477808 วันที่25/11/2026 
 Review #89 วันที่26/11/2026 00:44:47น. ขอเพิ่ม historical Deploy rerun control และอัปเดตสถานะเอกสาร รับทั้งสองข้อ: gateปัจจุบันไม่ครอบคลุมworkflowsourceเก่าที่ rerun และต้องระบุaccepted sourceให้ตรงหลักฐาน การแก้ใน `codex/sprint2-release-review-89` เป็นdocs-only ไม่มีapplication/schema/GCP mutation ต้องผ่านPRเข้าสตagingตามworkflowก่อน #89 จะอัปเดตตาม ไม่เปิดrelease PRใหม่หรือIssueใหม่ ใช้ #8/#85 ต่อ
 
 ผล116/42ของ86963e3เป็นhistorical integration baselineของรอบนี้ ไม่ใช้รับรองdocs correction commitโดยอัตโนมัติ เมื่อรวมcorrectionแล้วให้เก็บfresh stagingและrelease-PR CIอีกรอบ mainยังe2b9842และ GCP Sprint2/cutover/activationยังpending อย่าอ้างว่า featureเปิดใช้งานบนเว็บจริงครบแล้ว
+
+**28/11/2026 readback preparation:** [Cloud metadata collector scope/tests](cloud-config-readback.md) adds read-only observation preparation after merged #94. CP release/activation remains blocked; SQL identities/source/writer inventory and actual cloud acceptance remain pending.

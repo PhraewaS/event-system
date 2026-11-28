@@ -1,0 +1,5 @@
+2026-11-28 Asia/Bangkok; design62ae79b before implementation.
+New collector interface initially failed closed with READER_NOT_IMPLEMENTED.
+node node_modules/vitest/vitest.mjs run tests/cloud-config-readback.test.ts --reporter=verbose
+RB-01:1failed, expected cloudFieldsMatch=true from matching synthetic API observations, receivedfalse.
+Runtime assertion (not import/compilation/setup failure). No real Cloud read/auth/mutation performed.

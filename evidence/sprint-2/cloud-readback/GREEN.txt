@@ -1,0 +1,13 @@
+2026-11-28 Asia/Bangkok — synthetic/offline checks only.
+Node 24.19.0 / Vitest 5.0.5
+Command: node node_modules/vitest/vitest.mjs run tests/cloud-config-readback.test.ts --reporter=verbose
+Result: 34 passed, 0 failed, 0 skipped (RB-01–RB-10, parameterized cases).
+
+Command: npm run build
+Result: server/client TypeScript + Vite succeeded.
+
+Command: python -X utf8 -m unittest discover -s deploy/tests -p 'test_*.py' -v
+Result: 39 tests, OK. Git Bash stub processes and local HTTP fixtures only.
+Includes review94 CP activation hard stop before gcloud even with full legacy confirmations.
+No real GCP authentication/read, SQL operation, deploy, variable/IAM change or activation.
+Hosted regression/Docker status must be checked independently on the submitted head.
