@@ -1,0 +1,45 @@
+test_LG01_valid_live_check_only_never_freezes_or_mutates (test_live_release_gate.LiveReleaseGate.test_LG01_valid_live_check_only_never_freezes_or_mutates) ... FAIL
+test_LG03_valid_offline_proof_cannot_hide_cloud_or_config_mismatch (test_live_release_gate.LiveReleaseGate.test_LG03_valid_offline_proof_cannot_hide_cloud_or_config_mismatch) ...
+  test_LG03_valid_offline_proof_cannot_hide_cloud_or_config_mismatch (test_live_release_gate.LiveReleaseGate.test_LG03_valid_offline_proof_cannot_hide_cloud_or_config_mismatch) (edit={'cloudFieldsMatch': False}) ... FAIL
+  test_LG03_valid_offline_proof_cannot_hide_cloud_or_config_mismatch (test_live_release_gate.LiveReleaseGate.test_LG03_valid_offline_proof_cannot_hide_cloud_or_config_mismatch) (edit={'configReviewHash': 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'}) ... FAIL
+  test_LG03_valid_offline_proof_cannot_hide_cloud_or_config_mismatch (test_live_release_gate.LiveReleaseGate.test_LG03_valid_offline_proof_cannot_hide_cloud_or_config_mismatch) (edit={'readOnly': False}) ... FAIL
+
+======================================================================
+FAIL: test_LG01_valid_live_check_only_never_freezes_or_mutates (test_live_release_gate.LiveReleaseGate.test_LG01_valid_live_check_only_never_freezes_or_mutates)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\natth\OneDrive\Documents\ChatGPT\SE\gather-sprint2-live-release-gate\deploy\tests\test_live_release_gate.py", line 48, in test_LG01_valid_live_check_only_never_freezes_or_mutates
+    self.assertIs(result['liveConfigurationVerified'],True)
+AssertionError: False is not True
+
+======================================================================
+FAIL: test_LG03_valid_offline_proof_cannot_hide_cloud_or_config_mismatch (test_live_release_gate.LiveReleaseGate.test_LG03_valid_offline_proof_cannot_hide_cloud_or_config_mismatch) (edit={'cloudFieldsMatch': False})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\natth\OneDrive\Documents\ChatGPT\SE\gather-sprint2-live-release-gate\deploy\tests\test_live_release_gate.py", line 57, in test_LG03_valid_offline_proof_cannot_hide_cloud_or_config_mismatch
+    with self.assertRaises(ValueError):evaluate_live_release(b,t,c,clock=lambda:NOW)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_LG03_valid_offline_proof_cannot_hide_cloud_or_config_mismatch (test_live_release_gate.LiveReleaseGate.test_LG03_valid_offline_proof_cannot_hide_cloud_or_config_mismatch) (edit={'configReviewHash': 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\natth\OneDrive\Documents\ChatGPT\SE\gather-sprint2-live-release-gate\deploy\tests\test_live_release_gate.py", line 57, in test_LG03_valid_offline_proof_cannot_hide_cloud_or_config_mismatch
+    with self.assertRaises(ValueError):evaluate_live_release(b,t,c,clock=lambda:NOW)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_LG03_valid_offline_proof_cannot_hide_cloud_or_config_mismatch (test_live_release_gate.LiveReleaseGate.test_LG03_valid_offline_proof_cannot_hide_cloud_or_config_mismatch) (edit={'readOnly': False})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\natth\OneDrive\Documents\ChatGPT\SE\gather-sprint2-live-release-gate\deploy\tests\test_live_release_gate.py", line 57, in test_LG03_valid_offline_proof_cannot_hide_cloud_or_config_mismatch
+    with self.assertRaises(ValueError):evaluate_live_release(b,t,c,clock=lambda:NOW)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.008s
+
+FAILED (failures=4)

@@ -1,0 +1,10 @@
+{
+  "implementationSha": "a3635328789b8ebcecb829c6a7ee4aff5035e63f",
+  "files": {
+    "GREEN.txt": "47c1948670bb397ebfc0c5f011be8fc08e7b229c90a6a67e3f83f20afda47bbd",
+    "node-readback.txt": "2e4987335545e578d62970c535d04f86b02e9e11719f35745f12f5ca070503a4",
+    "python-regression.txt": "4c752165c88e2fbde2e5e7fb4ec03066a13cf1c010d35bff2919631d1976f909",
+    "RED.txt": "f35cc8445bb8e3b4f896dfc9703938b99bcf80b6f7eb653ce654983081fe6b03",
+    "release-stub.txt": "b4e8a11783a9cb9fa86a5a987e7e57a544d12f13436f49e61639f5db11d82e51"
+  }
+}
