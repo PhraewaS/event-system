@@ -51,13 +51,16 @@ export ROLLBACK ACTIVATE_LIFECYCLE
 [[ "$ROLLBACK" == true || "$ROLLBACK" == false ]] || { echo 'Invalid rollback mode.' >&2; exit 1; }
 [[ "$ACTIVATE_LIFECYCLE" == true || "$ACTIVATE_LIFECYCLE" == false ]] || { echo 'Invalid activation mode.' >&2; exit 1; }
 
-# CP proof comparison is offline only. No authoritative live service/job reader
-# is installed yet; do not permit even a fully approved JSON bundle to activate.
+# CP requests use the live coordinator, never the legacy boolean-only path.
+# Its default is check-only; this branch never falls through to the normal
+# build/migration/gcloud service update sequence below.
 if [[ "${LIFECYCLE_DB_FENCE_METHOD:-}" == CLOUDSQL_CREDENTIAL_RETIREMENT_V1 ||
     -n "${CP_FENCE_BUNDLE_PATH:-}" || -n "${CP_APPROVED_PROOF_SHA256:-}" || -n "${CP_ACCEPTED_IMPLEMENTATION_SHA:-}" ||
-    -n "${CP_APPROVED_REVIEWER:-}" || "${CP_ACTIVATION_APPROVED:-}" == true ]]; then
-  echo 'CP-v1 activation is blocked: offline proof is not live configuration verification.' >&2
-  exit 1
+    -n "${CP_APPROVED_REVIEWER:-}" || "${CP_ACTIVATION_APPROVED:-}" == true ||
+    -n "${CP_ACCEPTED_RELEASE_GATE_SHA:-}" || -n "${CP_APPROVED_CONFIG_SHA256:-}" ||
+    -n "${CP_CHECK_ONLY:-}" || -n "${CP_EXECUTE_APPROVED_ACTIVATION:-}" ]]; then
+  "${PYTHON_COMMAND:-python3}" "$(dirname "$0")/live_release_gate.py"
+  exit $?
 fi
 
 # ------------------------------------------------------------------------------

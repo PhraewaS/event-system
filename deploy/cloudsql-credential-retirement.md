@@ -1,6 +1,6 @@
 # CP-v1 implementation — operator preparation, not Cloud acceptance
 
-> **Current scope after review #94 (28/11/2026): CP proof validation is offline-only. Both release.sh and the release verifier reject CP activation even with valid proof. No live service/job configuration reader is implemented; CP-AC-08 cloud activation remains pending.** Earlier implementation evidence is retained in the status record; this restriction supersedes the initial opt-in release integration.
+> **Proposed live integration (28/11/2026, independent review pending):** this branch routes CP requests to `live_release_gate.py`. Default is check-only. The reviewed offline validator and #95 metadata collector retain their restricted scope; the coordinator additionally requires live SQL/catalog checks, an approved full-config hash and an accepted clean execution SHA. Actual Cloud acceptance/deployment remains pending. See [current runbook and limitations](../docs/sprints/live-release-gate-implementation.md). The description of unconditional blocking below is retained as the historical #94 boundary, superseded only after independent acceptance of this implementation.
 
 Issue #8 · accepted contract [PR #93](https://github.com/PhraewaS/event-system/pull/93), head94e99a3, merge1407833 (27/11/2026 19:21:06 UTC+7)
 
@@ -21,7 +21,7 @@ The approved hash/reviewer/implementation SHA must come from the independent acc
 
 Proof verifiedAt must be at most15minutes old; readback at most5minutes old, after review; all timestamps include timezones and lie in the active approved maintenance window. A changed target/config/secret version requires new evidence/review. Method/flags remain truthful: credential rejection28P01 does not imply NOLOGIN28000; LOGIN/CREATEROLE/CREATEDB may still be true and the privileged migration path must be reviewed.
 
-## Release CP activation is unconditionally blocked pending live configuration verification
+## Historical #94 release boundary (before this proposed integration)
 
 Existing strict fence remains the default method. The following CP environment names are reserved evidence inputs from the initial implementation; their presence is **not** a way to enable activation:
 
@@ -37,7 +37,7 @@ Existing strict fence remains the default method. The following CP environment n
 
 The current GitHub Deploy demo workflow is unchanged: no CP artifact downloading, new inputs/variables, SHA approval or activation dispatch is installed automatically. Do not manufacture a strict DB-fence confirmation to substitute for missing CP evidence. Wiring a real reviewed proof and fresh readback into an actual cloud release is a later controlled operator step requiring explicit authorization; this branch does not constitute that authorization.
 
-Before CP activation can be implemented, add independent authoritative live reads of the actual service/job revision, image, identity, instance mapping and pinned secret versions; compare those with proof and intended mutation before sending it. This remains deferred per review #94, not marked complete. Do not remove the hard stop based only on passing offline tests.
+The new branch implements the independent reads/composition described in the current runbook. The preceding paragraphs document the historical restriction, not the new check-only coordinator's interface. Do not interpret passing local/mock tests, merging this branch or collecting metadata as actual cutover/activation approval.
 
 References: [Google Cloud SQL Connector](https://docs.cloud.google.com/sql/docs/postgres/connect-connectors), [PostgreSQL17 backend signaling permissions](https://www.postgresql.org/docs/17/functions-admin.html#FUNCTIONS-ADMIN-SIGNAL). No connector dependency or ambient credential discovery is added to the application runtime; the explicit operator integration supplies the trusted connector.
 

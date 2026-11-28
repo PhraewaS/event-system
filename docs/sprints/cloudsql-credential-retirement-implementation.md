@@ -1,5 +1,7 @@
 # CP-v1 implementation / acceptance status — Issue #8
 
+> **New proposed branch after #95:** [live integration status/runbook](live-release-gate-implementation.md) supersedes the code-scope description for this unreviewed branch. It adds an operator coordinator with actual read capabilities and default check-only behavior. Existing evidence below is historical. No real Cloud fence/deploy/activation was executed by the new implementation tests; acceptance still requires independent review/CI and separate operator approvals.
+
 > **Current after review #94 (28/11/2026):** [3corrections/tests/status](cloudsql-review94.md) supersede the initial79154f3snapshot below. SQLinstancebindingและsignal-authorityต้องผ่านก่อนmutation CPproofเป็นoffline-only; release.shบล็อกCPก่อนgcloudแม้proofครบ จึงยังไม่มีliveCPactivationintegration/Cloudacceptance ข้อมูล143/38/42ด้านล่างเป็นhistoricalrunไม่ใช้รับรองheadใหม่อัตโนมัติ
 
 27 พฤศจิกายน 2026 · Author `guluJa` · Reviewer `PhraewaS` (implementation review pending)
