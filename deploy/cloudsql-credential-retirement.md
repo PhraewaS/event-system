@@ -43,6 +43,8 @@ References: [Google Cloud SQL Connector](https://docs.cloud.google.com/sql/docs/
 
 ## Before any real use
 
+PR #96 review correction: before PATCH and before activation success, inspect the six granted SHARE locks on the held SQL backend. If the PATCH outcome is uncertain, poll the retained exact operation until it has a valid terminal result, then verify compatible disabled template/ready revision/traffic before releasing the barrier. An unchanged old disabled revision cannot settle a pending request. If no operation receipt was received, automatic settlement is unavailable: keep locks and external maintenance; arrange separately approved authoritative recovery. Do not retry PATCH, terminate the operator, or reopen writes on a timeout. A lost SQL barrier is a critical unknown outcome requiring external maintenance, never success. See [review disposition](../docs/sprints/live-release-gate-review96.md).
+
 Independent implementation review/CI → approved instance/writer inventory and role/secret provisioning → actual window/freeze/backup → approved management/session operations → actual normal journey/persistence/access/migration evidence → independent immutable proof review → approved readback/request binding → separately approved deployment/activation. A merged code PR alone never satisfies these gates.
 
 No real Cloud SQL user, membership, password, session, service, IAM policy, GitHub variable or lifecycle setting was changed during implementation/tests. Only disposable local PostgreSQL and mocked API operations are execution evidence in this branch. Cloud acceptance remains pending in #8.

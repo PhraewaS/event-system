@@ -59,6 +59,7 @@ def evaluate_live_release(bundle, trust, client, *, execute=False, clock=None):
     def authorize_send():
         validate_source()
         verify_bundle(bundle, **proof_trust, now=clock())
+        client.assert_write_barrier()
     result={'decision':'live_preflight_verified','method':METHOD,'proofHash':trust['approved_hash'],
             'liveConfigurationVerified':True,'activationExecuted':False,'checkOnly':not execute,
             'acceptedGateSha':accepted_gate,'approvedConfigurationHash':config_hash,
@@ -76,10 +77,12 @@ def evaluate_live_release(bundle, trust, client, *, execute=False, clock=None):
             outcome=client.activate(target,final,authorize_now=authorize_send)
             require(outcome.get('verified') is True and isinstance(outcome.get('revision'),str)
                     and outcome['revision'].startswith(target['service']+'/revisions/'), 'Activation result unknown or mismatched.')
+            client.assert_write_barrier()
         except (Exception, KeyboardInterrupt):
             # Never automatically release our data barrier merely because a
             # PATCH timed out or a postcheck failed. The real client waits under
-            # the held locks for independently observable compatible gate=false.
+            # the held locks for the exact operation to settle AND independently
+            # observable compatible gate=false. Old state alone is insufficient.
             # It retries reads only; a manual recovery remains the operator's job.
             if getattr(client,'mutation_may_have_started',False):
                 while True:

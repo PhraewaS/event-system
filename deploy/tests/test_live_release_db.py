@@ -62,4 +62,23 @@ class LocalDatabaseBarrier(unittest.TestCase):
                 cur.execute('INSERT INTO public.'+table+' VALUES(1)')
                 cur.execute('SELECT count(*) FROM public.'+table);self.assertEqual(cur.fetchone()[0],1)
 
+    def test_R9606_same_backend_lock_inspection_detects_transaction_loss(self):
+        with self.client.write_freeze(self.target):
+            self.client.assert_write_barrier()
+            # Only this disposable local transaction is ended, never real sessions.
+            self.client.freeze_cursor.execute('ROLLBACK')
+            with self.assertRaisesRegex(ValueError,'barrier lost'):
+                self.client.assert_write_barrier()
+
+    def test_R9606_partial_barrier_is_not_accepted(self):
+        with self.local() as cur:
+            cur.execute('BEGIN')
+            cur.execute('LOCK TABLE public.events IN SHARE MODE')
+            self.client.freeze_cursor=cur
+            try:
+                with self.assertRaisesRegex(ValueError,'barrier lost'):self.client.assert_write_barrier()
+            finally:
+                self.client.freeze_cursor=None
+                cur.execute('ROLLBACK')
+
 if __name__=='__main__':unittest.main(verbosity=2)

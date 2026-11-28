@@ -31,6 +31,7 @@ class Client:
         result={'database':target['database'],'instance':target['instance_connection_name'],'roles':copy.deepcopy(target['roles']),'replacementProfilesVerified':True,'oldSessionCount':0,'oldRoleAttributes':{'login':True,'createrole':True,'createdb':True},'oldMemberships':[],'migrationProfile':{'ownerRole':target['roles']['old']['name'],'set':True,'admin':False,'inherit':True,'privilegedPathReviewed':True}}
         result.update(self.sql_changes);return result
     def image_digest(self,target):self.calls.append('image');return self.digest
+    def assert_write_barrier(self):self.calls.append('barrier-checked')
     @contextmanager
     def write_freeze(self,target):
         self.calls.append('freeze-enter')

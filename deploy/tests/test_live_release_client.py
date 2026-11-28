@@ -33,9 +33,11 @@ class TransportBoundary(unittest.TestCase):
                'trafficStatuses':[{'revision':'disabled','percent':100}]}
         active=copy.deepcopy(false);active['template']['containers'][0]['env'][0]['value']='true'
         serving={**copy.deepcopy(template),'conditions':[{'type':'Ready','state':'CONDITION_SUCCEEDED'}]}
-        c.request=Mock(side_effect=[KeyboardInterrupt(),active,false,serving])
+        op=t['service'].split('/services/')[0]+'/operations/recovery'
+        c.activation_operation=op
+        c.request=Mock(side_effect=[KeyboardInterrupt(),{'name':op,'done':True,'error':{'code':10}},active,false,serving])
         with patch('live_release_client.time.sleep') as sleep:c.wait_until_disabled(t)
-        self.assertEqual(c.freeze_cursor.execute.call_count,3);self.assertEqual(sleep.call_count,1)
+        self.assertEqual(c.freeze_cursor.execute.call_count,4);self.assertEqual(sleep.call_count,1)
         self.assertTrue(all(call.kwargs.get('method','GET')=='GET' for call in c.request.call_args_list))
 
     def test_lost_sql_barrier_is_not_reported_as_safe_recovery(self):
@@ -87,7 +89,7 @@ class TransportBoundary(unittest.TestCase):
         gets=[old,new]
         def request(url,**kwargs):
             calls.append((url,copy.deepcopy(kwargs)))
-            if kwargs.get('method')=='PATCH':return {'done':True}
+            if kwargs.get('method')=='PATCH':return {'name':t['service'].split('/services/')[0]+'/operations/activation','done':True,'response':{'name':t['service']}}
             if '/revisions/' in url:return revision
             return gets.pop(0)
         c.request=request

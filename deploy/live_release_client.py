@@ -36,6 +36,8 @@ class GoogleLiveReleaseClient:
         self.mutation_may_have_started=False
         self.freeze_cursor=None
         self.baseline_service=None
+        self.activation_operation=None
+        self.activation_operation_settled=False
         self.opener=urllib.request.build_opener(NoRedirect())
 
     def bind_target(self,target):
@@ -226,10 +228,38 @@ class GoogleLiveReleaseClient:
                 self.freeze_cursor=None
                 cur.execute('ROLLBACK')
 
+    def assert_write_barrier(self):
+        """Inspect this same backend's granted locks, not a saved boolean."""
+        try:
+            if self.freeze_cursor is None:raise ValueError('No transaction.')
+            self.freeze_cursor.execute("SELECT count(DISTINCT c.relname) FROM pg_locks l JOIN pg_class c ON c.oid=l.relation JOIN pg_namespace n ON n.oid=c.relnamespace WHERE l.pid=pg_backend_pid() AND l.mode='ShareLock' AND l.granted AND n.nspname='public' AND c.relname IN ('events','login_rate_limits','registrations','schema_migrations','session','users')")
+            if self.freeze_cursor.fetchone()[0]!=len(TABLES):raise ValueError('Missing locks.')
+        except Exception:
+            print('CRITICAL: database write barrier lost. Outcome is unknown; preserve external maintenance and do not reopen writes.',file=sys.stderr)
+            raise ValueError('Database barrier lost; outcome unknown, retain external maintenance.') from None
+
+    def record_activation_operation(self,target,op):
+        """Only the exact operation receipt can establish request settlement."""
+        name=op.get('name','')
+        if not re.fullmatch(re.escape(target['service'].split('/services/')[0])+r'/operations/[A-Za-z0-9_-]+',name):
+            raise ValueError('Service operation receipt missing or invalid; outcome unknown.')
+        if self.activation_operation is not None and name!=self.activation_operation:
+            raise ValueError('Service operation receipt changed; outcome unknown.')
+        self.activation_operation=name
+        if op.get('done') is True:
+            # Terminal Operation has exactly one result. Malformed, missing or
+            # wrong-target results must not be treated as authoritative success.
+            error=op.get('error');response=op.get('response')
+            failed=isinstance(error,dict) and type(error.get('code')) is int and error['code']!=0 and response is None
+            succeeded=isinstance(response,dict) and response.get('name')==target['service'] and error is None
+            if not (failed or succeeded):raise ValueError('Service operation terminal result unverified.')
+            self.activation_operation_settled=True
+
     def wait_until_disabled(self,target):
         """Keep our barrier on an uncertain mutation; no automatic cloud writes.
 
-        Returns only after compatible false serving/template state is verified.
+        Returns only after the submitted operation is terminal AND compatible
+        false serving/template state is verified. Missing receipt stays unknown.
         External maintenance MUST survive process/SQL failure. A lost SQL barrier
         is a critical unknown outcome, not evidence of disabled lifecycle writes.
         """
@@ -239,16 +269,17 @@ class GoogleLiveReleaseClient:
         baseline=copy.deepcopy(self.baseline_service['template']);baseline.pop('revision',None)
         url='https://run.googleapis.com/v2/'+target['service']
         while True:
-            # Keep the transaction active and establish that all six locks still
-            # exist. If the SQL connection is lost, external maintenance is the
-            # remaining guard and the program must not claim safe recovery.
+            self.assert_write_barrier()
             try:
-                self.freeze_cursor.execute("SELECT count(DISTINCT c.relname) FROM pg_locks l JOIN pg_class c ON c.oid=l.relation JOIN pg_namespace n ON n.oid=c.relnamespace WHERE l.pid=pg_backend_pid() AND l.mode='ShareLock' AND l.granted AND n.nspname='public' AND c.relname IN ('events','login_rate_limits','registrations','schema_migrations','session','users')")
-                if self.freeze_cursor.fetchone()[0]!=len(TABLES):raise ValueError('Missing locks.')
-            except Exception:
-                print('CRITICAL: database write barrier lost. Outcome is unknown; preserve external maintenance and do not reopen writes.',file=sys.stderr)
-                raise ValueError('Database barrier lost; outcome unknown, retain external maintenance.') from None
-            try:
+                if not self.activation_operation_settled:
+                    if self.activation_operation is not None:
+                        op=self.request('https://run.googleapis.com/v2/'+self.activation_operation)
+                        self.record_activation_operation(target,op)
+                    # A lost PATCH response gives no operation to reconcile.
+                    # Do not infer settlement from old false state or timeout.
+                    if not self.activation_operation_settled:
+                        time.sleep(2)
+                        continue
                 current=self.request(url)
                 template=copy.deepcopy(current.get('template',{}));template.pop('revision',None)
                 traffic=current.get('trafficStatuses',[])
@@ -264,6 +295,7 @@ class GoogleLiveReleaseClient:
                     if (serving.get('containers')==baseline['containers'] and serving.get('serviceAccount')==baseline.get('serviceAccount') and
                         serving.get('volumes')==baseline.get('volumes') and serving.get('reconciling') is not True and
                         any(c.get('type')=='Ready' and c.get('state')=='CONDITION_SUCCEEDED' for c in serving.get('conditions',[]))):
+                        self.assert_write_barrier()
                         return
             except KeyboardInterrupt:
                 # A normal interrupt must not silently remove a still-needed barrier.
@@ -275,6 +307,8 @@ class GoogleLiveReleaseClient:
 
     def activate(self,target,observation,*,authorize_now):
         if not callable(authorize_now):raise ValueError('Fresh execution authorization required.')
+        if self.baseline_service is not None or self.activation_operation is not None or self.mutation_may_have_started:
+            raise ValueError('One activation attempt per operator client; no automatic retry.')
         self.bind_target(target)
         url='https://run.googleapis.com/v2/'+target['service']
         service=self.request(url)
@@ -288,12 +322,13 @@ class GoogleLiveReleaseClient:
               'traffic':[{'type':'TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST','percent':100}]}
         self.baseline_service=copy.deepcopy(service)
         op=self.request(url+'?updateMask=template.containers%2Ctemplate.revision%2Ctraffic',method='PATCH',body=body,pre_send=authorize_now)
+        self.record_activation_operation(target,op)
         deadline=time.monotonic()+180
-        while not op.get('done'):
-            name=op.get('name','')
-            if not re.fullmatch(re.escape(target['service'].split('/services/')[0])+r'/operations/[A-Za-z0-9_-]+',name) or time.monotonic()>deadline:
+        while not self.activation_operation_settled:
+            if time.monotonic()>deadline:
                 raise ValueError('Service operation outcome unknown; do not retry automatically.')
-            time.sleep(1);op=self.request('https://run.googleapis.com/v2/'+name)
+            time.sleep(1);op=self.request('https://run.googleapis.com/v2/'+self.activation_operation)
+            self.record_activation_operation(target,op)
         if op.get('error'):raise ValueError('Conditional service operation failed.')
         current=self.request(url)
         def revision_name(value):
