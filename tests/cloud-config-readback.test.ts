@@ -136,3 +136,30 @@ test('RB-11 / renamed volume passes when its mount is bound correctly',async()=>
  }
  expect((await collectCloudConfiguration(f)).cloudFieldsMatch).toBe(true);
 });
+
+// Review #95 round 2: latestCreatedExecution is independent evidence, even with an empty list.
+test.each(['EXECUTION_RUNNING','EXECUTION_PENDING','COMPLETION_STATUS_UNSPECIFIED','UNRECOGNIZED',undefined])('RB-13 / latest status %s blocks even when executions stay empty',async(completionStatus)=>{
+ const f=cloudFixture();(f.data.job as any).executionCount=1;(f.data.job as any).latestCreatedExecution={name:finishedExecution(f,'latest').name,completionStatus};
+ const r=await collectCloudConfiguration(f);expect(r.cloudFieldsMatch).toBe(false);expect(r.releaseActivationAllowed).toBe(false);
+ expect(r.reasons).toEqual(['JOB_LATEST_EXECUTION_ACTIVE_OR_UNKNOWN']);
+});
+test.each(['EXECUTION_SUCCEEDED','EXECUTION_FAILED','EXECUTION_CANCELLED'])('RB-13 / known terminal latest status %s can pass without authorizing activation',async(completionStatus)=>{
+ const f=cloudFixture();(f.data.job as any).executionCount=1;(f.data.job as any).latestCreatedExecution={...finishedExecution(f,'finished'),completionStatus};
+ const r=await collectCloudConfiguration(f);expect(r.cloudFieldsMatch).toBe(true);expect(r.releaseActivationAllowed).toBe(false);
+});
+test.each(['missing-reference','missing-time','missing-name','invalid-time','foreign-job'])('RB-13 / %s in latest execution metadata fails closed',async(problem)=>{
+ const f=cloudFixture();const job:any=f.data.job;job.executionCount=1;
+ job.latestCreatedExecution={...finishedExecution(f,'latest'),completionStatus:'EXECUTION_SUCCEEDED'};
+ if(problem==='missing-reference')delete job.latestCreatedExecution;
+ if(problem==='missing-time')delete job.latestCreatedExecution.completionTime;
+ if(problem==='missing-name')delete job.latestCreatedExecution.name;
+ if(problem==='invalid-time')job.latestCreatedExecution.completionTime='not-a-timestamp';
+ if(problem==='foreign-job')job.latestCreatedExecution.name=job.latestCreatedExecution.name.replace('/jobs/cp-migrate/','/jobs/other/');
+ const r=await collectCloudConfiguration(f);expect(r.cloudFieldsMatch).toBe(false);expect(r.releaseActivationAllowed).toBe(false);
+});
+test.each([2,3])('RB-13 / latest active state on job read %s is rejected directly',async(targetRead)=>{
+ const f=cloudFixture();const read=f.client.readJob;let reads=0;f.client.readJob=async()=>{
+  const job:any=await read();if(++reads===targetRead){job.executionCount=1;job.latestCreatedExecution={name:finishedExecution(f,'late').name,completionStatus:'EXECUTION_PENDING'};}return job;
+ };
+ const r=await collectCloudConfiguration(f);expect(r.reasons).toEqual(['JOB_LATEST_EXECUTION_ACTIVE_OR_UNKNOWN']);expect(r.releaseActivationAllowed).toBe(false);
+});
