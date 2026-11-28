@@ -1,0 +1,26 @@
+PR #96 review correction, 28 November 2026 (UTC+7)
+Author: guluJa. Reviewer: PhraewaS (re-review pending).
+Reviewed old head: cad3381acdeb288030a566bacf4fad18a3ebb3e0
+Specification and RED test commit: 0110c51
+Implementation/tested source: a3635328789b8ebcecb829c6a7ee4aff5035e63f
+
+RED: python -X utf8 -m unittest discover -s deploy/tests -p test_live_release_review96.py -v
+5 tests, 5 behavioral assertion failures against old implementation; no setup/import errors.
+
+GREEN: python -X utf8 -m unittest discover -s deploy/tests -p 'test_*.py' -v
+82 passed, 0 failed, 0 skipped. Includes 9 review-specific offline tests and
+4 actual local PostgreSQL barrier tests (2 newly added). Synthetic loopback
+PostgreSQL17 on port55628 only; TEST_DATABASE_URL points to a disposable *_test DB.
+Dependencies: PyYAML6.0.3 and pg8000 1.31.6 via local PYTHONPATH; Git Bash on PATH.
+
+node node_modules/vitest/vitest.mjs run tests/live-release-readback.test.ts tests/cloud-config-readback.test.ts
+74 passed, 0 failed, 0 skipped in 2 files.
+bash -n deploy/deploy.sh deploy/teardown.sh deploy/release.sh: passed.
+bash deploy/tests/test_release_stub.sh: 6 PASS scenarios; no GCP access.
+The first shell invocation lacked python3 on this Windows host; rerun passed with
+a local python3 launcher pointing to the same Python runtime. This is test setup,
+not behavioral RED. No launcher or environment workaround is added to repository code.
+
+Hosted CI for the new pushed head is checked separately; these local results
+do not prove Cloud deployment, credential retirement or lifecycle activation.
+No production deployment/password change/session termination/lifecycle activation.

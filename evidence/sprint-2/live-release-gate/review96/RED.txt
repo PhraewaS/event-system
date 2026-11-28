@@ -1,0 +1,62 @@
+test_R9601_lost_barrier_prevents_patch (test_live_release_review96.Review96.test_R9601_lost_barrier_prevents_patch) ... FAIL
+test_R9602_lost_barrier_after_postcheck_cannot_report_success (test_live_release_review96.Review96.test_R9602_lost_barrier_after_postcheck_cannot_report_success) ... FAIL
+test_R9603_pending_operation_cannot_accept_old_disabled_revision (test_live_release_review96.Review96.test_R9603_pending_operation_cannot_accept_old_disabled_revision) ... Activation outcome unverified. Holding the database write barrier; retain external maintenance and restore verified compatible lifecycle-disabled service. Read retries only; do not terminate this operator process.
+FAIL
+test_R9604_missing_receipt_cannot_accept_old_disabled_revision (test_live_release_review96.Review96.test_R9604_missing_receipt_cannot_accept_old_disabled_revision) ... Activation outcome unverified. Holding the database write barrier; retain external maintenance and restore verified compatible lifecycle-disabled service. Read retries only; do not terminate this operator process.
+FAIL
+test_R9605_terminal_exact_operation_then_disabled_state_allows_recovery (test_live_release_review96.Review96.test_R9605_terminal_exact_operation_then_disabled_state_allows_recovery) ... Activation outcome unverified. Holding the database write barrier; retain external maintenance and restore verified compatible lifecycle-disabled service. Read retries only; do not terminate this operator process.
+FAIL
+
+======================================================================
+FAIL: test_R9601_lost_barrier_prevents_patch (test_live_release_review96.Review96.test_R9601_lost_barrier_prevents_patch)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<checkout>\deploy\tests\test_live_release_review96.py", line 21, in test_R9601_lost_barrier_prevents_patch
+    with self.assertRaisesRegex(ValueError, 'barrier lost'):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_R9602_lost_barrier_after_postcheck_cannot_report_success (test_live_release_review96.Review96.test_R9602_lost_barrier_after_postcheck_cannot_report_success)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<checkout>\deploy\tests\test_live_release_review96.py", line 29, in test_R9602_lost_barrier_after_postcheck_cannot_report_success
+    with self.assertRaisesRegex(ValueError,'barrier lost'):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_R9603_pending_operation_cannot_accept_old_disabled_revision (test_live_release_review96.Review96.test_R9603_pending_operation_cannot_accept_old_disabled_revision)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<checkout>\deploy\tests\test_live_release_review96.py", line 56, in test_R9603_pending_operation_cannot_accept_old_disabled_revision
+    with self.assertRaises(StopMonitoring):c.wait_until_disabled(t)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: StopMonitoring not raised
+
+======================================================================
+FAIL: test_R9604_missing_receipt_cannot_accept_old_disabled_revision (test_live_release_review96.Review96.test_R9604_missing_receipt_cannot_accept_old_disabled_revision)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<checkout>\deploy\tests\test_live_release_review96.py", line 64, in test_R9604_missing_receipt_cannot_accept_old_disabled_revision
+    with self.assertRaises(StopMonitoring):c.wait_until_disabled(t)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: StopMonitoring not raised
+
+======================================================================
+FAIL: test_R9605_terminal_exact_operation_then_disabled_state_allows_recovery (test_live_release_review96.Review96.test_R9605_terminal_exact_operation_then_disabled_state_allows_recovery)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<checkout>\deploy\tests\test_live_release_review96.py", line 71, in test_R9605_terminal_exact_operation_then_disabled_state_allows_recovery
+    self.assertEqual(c.request.call_args_list[0].args[0],'https://run.googleapis.com/v2/'+op)
+AssertionError: 'http[39 chars]ixture-project/locations/asia-southeast1/services/cp-fixture' != 'http[39 chars]ixture-project/locations/asia-southeast1/operations/attempt-96'
+- https://run.googleapis.com/v2/projects/cp-fixture-project/locations/asia-southeast1/services/cp-fixture
+?                                                                                     ^  ^ ^^  ^  ^^^^^^^
++ https://run.googleapis.com/v2/projects/cp-fixture-project/locations/asia-southeast1/operations/attempt-96
+?                                                                                     ^^  ^^ ^^  ^^^^^ + ^^
+
+
+----------------------------------------------------------------------
+Ran 5 tests in 2.091s
+
+FAILED (failures=5)
