@@ -83,8 +83,14 @@ export async function collectCloudConfiguration({expected,client,clock=Date.now}
       }
       check(identity===(isJob?expected.migrator_service_account:expected.runtime_service_account),`${kind}_IDENTITY_MISMATCH`);
       check(same(container.command??[],isJob?['node']:[])&&same(container.args??[],isJob?['dist/server/migrate.js']:[]),`${kind}_COMMAND_OVERRIDE`);
-      const mounted=(value.volumes??[]).flatMap(v=>v.cloudSqlInstance?.instances??[]);
-      check(same(mounted,[expected.instance_connection_name]),`${kind}_SQL_ATTACHMENT_MISMATCH`);
+      const volumes=value.volumes??[];
+      check(Array.isArray(volumes),'SQL_VOLUMES_UNKNOWN');
+      const sqlVolumes=volumes.filter(v=>v.cloudSqlInstance);
+      check(sqlVolumes.length===1&&same(sqlVolumes[0].cloudSqlInstance.instances,[expected.instance_connection_name]),`${kind}_SQL_ATTACHMENT_MISMATCH`);
+      const volume=sqlVolumes[0],mounts=container.volumeMounts;
+      check(nonempty(volume.name)&&volumes.filter(v=>v.name===volume.name).length===1&&Array.isArray(mounts)&&
+        mounts.filter(m=>m.name===volume.name).length===1&&mounts.filter(m=>m.mountPath==='/cloudsql').length===1&&
+        mounts.some(m=>m.name===volume.name&&m.mountPath==='/cloudsql'),`${kind}_SQL_MOUNT_MISMATCH`);
       check(Array.isArray(container.env),'ENVIRONMENT_UNKNOWN');
       const find=(name)=>{const vars=container.env.filter(e=>e.name===name);check(vars.length===1,'ENVIRONMENT_UNKNOWN');return vars[0];};
       const database=find('DATABASE_URL');
@@ -100,14 +106,28 @@ export async function collectCloudConfiguration({expected,client,clock=Date.now}
     const live=parseProfile(revision,'SERVING');
     parseProfile(service.template,'TEMPLATE');
     const migration=parseProfile(job.template?.template,'JOB',true);
-    let token='',pages=0;const seen=new Set();
-    do{
-      check(pages++<10&&!seen.has(token),'EXECUTION_PAGINATION_UNKNOWN');seen.add(token);
-      const page=await read(()=>client.listExecutions(token));
-      check(page&&Array.isArray(page.executions??[]),'EXECUTION_VISIBILITY_UNKNOWN');
-      check(!(page.executions??[]).some(e=>!nonempty(e.completionTime)),'JOB_EXECUTION_ACTIVE_OR_UNKNOWN');
-      token=page.nextPageToken??'';check(typeof token==='string'&&token.length<=4096,'EXECUTION_PAGINATION_UNKNOWN');
-    }while(token);
+    const executionSnapshot=async()=>{
+      let token='',pages=0;const seen=new Set(),names=new Set(),records=[];
+      do{
+        check(pages++<10&&!seen.has(token),'EXECUTION_PAGINATION_UNKNOWN');seen.add(token);
+        const page=await read(()=>client.listExecutions(token));
+        check(page&&Array.isArray(page.executions??[]),'EXECUTION_VISIBILITY_UNKNOWN');
+        for(const execution of page.executions??[]){
+          check(nonempty(execution.completionTime)&&execution.reconciling!==true&&
+            (execution.runningCount??0)===0,'JOB_EXECUTION_ACTIVE_OR_UNKNOWN');
+          const name=canonical(execution.name);
+          check(name.startsWith(`${expected.job}/executions/`)&&name.split('/').length===8&&
+            nonempty(execution.uid)&&!names.has(name),'EXECUTION_IDENTITY_UNKNOWN');
+          names.add(name);
+          records.push([name,execution.uid,execution.createTime??'',execution.startTime??'',execution.completionTime]);
+        }
+        token=page.nextPageToken??'';check(typeof token==='string'&&token.length<=4096,'EXECUTION_PAGINATION_UNKNOWN');
+      }while(token);
+      return records.sort((a,b)=>a[0].localeCompare(b[0]));
+    };
+    const executionsBefore=await executionSnapshot();
+    const sameJob=(a,b)=>a.uid===b.uid&&a.etag===b.etag&&same(a.template,b.template)&&
+      (a.executionCount??0)===(b.executionCount??0)&&same(a.latestCreatedExecution??null,b.latestCreatedExecution??null);
     for(const version of [wantedRuntime,wantedMigrator]){
       const first=await read(()=>client.readSecretVersion(version));
       check(first&&secretVersion(first.name)===version&&first.state==='ENABLED','SECRET_DISABLED_OR_UNKNOWN');
@@ -117,11 +137,15 @@ export async function collectCloudConfiguration({expected,client,clock=Date.now}
     stableResource(serviceAgain,expected.service,'SERVICE');stableResource(jobAgain,expected.job,'JOB');
     check(serviceAgain.uid===service.uid&&serviceAgain.etag===service.etag&&same(serviceAgain.trafficStatuses,service.trafficStatuses)&&
       same(serviceAgain.template,service.template)&&serviceAgain.latestCreatedRevision===service.latestCreatedRevision&&
-      jobAgain.uid===job.uid&&jobAgain.etag===job.etag&&same(jobAgain.template,job.template),'CONFIG_CHANGED_DURING_READBACK');
+      sameJob(jobAgain,job),'CONFIG_CHANGED_DURING_READBACK');
     for(const version of [wantedRuntime,wantedMigrator]){
       const metadata=await read(()=>client.readSecretVersion(version));
       check(metadata&&secretVersion(metadata.name)===version&&metadata.state==='ENABLED','SECRET_CHANGED_DURING_READBACK');
     }
+    // Re-scan every page near return: even a newly completed execution invalidates this observation.
+    check(same(executionsBefore,await executionSnapshot()),'JOB_EXECUTIONS_CHANGED_DURING_READBACK');
+    const finalJob=await read(()=>client.readJob());stableResource(finalJob,expected.job,'JOB');
+    check(sameJob(finalJob,job),'JOB_EXECUTIONS_OR_CONFIG_CHANGED_DURING_READBACK');
     check(clock()>=start&&clock()-start<=60000,'READBACK_TIME_BUDGET');
     return {...report,cloudFieldsMatch:true,observedAt:new Date(clock()).toISOString(),
       observed:{project:expected.project,projectNumber:number,service:expected.service,job:expected.job,

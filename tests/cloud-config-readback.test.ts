@@ -54,7 +54,7 @@ test.each(['service','job','secret'])('RB-06 detects %s changing between reads',
 });
 test('RB-07 exhausts pages and finds active execution on second page',async()=>{
  const f=cloudFixture();const tokens:string[]=[];
- (f.client as any).listExecutions=async(token:string)=>{tokens.push(token);return token?{executions:[{name:'running'}]}:{executions:[{completionTime:'2026-11-28T00:00:00Z'}],nextPageToken:'page2'};};
+ (f.client as any).listExecutions=async(token:string)=>{tokens.push(token);return token?{executions:[{name:'running'}]}:{executions:[{name:f.expected.job+'/executions/old',uid:'old-uid',completionTime:'2026-11-28T00:00:00Z'}],nextPageToken:'page2'};};
  const r=await collectCloudConfiguration(f);expect(tokens).toEqual(['','page2']);expect(r.reasons).toEqual(['JOB_EXECUTION_ACTIVE_OR_UNKNOWN']);
 });
 test('RB-07 repeated pagination token blocks observation',async()=>{
@@ -122,4 +122,17 @@ test('RB-12 / stable completed history passes despite page-order changes',async(
  const f=cloudFixture();let scans=0;const a=finishedExecution(f,'first'),b=finishedExecution(f,'second');
  (f.client as any).listExecutions=async(token:string)=>{if(!token)scans++;return {executions:[scans===1?(token?b:a):(token?a:b)],...(token?{}:{nextPageToken:'page2'})};};
  const r=await collectCloudConfiguration(f);expect(r.cloudFieldsMatch).toBe(true);expect(r.releaseActivationAllowed).toBe(false);expect(scans).toBe(2);
+});
+test('RB-12 / final job marker catches an execution starting after the last scan',async()=>{
+ const f=cloudFixture();let scans=0;(f.client as any).listExecutions=async()=>{
+  if(++scans===2){(f.data.job as any).executionCount=1;(f.data.job as any).latestCreatedExecution={name:finishedExecution(f,'late').name,completionStatus:'EXECUTION_RUNNING'};}
+  return {executions:[]};
+ };
+ const r=await collectCloudConfiguration(f);expect(r.reasons).toEqual(['JOB_EXECUTIONS_OR_CONFIG_CHANGED_DURING_READBACK']);expect(r.releaseActivationAllowed).toBe(false);
+});
+test('RB-11 / renamed volume passes when its mount is bound correctly',async()=>{
+ const f=cloudFixture();for(const scope of ['revision','template','job']){
+  const profile=profileAt(f,scope);profile.volumes[0].name='sql-socket';profile.containers[0].volumeMounts[0].name='sql-socket';
+ }
+ expect((await collectCloudConfiguration(f)).cloudFieldsMatch).toBe(true);
 });
